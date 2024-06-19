@@ -83,7 +83,7 @@ public class JdbcSourceChunkSplitterTest {
         @Override
         public Object[] sampleDataFromColumn(
                 JdbcConnection jdbc, TableId tableId, String columnName, int samplingRate)
-                throws SQLException {
+                throws Exception {
             return new Object[0];
         }
 
@@ -161,6 +161,11 @@ public class JdbcSourceChunkSplitterTest {
 
         @Override
         public List<TableId> discoverDataCollections(JdbcSourceConfig sourceConfig) {
+            return null;
+        }
+
+        @Override
+        public JdbcConnection openJdbcConnection(JdbcSourceConfig sourceConfig) {
             return null;
         }
 

@@ -23,7 +23,6 @@ import org.apache.seatunnel.api.table.catalog.PrimaryKey;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfig;
 import org.apache.seatunnel.connectors.cdc.base.dialect.JdbcDataSourceDialect;
-import org.apache.seatunnel.connectors.cdc.base.relational.connection.JdbcConnectionPoolFactory;
 import org.apache.seatunnel.connectors.cdc.base.source.enumerator.splitter.ChunkSplitter;
 import org.apache.seatunnel.connectors.cdc.base.source.offset.Offset;
 import org.apache.seatunnel.connectors.cdc.base.source.reader.external.FetchTask;
@@ -90,17 +89,14 @@ public class PostgresDialect implements JdbcDataSourceDialect {
                 (PostgresConnectorConfig) sourceConfig.getDbzConnectorConfig();
         return new PostgresConnection(
                 conf.getJdbcConfig(),
-                newPostgresValueConverterBuilder(conf, sourceConfig.getServerTimeZone()));
+                newPostgresValueConverterBuilder(
+                        conf, "postgres-dialect", sourceConfig.getServerTimeZone()),
+                "postgres-dialect");
     }
 
     @Override
     public ChunkSplitter createChunkSplitter(JdbcSourceConfig sourceConfig) {
         return new PostgresChunkSplitter(sourceConfig, this);
-    }
-
-    @Override
-    public JdbcConnectionPoolFactory getPooledDataSourceFactory() {
-        return new PostgresPooledDataSourceFactory();
     }
 
     @Override
@@ -134,7 +130,9 @@ public class PostgresDialect implements JdbcDataSourceDialect {
                         dbzConnectorConfig.getJdbcConfig(),
                         newPostgresValueConverterBuilder(
                                 (PostgresConnectorConfig) dbzConnectorConfig,
-                                taskSourceConfig.getServerTimeZone()));
+                                "postgres-source-fetch-task",
+                                taskSourceConfig.getServerTimeZone()),
+                        "postgres-source-fetch-task");
 
         List<TableChanges.TableChange> tableChangeList = new ArrayList<>();
         // TODO: support save table schema
