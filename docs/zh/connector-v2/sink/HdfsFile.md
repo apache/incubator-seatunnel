@@ -90,7 +90,6 @@ source {
   # 这是一个示例源插件 **仅用于测试和演示功能源插件**
   FakeSource {
     parallelism = 1
-    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

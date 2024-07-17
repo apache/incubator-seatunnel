@@ -177,7 +177,6 @@ public class ConfigShadeTest {
             Assertions.assertEquals(list1.get(1), "de~");
             Assertions.assertEquals(list1.get(2), "f h");
             Assertions.assertEquals(sourceConfig.getInt("row.num"), rowNum);
-            Assertions.assertEquals(sourceConfig.getString("plugin_output"), resName);
         }
         List<? extends ConfigObject> transformConfigs = config.getObjectList("transform");
         for (ConfigObject configObject : transformConfigs) {

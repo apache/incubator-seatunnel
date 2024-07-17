@@ -398,7 +398,7 @@ public class LocalFileIT extends TestSuiteBase {
             throws IOException, InterruptedException {
         TestHelper helper = new TestHelper(container);
         // test save_mode
-        String path = "/tmp/seatunnel/localfile/json/fake";
+        String path = "/tmp/seatunnel/localfile/json/default_dataset_0";
         Assertions.assertEquals(getFileListFromContainer(path).size(), 0);
         helper.execute("/json/fake_to_local_file_json_save_mode.conf");
         Assertions.assertEquals(getFileListFromContainer(path).size(), 1);

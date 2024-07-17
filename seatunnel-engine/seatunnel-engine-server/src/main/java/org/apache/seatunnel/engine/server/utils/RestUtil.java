@@ -76,6 +76,10 @@ public class RestUtil {
         return ConfigBuilder.of(objectMap, isEncrypt, true);
     }
 
+    public static Config buildConfig(String hocon) {
+        return ConfigBuilder.ofHocon(hocon, false);
+    }
+
     public static List<Tuple2<Map<String, String>, Config>> buildConfigList(
             JsonNode jsonNode, boolean isEncrypt) {
         return StreamSupport.stream(jsonNode.spliterator(), false)

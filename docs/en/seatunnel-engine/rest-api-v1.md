@@ -431,7 +431,6 @@ When we can't get the job info, the response will be:
     "source": [
         {
             "plugin_name": "FakeSource",
-            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -446,8 +445,7 @@ When we can't get the job info, the response will be:
     ],
     "sink": [
         {
-            "plugin_name": "Console",
-            "plugin_input": ["fake"]
+            "plugin_name": "Console"
         }
     ]
 }
@@ -494,7 +492,6 @@ When we can't get the job info, the response will be:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -509,8 +506,7 @@ When we can't get the job info, the response will be:
     ],
     "sink": [
       {
-        "plugin_name": "Console",
-        "plugin_input": ["fake"]
+        "plugin_name": "Console"
       }
     ]
   },
@@ -525,7 +521,6 @@ When we can't get the job info, the response will be:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -540,8 +535,7 @@ When we can't get the job info, the response will be:
     ],
     "sink": [
       {
-        "plugin_name": "Console",
-        "plugin_input": ["fake"]
+        "plugin_name": "Console"
       }
     ]
   }
@@ -650,7 +644,6 @@ For more information about customize encryption, please refer to the documentati
                     "age": "int"
                 }
             },
-            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -690,7 +683,6 @@ For more information about customize encryption, please refer to the documentati
                     "age": "int"
                 }
             },
-            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",

@@ -78,7 +78,6 @@ env {
 
 source {
   Http {
-    plugin_output = "http"
     url = "http://mockserver:1080/example/http"
     method = "GET"
     format = "json"

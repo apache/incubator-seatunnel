@@ -33,9 +33,6 @@ SeaTunnel transform支持多表转换，在上游插件输出多个表的时候�
 ```hocon
 transform {
   Copy {
-    plugin_input = "fake"  // 可选的读取数据集名
-    plugin_output = "fake1" // 可选的输出数据集名
-
     table_match_regex = "test.a.*" // 1. 通过正则表达式匹配需要进行转换的表，test.a.*表示匹配test.abc和test.abcd
     src_field = "name" // 源字段
     dest_field = "name1" // 目标字段

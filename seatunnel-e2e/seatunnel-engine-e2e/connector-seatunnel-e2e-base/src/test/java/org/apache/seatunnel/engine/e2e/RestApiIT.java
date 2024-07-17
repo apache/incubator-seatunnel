@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -423,7 +424,7 @@ public class RestApiIT {
                                                                     "pipeline-1 [Source[0]-FakeSource]"))
                                                     .body(
                                                             "[0].jobDag.vertexInfoMap[0].tablePaths[0]",
-                                                            equalTo("fake"))
+                                                            equalTo("default_dataset_0"))
                                                     .body(
                                                             "[0].jobDag.vertexInfoMap[1].vertexId",
                                                             equalTo(2))
@@ -436,7 +437,7 @@ public class RestApiIT {
                                                                     "pipeline-1 [Sink[0]-LocalFile-MultiTableSink]"))
                                                     .body(
                                                             "[0].jobDag.vertexInfoMap[1].tablePaths[0]",
-                                                            equalTo("fake"))
+                                                            equalTo("default_dataset_0"))
                                                     .body(
                                                             "[0].jobDag.envOptions.'job.mode'",
                                                             equalTo("STREAMING"))
@@ -486,7 +487,7 @@ public class RestApiIT {
                                                                     "pipeline-1 [Source[0]-FakeSource]"))
                                                     .body(
                                                             "[0].jobDag.vertexInfoMap[0].tablePaths[0]",
-                                                            equalTo("fake"))
+                                                            equalTo("default_dataset_0"))
                                                     .body(
                                                             "[0].jobDag.vertexInfoMap[1].vertexId",
                                                             equalTo(2))
@@ -499,7 +500,7 @@ public class RestApiIT {
                                                                     "pipeline-1 [Sink[0]-LocalFile-MultiTableSink]"))
                                                     .body(
                                                             "[0].jobDag.vertexInfoMap[1].tablePaths[0]",
-                                                            equalTo("fake"))
+                                                            equalTo("default_dataset_0"))
                                                     .body(
                                                             "[0].jobDag.envOptions.'job.mode'",
                                                             equalTo("STREAMING"))
@@ -553,7 +554,7 @@ public class RestApiIT {
                                                                 "pipeline-1 [Source[0]-FakeSource]"))
                                                 .body(
                                                         "jobDag.vertexInfoMap[0].tablePaths[0]",
-                                                        equalTo("fake"))
+                                                        equalTo("default_dataset_0"))
                                                 .body(
                                                         "jobDag.vertexInfoMap[1].vertexId",
                                                         equalTo(2))
@@ -566,13 +567,17 @@ public class RestApiIT {
                                                                 "pipeline-1 [Sink[0]-console-MultiTableSink]"))
                                                 .body(
                                                         "jobDag.vertexInfoMap[1].tablePaths[0]",
-                                                        equalTo("fake"))
+                                                        equalTo("default_dataset_0"))
                                                 .body(
-                                                        "metrics.TableSourceReceivedCount.fake",
-                                                        equalTo("5"))
+                                                        "metrics.TableSourceReceivedCount",
+                                                        equalTo(
+                                                                Collections.singletonMap(
+                                                                        "default_dataset_0", "5")))
                                                 .body(
-                                                        "metrics.TableSinkWriteCount.fake",
-                                                        equalTo("5"))
+                                                        "metrics.TableSinkWriteCount",
+                                                        equalTo(
+                                                                Collections.singletonMap(
+                                                                        "default_dataset_0", "5")))
                                                 .body("metrics.SinkWriteCount", equalTo("5"))
                                                 .body("metrics.SourceReceivedCount", equalTo("5"))
                                                 .body(
@@ -619,7 +624,7 @@ public class RestApiIT {
                                                                 "pipeline-1 [Source[0]-FakeSource]"))
                                                 .body(
                                                         "jobDag.vertexInfoMap[0].tablePaths[0]",
-                                                        equalTo("fake"))
+                                                        equalTo("default_dataset_0"))
                                                 .body(
                                                         "jobDag.vertexInfoMap[1].vertexId",
                                                         equalTo(2))
@@ -632,13 +637,17 @@ public class RestApiIT {
                                                                 "pipeline-1 [Sink[0]-console-MultiTableSink]"))
                                                 .body(
                                                         "jobDag.vertexInfoMap[1].tablePaths[0]",
-                                                        equalTo("fake"))
+                                                        equalTo("default_dataset_0"))
                                                 .body(
-                                                        "metrics.TableSourceReceivedCount.fake",
-                                                        equalTo("5"))
+                                                        "metrics.TableSourceReceivedCount",
+                                                        equalTo(
+                                                                Collections.singletonMap(
+                                                                        "default_dataset_0", "5")))
                                                 .body(
-                                                        "metrics.TableSinkWriteCount.fake",
-                                                        equalTo("5"))
+                                                        "metrics.TableSinkWriteCount",
+                                                        equalTo(
+                                                                Collections.singletonMap(
+                                                                        "default_dataset_0", "5")))
                                                 .body("metrics.SinkWriteCount", equalTo("5"))
                                                 .body("metrics.SourceReceivedCount", equalTo("5"))
                                                 .body(
@@ -903,7 +912,6 @@ public class RestApiIT {
                                                         + "                    \"age\": \"int\"\n"
                                                         + "                }\n"
                                                         + "            },\n"
-                                                        + "            \"plugin_output\": \"fake\",\n"
                                                         + "            \"parallelism\": 1,\n"
                                                         + "            \"hostname\": \"127.0.0.1\",\n"
                                                         + "            \"username\": \"seatunnel\",\n"
@@ -933,7 +941,6 @@ public class RestApiIT {
                                                                         .REST_URL_ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",
@@ -951,7 +958,6 @@ public class RestApiIT {
                                                                         .REST_URL_ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",

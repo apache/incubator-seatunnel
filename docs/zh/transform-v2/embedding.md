@@ -154,13 +154,11 @@ source {
       "Herman Melville (1819–1891) was an American novelist, short story writer, and poet of the American Renaissance period. Born in New York City, Melville gained initial fame with novels such as Typee and Omoo, but it was Moby-Dick, published in 1851, that would later be recognized as his masterpiece. Melville’s work is known for its complexity, symbolism, and exploration of themes such as man’s place in the universe, the nature of evil, and the quest for meaning. Despite facing financial difficulties and critical neglect during his lifetime, Melville’s reputation soared posthumously, and he is now considered one of the great American authors."
       ], kind = INSERT}
     ]
-    plugin_output = "fake"
   }
 }
 
 transform {
   Embedding {
-    plugin_input = "fake"
     embedding_model_provider = QIANFAN
     model = bge_large_en
     api_key = xxxxxxxxxx
@@ -170,15 +168,11 @@ transform {
         book_intro_vector = book_intro
         author_biography_vector  = author_biography
     }
-    plugin_output = "embedding_output"
   }
 }
 
 sink {
   Assert {
-      plugin_input = "embedding_output"
-
-
       rules =
         {
           field_rules = [
@@ -283,13 +277,11 @@ source {
       "Herman Melville (1819–1891) was an American novelist, short story writer, and poet of the American Renaissance period. Born in New York City, Melville gained initial fame with novels such as Typee and Omoo, but it was Moby-Dick, published in 1851, that would later be recognized as his masterpiece. Melville’s work is known for its complexity, symbolism, and exploration of themes such as man’s place in the universe, the nature of evil, and the quest for meaning. Despite facing financial difficulties and critical neglect during his lifetime, Melville’s reputation soared posthumously, and he is now considered one of the great American authors."
       ], kind = INSERT}
     ]
-    plugin_output = "fake"
   }
 }
 
 transform {
  Embedding {
-    plugin_input = "fake"
     model_provider = CUSTOM
     model = text-embedding-3-small
     api_key = xxxxxxxx
@@ -310,13 +302,11 @@ transform {
             inputx = ["${input}"]
         }
     }
-    plugin_output = "embedding_output_1"
   }
 }
 
 sink {
   Assert {
-      plugin_input = "embedding_output_1"
       rules =
         {
           field_rules = [

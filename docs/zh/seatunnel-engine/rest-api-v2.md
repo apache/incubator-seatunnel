@@ -399,7 +399,6 @@ Json请求示例：
     "source": [
         {
             "plugin_name": "FakeSource",
-            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -414,8 +413,7 @@ Json请求示例：
     ],
     "sink": [
         {
-            "plugin_name": "Console",
-            "plugin_input": ["fake"]
+            "plugin_name": "Console"
         }
     ]
 }
@@ -429,7 +427,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     schema = {
       fields {
@@ -446,7 +443,6 @@ transform {
 
 sink {
   Console {
-    plugin_input = "fake"
   }
 }
 
@@ -528,7 +524,6 @@ curl --location 'http://127.0.0.1:8080/submit-job/upload' --form 'config_file=@"
     "source": [
       {
         "plugin_name": "FakeSource",
-        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -543,8 +538,7 @@ curl --location 'http://127.0.0.1:8080/submit-job/upload' --form 'config_file=@"
     ],
     "sink": [
       {
-        "plugin_name": "Console",
-        "plugin_input": ["fake"]
+        "plugin_name": "Console"
       }
     ]
   },
@@ -559,7 +553,6 @@ curl --location 'http://127.0.0.1:8080/submit-job/upload' --form 'config_file=@"
     "source": [
       {
         "plugin_name": "FakeSource",
-        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -574,8 +567,7 @@ curl --location 'http://127.0.0.1:8080/submit-job/upload' --form 'config_file=@"
     ],
     "sink": [
       {
-        "plugin_name": "Console",
-        "plugin_input": ["fake"]
+        "plugin_name": "Console"
       }
     ]
   }
@@ -687,7 +679,6 @@ curl --location 'http://127.0.0.1:8080/submit-job/upload' --form 'config_file=@"
                     "age": "int"
                 }
             },
-            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -727,7 +718,6 @@ curl --location 'http://127.0.0.1:8080/submit-job/upload' --form 'config_file=@"
                     "age": "int"
                 }
             },
-            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",

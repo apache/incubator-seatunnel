@@ -271,13 +271,11 @@ source {
       {fields = [4, "Eric"], kind = INSERT}
       {fields = [5, "Guangdong Liu"], kind = INSERT}
     ]
-    plugin_output = "fake"
   }
 }
 
 transform {
   LLM {
-    plugin_input = "fake"
     model_provider = CUSTOM
     model = gpt-4o-mini
     api_key = sk-xxx
@@ -302,13 +300,11 @@ transform {
                 }]
             }
         }
-    plugin_output = "llm_output"
   }
 }
 
 sink {
   Assert {
-    plugin_input = "llm_output"
     rules =
       {
         field_rules = [

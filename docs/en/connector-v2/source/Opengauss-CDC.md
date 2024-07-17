@@ -109,7 +109,6 @@ env {
 
 source {
   Opengauss-CDC {
-    plugin_output = "customers_opengauss_cdc"
     username = "gaussdb"
     password = "openGauss@123"
     database-names = ["opengauss_cdc"]
@@ -126,7 +125,6 @@ transform {
 
 sink {
   jdbc {
-    plugin_input = "customers_opengauss_cdc"
     url = "jdbc:postgresql://opengauss_cdc_e2e:5432/opengauss_cdc"
     driver = "org.postgresql.Driver"
     user = "dailai"
@@ -149,7 +147,6 @@ sink {
 ```
 source {
   Opengauss-CDC {
-    plugin_output = "customers_opengauss_cdc"
     username = "gaussdb"
     password = "openGauss@123"
     database-names = ["opengauss_cdc"]

@@ -43,8 +43,6 @@
 ```
 transform {
   Filter {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     include_fields = [name, card]
   }
 }
@@ -55,8 +53,6 @@ transform {
 ```
 transform {
   Filter {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     exclude_fields = [age]
   }
 }

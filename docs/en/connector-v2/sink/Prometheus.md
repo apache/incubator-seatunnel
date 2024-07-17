@@ -68,7 +68,6 @@ source {
         c_timestamp = timestamp
       }
     }
-    plugin_output = "fake"
     rows = [
        {
          kind = INSERT

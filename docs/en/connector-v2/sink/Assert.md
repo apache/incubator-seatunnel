@@ -267,13 +267,11 @@ source {
         ]
       }
     ]
-    plugin_output = "fake"
   }
 }
 
 sink{
   Assert {
-    plugin_input = "fake"
     rules =
       {
         row_rules = [

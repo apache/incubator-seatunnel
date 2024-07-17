@@ -36,8 +36,6 @@ We want to delete `age` field and update the filed order to `id`, `card`, `name`
 ```
 transform {
   FieldMapper {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     field_mapper = {
         id = id
         card = card

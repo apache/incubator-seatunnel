@@ -30,7 +30,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     schema = {
       fields {
@@ -44,8 +43,6 @@ source {
 
 transform {
   Filter {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     fields = [name, card]
   }
 }
@@ -58,7 +55,6 @@ sink {
     fields = ["name", "card"]
     username = "default"
     password = ""
-    plugin_input = "fake1"
   }
 }
 ```
@@ -93,7 +89,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     schema = {
       fields {
@@ -113,7 +108,6 @@ sink {
     fields = ["name", "age", "card"]
     username = "default"
     password = ""
-    plugin_input = "fake1"
   }
 }
 ```
@@ -161,7 +155,6 @@ sql = """ select * from "table" """
   "source": [
     {
       "plugin_name": "FakeSource",
-      "plugin_output": "fake",
       "row.num": 100,
       "schema": {
         "fields": {
@@ -175,8 +168,6 @@ sql = """ select * from "table" """
   "transform": [
     {
       "plugin_name": "Filter",
-      "plugin_input": "fake",
-      "plugin_output": "fake1",
       "fields": ["name", "card"]
     }
   ],
@@ -188,8 +179,7 @@ sql = """ select * from "table" """
       "table": "seatunnel_console",
       "fields": ["name", "card"],
       "username": "default",
-      "password": "",
-      "plugin_input": "fake1"
+      "password": ""
     }
   ]
 }
@@ -224,7 +214,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "${resName:fake_test}_table"
     row.num = "${rowNum:50}"
     string.template = ${strTemplate}
     int.template = [20, 21]
@@ -239,8 +228,6 @@ source {
 
 transform {
     sql {
-      plugin_input = "${resName:fake_test}_table"
-      plugin_output = "sql"
       query = "select * from ${resName:fake_test}_table where name = '${nameVal}' "
     }
 
@@ -248,7 +235,6 @@ transform {
 
 sink {
   Console {
-     plugin_input = "sql"
      username = ${username}
      password = ${password}
   }
@@ -283,7 +269,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake_test_table"
     row.num = 50
     string.template = ['abc','d~f','hi']
     int.template = [20, 21]
@@ -298,8 +283,6 @@ source {
 
 transform {
     sql {
-      plugin_input = "fake_test_table"
-      plugin_output = "sql"
       query = "select * from dual where name = 'abc' "
     }
 
@@ -307,7 +290,6 @@ transform {
 
 sink {
   Console {
-     plugin_input = "sql"
      username = "seatunnel=2.3.1"
      password = "$a^b%c.d~e0*9("
     }

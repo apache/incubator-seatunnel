@@ -46,7 +46,6 @@ Base64编码支持加密以下参数：
 
    source {
      MySQL-CDC {
-       plugin_output = "fake"
        parallelism = 1
        server-id = 5656
        port = 56725
@@ -100,7 +99,6 @@ Base64编码支持加密以下参数：
                "port" : 56725,
                "database-name" : "inventory_vwyw0n",
                "parallelism" : 1,
-               "plugin_output" : "fake",
                "table-name" : "products",
                "plugin_name" : "MySQL-CDC",
                "server-id" : 5656,

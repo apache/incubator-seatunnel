@@ -18,7 +18,6 @@
 package org.apache.seatunnel.engine.server.rest.service;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
-import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
 import org.apache.seatunnel.api.common.metrics.JobMetrics;
 import org.apache.seatunnel.common.utils.JsonUtils;
@@ -165,7 +164,7 @@ public class JobInfoService extends BaseService {
         Config config;
         if (HOCON.equalsIgnoreCase(requestParams.get(CONFIG_FORMAT))) {
             String requestBodyStr = new String(requestBody, StandardCharsets.UTF_8);
-            config = ConfigFactory.parseString(requestBodyStr);
+            config = RestUtil.buildConfig(requestBodyStr);
         } else {
             config = RestUtil.buildConfig(requestHandle(requestBody), false);
         }
