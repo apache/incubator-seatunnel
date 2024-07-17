@@ -263,7 +263,6 @@ exit;
 source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   Oracle-CDC {
-    plugin_output = "customers"
     username = "system"
     password = "oracle"
     database-names = ["XE"]
@@ -281,7 +280,6 @@ source {
 > source {
 > # This is a example source plugin **only for test and demonstrate the feature source plugin**
 > Oracle-CDC {
-> plugin_output = "customers"
 > use_select_count = true 
 > username = "system"
 > password = "oracle"
@@ -300,7 +298,6 @@ source {
 > source {
 > # This is a example source plugin **only for test and demonstrate the feature source plugin**
 > Oracle-CDC {
-> plugin_output = "customers"
 > skip_analyze = true 
 > username = "system"
 > password = "oracle"
@@ -319,7 +316,6 @@ source {
 
 source {
   Oracle-CDC {
-    plugin_output = "customers"
     base-url = "jdbc:oracle:thin:system/oracle@oracle-host:1521:xe"
     source.reader.close.timeout = 120000
     username = "system"

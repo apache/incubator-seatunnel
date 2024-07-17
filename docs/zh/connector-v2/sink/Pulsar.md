@@ -136,7 +136,6 @@ env {
 source {
   FakeSource {
     parallelism = 1
-    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {
@@ -152,7 +151,6 @@ sink {
   	topic = "example"
     client.service-url = "localhost:pulsar://localhost:6650"
     admin.service-url = "http://my-broker.example.com:8080"
-    plugin_output = "test"
     pulsar.config = {
         sendTimeoutMs = 30000
     }

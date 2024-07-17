@@ -53,7 +53,6 @@ env {
 
 source {
     MySQL-CDC {
-        plugin_output = "customers_mysql_cdc"
         server-id = 5652
         username = "root"
         password = "zdyk_Dev@2024"
@@ -71,13 +70,11 @@ transform {
       EventTime = ts_ms
       Delay = delay
     }
-    plugin_output = "trans_result"
   }
 }
 
 sink {
   Console {
-    plugin_input = "custom_name"
   }
 }
 

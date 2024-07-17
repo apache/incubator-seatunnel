@@ -12,8 +12,7 @@
   ],
   "source" : [
     {
-      "plugin_name" : "Fake",
-      "plugin_output" : "my_dataset"
+      "plugin_name" : "Fake"
     }
   ],
   "transform" : []

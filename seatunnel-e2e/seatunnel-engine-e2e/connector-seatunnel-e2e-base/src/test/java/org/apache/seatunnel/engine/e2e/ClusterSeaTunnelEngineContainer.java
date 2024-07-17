@@ -1193,7 +1193,6 @@ public class ClusterSeaTunnelEngineContainer extends SeaTunnelEngineContainer {
             List<Map<String, Object>> sourceList = new ArrayList<>();
             Map<String, Object> source = new HashMap<>();
             source.put("plugin_name", "FakeSource");
-            source.put("plugin_output", "fake");
             source.put("row.num", 1000);
 
             Map<String, Object> schema = new HashMap<>();
@@ -1213,9 +1212,6 @@ public class ClusterSeaTunnelEngineContainer extends SeaTunnelEngineContainer {
             List<Map<String, Object>> sinkList = new ArrayList<>();
             Map<String, Object> sink = new HashMap<>();
             sink.put("plugin_name", "Console");
-            List<String> pluginInputIdentifier = new ArrayList<>();
-            pluginInputIdentifier.add("fake");
-            sink.put("plugin_input", pluginInputIdentifier);
 
             sinkList.add(sink);
             job.put("sink", sinkList);
@@ -1246,7 +1242,6 @@ public class ClusterSeaTunnelEngineContainer extends SeaTunnelEngineContainer {
                         + "    \"source\": [\n"
                         + "        {\n"
                         + "            \"plugin_name\": \"FakeSource\",\n"
-                        + "            \"plugin_output\": \"fake\",\n"
                         + "            \"row.num\": 100,\n"
                         + "            \"schema\": {\n"
                         + "                \"fields\": {\n"
@@ -1261,8 +1256,7 @@ public class ClusterSeaTunnelEngineContainer extends SeaTunnelEngineContainer {
                         + "    ],\n"
                         + "    \"sink\": [\n"
                         + "        {\n"
-                        + "            \"plugin_name\": \"Console\",\n"
-                        + "            \"plugin_input\": [\"fake\"]\n"
+                        + "            \"plugin_name\": \"Console\"\n"
                         + "        }\n"
                         + "    ]\n"
                         + "}";
@@ -1469,7 +1463,6 @@ public class ClusterSeaTunnelEngineContainer extends SeaTunnelEngineContainer {
                                 + "}\n\n"
                                 + "source {\n"
                                 + "  FakeSource {\n"
-                                + "    plugin_output = \"fake\"\n"
                                 + "    schema = {\n"
                                 + "      fields {\n"
                                 + "        name = \"string\"\n"
@@ -1483,7 +1476,6 @@ public class ClusterSeaTunnelEngineContainer extends SeaTunnelEngineContainer {
                                 + "}\n\n"
                                 + "sink {\n"
                                 + "  Console {\n"
-                                + "    plugin_input = \"fake\"\n"
                                 + "  }\n"
                                 + "}\n",
                         jobName, jobMode);

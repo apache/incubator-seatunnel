@@ -19,14 +19,19 @@ package org.apache.seatunnel.core.starter.utils;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
+import org.apache.seatunnel.shade.com.typesafe.config.ConfigObject;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigParseOptions;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigRenderOptions;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigResolveOptions;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigSyntax;
+import org.apache.seatunnel.shade.com.typesafe.config.ConfigValueFactory;
 import org.apache.seatunnel.shade.com.typesafe.config.impl.Parseable;
 
 import org.apache.seatunnel.api.configuration.ConfigAdapter;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.sink.TablePlaceholder;
+import org.apache.seatunnel.common.Constants;
+import org.apache.seatunnel.common.config.TypesafeConfigUtils;
 import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.common.utils.ParserException;
 import org.apache.seatunnel.core.starter.exception.ConfigCheckException;
@@ -38,6 +43,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +53,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_INPUT;
+import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_OUTPUT;
 import static org.apache.seatunnel.common.utils.PlaceholderUtils.replacePlaceholders;
 import static org.apache.seatunnel.core.starter.utils.ConfigShadeUtils.DEFAULT_SENSITIVE_KEYWORDS;
 
@@ -95,6 +103,8 @@ public class ConfigBuilder {
         log.info(
                 "Parsed config file: \n{}",
                 mapToString(configDesensitization(config.root().unwrapped())));
+
+        config = rewriteConfig(config);
         return config;
     }
 
@@ -117,6 +127,22 @@ public class ConfigBuilder {
         log.info(
                 "Parsed config file: \n{}",
                 mapToString(configDesensitization(config.root().unwrapped())));
+        config = rewriteConfig(config);
+        return config;
+    }
+
+    public static Config ofHocon(@NonNull String text, boolean isEncrypt) {
+        log.info("Loading config file from text");
+
+        Config config = ConfigFactory.parseString(text);
+        if (!isEncrypt) {
+            config = ConfigShadeUtils.decryptConfig(config);
+        }
+
+        log.info(
+                "Parsed config file: \n{}",
+                mapToString(configDesensitization(config.root().unwrapped())));
+        config = rewriteConfig(config);
         return config;
     }
 
@@ -298,5 +324,97 @@ public class ConfigBuilder {
                                 ConfigFactory.systemProperties(),
                                 ConfigResolveOptions.defaults().setAllowUnresolved(true));
         return config.root().render(CONFIG_RENDER_OPTIONS);
+    }
+
+    private static Config rewriteConfig(Config config) {
+        List<? extends Config> sourceConfigList =
+                TypesafeConfigUtils.getConfigList(
+                        config, Constants.SOURCE, Collections.emptyList());
+        List<? extends Config> transformConfigList =
+                TypesafeConfigUtils.getConfigList(
+                        config, Constants.TRANSFORM, Collections.emptyList());
+        List<? extends Config> sinkConfigList =
+                TypesafeConfigUtils.getConfigList(config, Constants.SINK, Collections.emptyList());
+        if (sourceConfigList.size() == 1 && sinkConfigList.size() == 1) {
+            Config sourceConfig = sourceConfigList.get(0);
+            boolean sourceOutputIdentifierIsEmpty =
+                    ReadonlyConfig.fromConfig(sourceConfig).get(PLUGIN_OUTPUT) == null;
+
+            Config sinkConfig = sinkConfigList.get(0);
+            boolean sinkInputIdentifierIsEmpty =
+                    ReadonlyConfig.fromConfig(sinkConfig).get(PLUGIN_INPUT) == null;
+
+            boolean transformInputOutputIdentifierIsEmpty = true;
+            for (Config transformConfig : transformConfigList) {
+                List<String> transformInputIdentifier =
+                        ReadonlyConfig.fromConfig(transformConfig).get(PLUGIN_INPUT);
+                String transformOutputIdentifier =
+                        ReadonlyConfig.fromConfig(transformConfig).get(PLUGIN_OUTPUT);
+                transformInputOutputIdentifierIsEmpty &=
+                        transformInputIdentifier == null && transformOutputIdentifier == null;
+            }
+
+            if (sourceOutputIdentifierIsEmpty
+                    && sinkInputIdentifierIsEmpty
+                    && transformInputOutputIdentifierIsEmpty) {
+                String identifier = "default_dataset_0";
+                Config sourceConfigRewrited =
+                        sourceConfig.withValue(
+                                PLUGIN_OUTPUT.key(), ConfigValueFactory.fromAnyRef(identifier));
+                Config sinkConfigRewrited =
+                        sinkConfig.withValue(
+                                PLUGIN_INPUT.key(), ConfigValueFactory.fromAnyRef(identifier));
+                List<ConfigObject> transformConfigListRewrited = new ArrayList<>();
+
+                for (int i = 0; i < transformConfigList.size(); i++) {
+                    String leftIdentifier = String.format("default_dataset_%d", i);
+                    String rightIdentifier = String.format("default_dataset_%d", i + 1);
+                    if (i == 0) {
+                        sourceConfigRewrited =
+                                sourceConfig.withValue(
+                                        PLUGIN_OUTPUT.key(),
+                                        ConfigValueFactory.fromAnyRef(leftIdentifier));
+                    }
+                    if (i == transformConfigList.size() - 1) {
+                        sinkConfigRewrited =
+                                sinkConfig.withValue(
+                                        PLUGIN_INPUT.key(),
+                                        ConfigValueFactory.fromAnyRef(rightIdentifier));
+                    }
+                    Config transformConfigRewrited =
+                            transformConfigList
+                                    .get(i)
+                                    .withValue(
+                                            PLUGIN_INPUT.key(),
+                                            ConfigValueFactory.fromAnyRef(leftIdentifier))
+                                    .withValue(
+                                            PLUGIN_OUTPUT.key(),
+                                            ConfigValueFactory.fromAnyRef(rightIdentifier));
+                    transformConfigListRewrited.add(transformConfigRewrited.root());
+                }
+
+                Config configRewrited =
+                        config.withValue(
+                                        Constants.SOURCE,
+                                        ConfigValueFactory.fromIterable(
+                                                Collections.singletonList(
+                                                        sourceConfigRewrited.root())))
+                                .withValue(
+                                        Constants.TRANSFORM,
+                                        ConfigValueFactory.fromIterable(
+                                                transformConfigListRewrited))
+                                .withValue(
+                                        Constants.SINK,
+                                        ConfigValueFactory.fromIterable(
+                                                Collections.singletonList(
+                                                        sinkConfigRewrited.root())));
+                log.debug(
+                        "Rewrite config plugin_input/plugin_output: \n{}",
+                        mapToString(configDesensitization(configRewrited.root().unwrapped())));
+
+                return configRewrited;
+            }
+        }
+        return config;
     }
 }

@@ -220,7 +220,6 @@ tables_configs = [
 source {
   FakeSource {
     parallelism = 2
-    plugin_output = "fake"
     row.num = 16
     schema {
         table = "FakeDatabase.FakeTable"
@@ -274,7 +273,6 @@ If you only need to define the column, you can use fields to define the column, 
 source {
   FakeSource {
     parallelism = 2
-    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

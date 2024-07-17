@@ -394,7 +394,6 @@ source {
           file_format_type = "orc"
       }
     ]
-    plugin_output = "fake"
   }
 }
 
@@ -511,7 +510,6 @@ source {
           }
       }
     ]
-    plugin_output = "fake"
   }
 }
 

@@ -93,8 +93,6 @@ Assuming we want to use JsonPath to extract properties.
 ```json
 transform {
   JsonPath {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     columns = [
      {
         "src_field" = "data"
@@ -175,9 +173,6 @@ The JsonPath transform converts the values of seatunnel into an array,
 ```hocon
 transform {
   JsonPath {
-    plugin_input = "fake"
-    plugin_output = "fake1"
-  
     row_error_handle_way = FAIL
     columns = [
      {

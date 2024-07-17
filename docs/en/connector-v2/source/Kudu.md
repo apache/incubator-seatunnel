@@ -78,7 +78,6 @@ source {
   kudu {
     kudu_masters = "kudu-master:7051"
     table_name = "kudu_source_table"
-    plugin_output = "kudu"
     enable_kerberos = true
     kerberos_principal = "xx@xx.COM"
     kerberos_keytab = "xx.keytab"
@@ -89,12 +88,7 @@ transform {
 }
 
 sink {
-  console {
-    plugin_input = "kudu"
-  }
-
   kudu {
-    plugin_input = "kudu"
     kudu_masters = "kudu-master:7051"
     table_name = "kudu_sink_table"
     enable_kerberos = true
@@ -125,7 +119,6 @@ source {
     table_name = "kudu_source_table_2"
    }
    ]
-   plugin_output = "kudu"
 }
 }
 

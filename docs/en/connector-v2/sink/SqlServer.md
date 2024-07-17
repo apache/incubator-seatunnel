@@ -147,7 +147,6 @@ sink {
 
 ```
 Jdbc {
-  plugin_input = "customers"
   driver = com.microsoft.sqlserver.jdbc.SQLServerDriver
   url = "jdbc:sqlserver://localhost:1433;databaseName=column_type_test"
   user = SA

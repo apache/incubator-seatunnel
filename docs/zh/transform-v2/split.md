@@ -46,8 +46,6 @@
 ```
 transform {
   Split {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     separator = " "
     split_field = "name"
     output_fields = [first_name, second_name]

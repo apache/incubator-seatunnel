@@ -110,7 +110,6 @@ public abstract class ClassLoaderITBase extends SeaTunnelEngineContainer {
                                     + "\t\"source\": [\n"
                                     + "\t\t{\n"
                                     + "\t\t\t\"plugin_name\": \"FakeSource\",\n"
-                                    + "\t\t\t\"plugin_output\": \"fake\",\n"
                                     + "\t\t\t\"parallelism\": 10,\n"
                                     + "\t\t\t\"schema\": {\n"
                                     + "\t\t\t\t\"fields\": {\n"
@@ -124,8 +123,7 @@ public abstract class ClassLoaderITBase extends SeaTunnelEngineContainer {
                                     + "\t\"transform\": [],\n"
                                     + "\t\"sink\": [\n"
                                     + "\t\t{\n"
-                                    + "\t\t\t\"plugin_name\": \"InMemory\",\n"
-                                    + "\t\t\t\"plugin_input\": \"fake\"\n"
+                                    + "\t\t\t\"plugin_name\": \"InMemory\"\n"
                                     + "\t\t}\n"
                                     + "\t]\n"
                                     + "}")

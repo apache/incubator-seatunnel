@@ -89,7 +89,6 @@ env {
 
 source {
   TiDB-CDC {
-    plugin_output = "products_tidb_cdc"
     base-url = "jdbc:mysql://tidb0:4000/inventory"
     driver = "com.mysql.cj.jdbc.Driver"
     tikv.grpc.timeout_in_ms = 20000
@@ -106,7 +105,6 @@ transform {
 
 sink {
   jdbc {
-    plugin_input = "products_tidb_cdc"
     url = "jdbc:mysql://tidb0:4000/inventory"
     driver = "com.mysql.cj.jdbc.Driver"
     user = "root"

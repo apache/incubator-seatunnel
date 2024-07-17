@@ -17,8 +17,6 @@ env {
 
 source {
   MySQL-CDC {
-    plugin_output = "table1"
-
     base-url="jdbc:mysql://localhost:3306/test"
     "startup.mode"=INITIAL
     table-names=[
@@ -41,8 +39,6 @@ source {
 
 sink {
   Kafka {
-    plugin_input = "table1"
-
     bootstrap.servers = "localhost:9092"
     topic = "${topic}"
 

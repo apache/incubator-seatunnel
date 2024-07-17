@@ -21,8 +21,7 @@
           "age" : "int",
           "sex" : "boolean"
         }
-      },
-      "plugin_output" : "fake"
+      }
     }
   ],
   "transform" : [],
