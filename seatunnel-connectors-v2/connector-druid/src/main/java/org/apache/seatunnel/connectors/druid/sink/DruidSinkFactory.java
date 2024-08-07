@@ -18,6 +18,7 @@
 
 package org.apache.seatunnel.connectors.druid.sink;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.connector.TableSink;
@@ -44,7 +45,8 @@ public class DruidSinkFactory implements TableSinkFactory {
 
     @Override
     public TableSink createSink(TableSinkFactoryContext context) {
+        ReadonlyConfig readonlyConfig = context.getOptions();
         CatalogTable catalogTable = context.getCatalogTable();
-        return () -> new DruidSink(context.getOptions(), catalogTable);
+        return () -> new DruidSink(readonlyConfig, catalogTable);
     }
 }
