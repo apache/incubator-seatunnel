@@ -94,6 +94,12 @@ public class DamengCatalog extends AbstractJdbcCatalog {
     }
 
     @Override
+    protected String getTruncateTableSql(TablePath tablePath) throws CatalogException {
+        return String.format(
+                "TRUNCATE TABLE `%s`.`%s`;", tablePath.getSchemaName(), tablePath.getTableName());
+    }
+
+    @Override
     protected String getTableName(TablePath tablePath) {
         return tablePath.getSchemaAndTableName().toUpperCase();
     }
