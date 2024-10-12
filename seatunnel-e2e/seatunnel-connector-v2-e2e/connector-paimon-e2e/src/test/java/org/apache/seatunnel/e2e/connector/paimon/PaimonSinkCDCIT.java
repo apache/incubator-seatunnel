@@ -17,17 +17,7 @@
 
 package org.apache.seatunnel.e2e.connector.paimon;
 
-import org.apache.seatunnel.common.utils.FileUtils;
-import org.apache.seatunnel.common.utils.SeaTunnelException;
-import org.apache.seatunnel.core.starter.utils.CompressionUtils;
-import org.apache.seatunnel.e2e.common.TestResource;
-import org.apache.seatunnel.e2e.common.TestSuiteBase;
-import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
-import org.apache.seatunnel.e2e.common.container.EngineType;
-import org.apache.seatunnel.e2e.common.container.TestContainer;
-import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
-import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.paimon.CoreOptions;
@@ -47,14 +37,21 @@ import org.apache.paimon.types.DataField;
 import org.apache.paimon.types.DateType;
 import org.apache.paimon.types.TimestampType;
 import org.apache.paimon.utils.DateTimeUtils;
-
+import org.apache.seatunnel.common.utils.FileUtils;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.core.starter.utils.CompressionUtils;
+import org.apache.seatunnel.e2e.common.TestResource;
+import org.apache.seatunnel.e2e.common.TestSuiteBase;
+import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
+import org.apache.seatunnel.e2e.common.container.EngineType;
+import org.apache.seatunnel.e2e.common.container.TestContainer;
+import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestTemplate;
 import org.testcontainers.containers.Container;
-
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -601,14 +598,14 @@ public class PaimonSinkCDCIT extends TestSuiteBase implements TestResource {
                                 throw new SeaTunnelException(e);
                             }
                         }));
-        // stream job running 30 seconds
-        TimeUnit.SECONDS.sleep(30);
+        // stream job running 10 seconds
+        TimeUnit.SECONDS.sleep(10);
         // cancel stream job
         container.cancelJob(jobIds[1]);
         container.cancelJob(jobIds[2]);
         container.cancelJob(jobIds[0]);
         changeLogEnabled = true;
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(30);
         // copy paimon to local
         container.executeExtraCommands(containerExtendedFactory);
         List<PaimonRecord> paimonRecords1 = loadPaimonData("seatunnel_namespace", "st_test_sink");
@@ -629,14 +626,15 @@ public class PaimonSinkCDCIT extends TestSuiteBase implements TestResource {
                         "[+I, 2, Bb, 90, +U]",
                         "[+I, 3, C, 100, -D]"),
                 actual1);
-        List<PaimonRecord> paimonRecords2 = loadPaimonData("seatunnel_namespace", "st_test_lookup");
+        List<PaimonRecord> paimonRecords2 =
+                loadPaimonData("seatunnel_namespace", "st_test_lookup");
         List<String> actual2 =
                 paimonRecords2.stream()
                         .map(PaimonRecord::toChangeLogFull)
                         .collect(Collectors.toList());
         log.info("paimon records: {}", actual2);
         Assertions.assertEquals(2, actual2.size());
-        Assertions.assertEquals(Arrays.asList("[+U, 1, Aa, 200]", "[+I, 2, Bb, 90]"), actual2);
+        Assertions.assertEquals(Arrays.asList("[+I, 1, Aa, 200]", "[+I, 2, Bb, 90]"), actual2);
         changeLogEnabled = false;
         futures.forEach(future -> future.cancel(true));
     }
@@ -734,6 +732,7 @@ public class PaimonSinkCDCIT extends TestSuiteBase implements TestResource {
             throw new RuntimeException(e);
         }
     }
+
 
     private List<PaimonRecord> loadPaimonData(String dbName, String tbName) throws Exception {
         FileStoreTable table = (FileStoreTable) getTable(dbName, tbName);

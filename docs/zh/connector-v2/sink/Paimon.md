@@ -6,6 +6,15 @@
 
 Apache Paimon数据连接器。支持cdc写以及自动建表。
 
+### Seatunnmel与Paimon版本对照
+
+| Seatunnel Version | Paimon Version   |
+|-------------------|------------------|
+| 2.3.2  -  2.3.3   | 0.4-SNAPSHOT     |
+| 2.3.4             | 0.6-SNAPSHOT     |
+| 2.3.5  -  2.3.8   | 0.7.0-incubating |
+| 2.3.9             | 0.8.2            |
+
 ## 支持的数据源信息
 
 |  数据源   |    依赖     |                                   Maven                                   |

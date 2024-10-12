@@ -6,6 +6,15 @@
 
 Read data from Apache Paimon.
 
+### Comparison between Seatunnel and Paimon vsrsion
+
+| Seatunnel Version | Paimon Version   |
+|-------------------|------------------|
+| 2.3.2  -  2.3.3   | 0.4-SNAPSHOT     |
+| 2.3.4             | 0.6-SNAPSHOT     |
+| 2.3.5  -  2.3.8   | 0.7.0-incubating |
+| 2.3.9             | 0.8.2            |
+
 ## Key features
 
 - [x] [batch](../../concept/connector-v2-features.md)
