@@ -37,6 +37,7 @@ import org.apache.seatunnel.api.table.type.PrimitiveByteArrayType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormat;
 import org.apache.seatunnel.connectors.seatunnel.kafka.serialize.DefaultSeaTunnelRowSerializer;
 import org.apache.seatunnel.e2e.common.TestResource;
@@ -64,6 +65,7 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -291,7 +293,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                         DEFAULT_FORMAT,
                         DEFAULT_FIELD_DELIMITER,
                         null);
-        generateTestData(row -> serializer.serializeRow(row), 0, 100);
+        generateTestData(serializer::serializeRow, 0, 100);
         Container.ExecResult execResult =
                 container.executeJob(
                         "/kafka/kafkasource_format_error_handle_way_skip_to_console.conf");
@@ -308,11 +310,11 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                         DEFAULT_FORMAT,
                         DEFAULT_FIELD_DELIMITER,
                         null);
-        generateTestData(row -> serializer.serializeRow(row), 0, 100);
+        generateTestData(serializer::serializeRow, 0, 100);
         Container.ExecResult execResult =
                 container.executeJob(
                         "/kafka/kafkasource_format_error_handle_way_fail_to_console.conf");
-        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+        Assertions.assertEquals(1, execResult.getExitCode(), execResult.getStderr());
     }
 
     @TestTemplate
@@ -693,30 +695,11 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
         ProtobufDeserializationSchema deserializationSchema =
                 new ProtobufDeserializationSchema(catalogTable);
 
-        // Create serializer
         DefaultSeaTunnelRowSerializer serializer =
-                DefaultSeaTunnelRowSerializer.create(
-                        "test_protobuf_topic_fake_source",
-                        seaTunnelRowType,
-                        MessageFormat.PROTOBUF,
-                        DEFAULT_FIELD_DELIMITER,
-                        readonlyConfig);
+                getDefaultSeaTunnelRowSerializer(
+                        "test_protobuf_topic_fake_source", seaTunnelRowType, readonlyConfig);
 
-        // Produce records to Kafka
-        IntStream.range(0, 20)
-                .forEach(
-                        i -> {
-                            try {
-                                SeaTunnelRow originalRow = buildSeaTunnelRow();
-                                ProducerRecord<byte[], byte[]> producerRecord =
-                                        serializer.serializeRow(originalRow);
-                                producer.send(producerRecord).get();
-                            } catch (InterruptedException | ExecutionException e) {
-                                throw new RuntimeException("Error sending Kafka message", e);
-                            }
-                        });
-
-        producer.flush();
+        sendData(serializer);
 
         // Execute the job and validate
         Container.ExecResult execResult = container.executeJob(confFile);
@@ -767,6 +750,87 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                                     Assertions.assertArrayEquals(
                                             expectedPhoneNumbers, (String[]) row.getField(9)));
                 });
+    }
+
+    private @NotNull DefaultSeaTunnelRowSerializer getDefaultSeaTunnelRowSerializer(
+            String topic, SeaTunnelRowType seaTunnelRowType, ReadonlyConfig readonlyConfig) {
+        // Create serializer
+        DefaultSeaTunnelRowSerializer serializer =
+                DefaultSeaTunnelRowSerializer.create(
+                        topic,
+                        seaTunnelRowType,
+                        MessageFormat.PROTOBUF,
+                        DEFAULT_FIELD_DELIMITER,
+                        readonlyConfig);
+        return serializer;
+    }
+
+    private void sendData(DefaultSeaTunnelRowSerializer serializer) {
+        // Produce records to Kafka
+        IntStream.range(0, 20)
+                .forEach(
+                        i -> {
+                            try {
+                                SeaTunnelRow originalRow = buildSeaTunnelRow();
+                                ProducerRecord<byte[], byte[]> producerRecord =
+                                        serializer.serializeRow(originalRow);
+                                producer.send(producerRecord).get();
+                            } catch (InterruptedException | ExecutionException e) {
+                                throw new RuntimeException("Error sending Kafka message", e);
+                            }
+                        });
+
+        producer.flush();
+    }
+
+    @TestTemplate
+    public void testKafkaProtobufForTransformToAssert(TestContainer container)
+            throws IOException, InterruptedException, URISyntaxException {
+
+        String confFile = "/protobuf/kafka_protobuf_transform_to_assert.conf";
+        String path = getTestConfigFile(confFile);
+        Config config = ConfigFactory.parseFile(new File(path));
+        Config sinkConfig = config.getConfigList("source").get(0);
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(sinkConfig);
+        SeaTunnelRowType seaTunnelRowType = buildSeaTunnelRowType();
+
+        // Create serializer
+        DefaultSeaTunnelRowSerializer serializer =
+                getDefaultSeaTunnelRowSerializer(
+                        "test_protobuf_topic_transform_fake_source",
+                        seaTunnelRowType,
+                        readonlyConfig);
+
+        // Produce records to Kafka
+        sendData(serializer);
+
+        // Execute the job and validate
+        Container.ExecResult execResult = container.executeJob(confFile);
+        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+
+        try (KafkaConsumer<byte[], byte[]> consumer =
+                new KafkaConsumer<>(kafkaByteConsumerConfig())) {
+            consumer.subscribe(Arrays.asList("verify_protobuf_transform"));
+            Map<TopicPartition, Long> offsets =
+                    consumer.endOffsets(
+                            Arrays.asList(new TopicPartition("verify_protobuf_transform", 0)));
+            Long endOffset = offsets.entrySet().iterator().next().getValue();
+            Long lastProcessedOffset = -1L;
+
+            do {
+                ConsumerRecords<byte[], byte[]> records = consumer.poll(Duration.ofMillis(100));
+                for (ConsumerRecord<byte[], byte[]> record : records) {
+                    if (lastProcessedOffset < record.offset()) {
+                        String data = new String(record.value(), "UTF-8");
+                        ObjectNode jsonNodes = JsonUtils.parseObject(data);
+                        Assertions.assertEquals(jsonNodes.size(), 2);
+                        Assertions.assertEquals(jsonNodes.get("city").asText(), "city_value");
+                        Assertions.assertEquals(jsonNodes.get("c_string").asText(), "test data");
+                    }
+                    lastProcessedOffset = record.offset();
+                }
+            } while (lastProcessedOffset < endOffset - 1);
+        }
     }
 
     public static String getTestConfigFile(String configFile)

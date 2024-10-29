@@ -297,6 +297,7 @@ public class SapHanaTypeConverter implements TypeConverter<BasicTypeDefine> {
                 break;
             case HANA_ST_POINT:
             case HANA_ST_GEOMETRY:
+                builder.columnLength(typeDefine.getLength());
                 builder.dataType(PrimitiveByteArrayType.INSTANCE);
                 break;
             default:

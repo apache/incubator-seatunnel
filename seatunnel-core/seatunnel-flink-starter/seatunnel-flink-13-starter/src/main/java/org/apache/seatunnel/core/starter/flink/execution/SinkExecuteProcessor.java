@@ -98,7 +98,7 @@ public class SinkExecuteProcessor
             throws TaskExecuteException {
         SeaTunnelSinkPluginDiscovery sinkPluginDiscovery =
                 new SeaTunnelSinkPluginDiscovery(ADD_URL_TO_CLASSLOADER);
-        DataStreamTableInfo input = upstreamDataStreams.get(0);
+        DataStreamTableInfo input = upstreamDataStreams.get(upstreamDataStreams.size() - 1);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         for (int i = 0; i < plugins.size(); i++) {
             Config sinkConfig = pluginConfigs.get(i);

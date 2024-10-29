@@ -24,7 +24,7 @@ import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.api.table.converter.TypeConverter;
-import org.apache.seatunnel.connectors.doris.config.DorisOptions;
+import org.apache.seatunnel.connectors.doris.config.DorisSinkOptions;
 import org.apache.seatunnel.connectors.seatunnel.common.sql.template.SqlTemplate;
 
 import org.apache.commons.lang3.StringUtils;
@@ -155,7 +155,7 @@ public class DorisCatalogUtil {
                 SaveModePlaceHolder.ROWTYPE_PRIMARY_KEY.getPlaceHolder(),
                 primaryKey,
                 tablePath.getFullName(),
-                DorisOptions.SAVE_MODE_CREATE_TEMPLATE.key());
+                DorisSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key());
         template =
                 template.replaceAll(
                         SaveModePlaceHolder.ROWTYPE_PRIMARY_KEY.getReplacePlaceHolder(),
@@ -165,7 +165,7 @@ public class DorisCatalogUtil {
                 SaveModePlaceHolder.ROWTYPE_UNIQUE_KEY.getPlaceHolder(),
                 uniqueKey,
                 tablePath.getFullName(),
-                DorisOptions.SAVE_MODE_CREATE_TEMPLATE.key());
+                DorisSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key());
         template =
                 template.replaceAll(
                         SaveModePlaceHolder.ROWTYPE_UNIQUE_KEY.getReplacePlaceHolder(), uniqueKey);
@@ -174,7 +174,7 @@ public class DorisCatalogUtil {
                 SaveModePlaceHolder.ROWTYPE_DUPLICATE_KEY.getPlaceHolder(),
                 dupKey,
                 tablePath.getFullName(),
-                DorisOptions.SAVE_MODE_CREATE_TEMPLATE.key());
+                DorisSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key());
         template =
                 template.replaceAll(
                         SaveModePlaceHolder.ROWTYPE_DUPLICATE_KEY.getReplacePlaceHolder(), dupKey);
@@ -252,9 +252,12 @@ public class DorisCatalogUtil {
             Column column, TypeConverter<BasicTypeDefine> typeConverter) {
         checkNotNull(column, "The column is required.");
         return String.format(
-                "`%s` %s %s ",
+                "`%s` %s %s %s",
                 column.getName(),
                 typeConverter.reconvert(column).getColumnType(),
-                column.isNullable() ? "NULL" : "NOT NULL");
+                column.isNullable() ? "NULL" : "NOT NULL",
+                StringUtils.isEmpty(column.getComment())
+                        ? ""
+                        : "COMMENT '" + column.getComment() + "'");
     }
 }

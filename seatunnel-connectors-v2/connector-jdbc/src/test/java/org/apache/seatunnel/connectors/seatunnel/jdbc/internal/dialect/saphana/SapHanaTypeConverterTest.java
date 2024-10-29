@@ -383,6 +383,37 @@ public class SapHanaTypeConverterTest {
     }
 
     @Test
+    public void testConvertSpecialType() {
+        BasicTypeDefine<Object> typeDefine =
+                BasicTypeDefine.builder()
+                        .name("test")
+                        .columnType("ST_POINT")
+                        .length(8L)
+                        .dataType("ST_POINT")
+                        .build();
+        Column column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
+
+        Assertions.assertEquals(typeDefine.getName(), column.getName());
+        Assertions.assertEquals(PrimitiveByteArrayType.INSTANCE, column.getDataType());
+        Assertions.assertEquals(8, column.getColumnLength());
+        Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
+
+        typeDefine =
+                BasicTypeDefine.builder()
+                        .name("test")
+                        .columnType("ST_GEOMETRY")
+                        .length(8L)
+                        .dataType("ST_GEOMETRY")
+                        .build();
+        column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
+
+        Assertions.assertEquals(typeDefine.getName(), column.getName());
+        Assertions.assertEquals(PrimitiveByteArrayType.INSTANCE, column.getDataType());
+        Assertions.assertEquals(8, column.getColumnLength());
+        Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
+    }
+
+    @Test
     public void testReconvertUnsupported() {
         Column column =
                 PhysicalColumn.of(

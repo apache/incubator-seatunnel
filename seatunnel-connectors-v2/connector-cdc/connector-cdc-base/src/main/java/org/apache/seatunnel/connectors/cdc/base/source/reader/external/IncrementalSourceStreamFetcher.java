@@ -187,12 +187,15 @@ public class IncrementalSourceStreamFetcher implements Fetcher<SourceRecords, So
     @Override
     public void close() {
         try {
-            if (taskContext != null) {
-                taskContext.close();
-            }
+            // 1. try close the split task
             if (streamFetchTask != null) {
-                streamFetchTask.shutdown();
+                try {
+                    streamFetchTask.shutdown();
+                } catch (Exception e) {
+                    log.error("Close stream split read task error", e);
+                }
             }
+            // 2. close the fetcher thread
             if (executorService != null) {
                 executorService.shutdown();
                 if (!executorService.awaitTermination(
@@ -205,6 +208,11 @@ public class IncrementalSourceStreamFetcher implements Fetcher<SourceRecords, So
             }
         } catch (Exception e) {
             log.error("Close stream fetcher error", e);
+        } finally {
+            // 3. close the task context
+            if (taskContext != null) {
+                taskContext.close();
+            }
         }
     }
 
