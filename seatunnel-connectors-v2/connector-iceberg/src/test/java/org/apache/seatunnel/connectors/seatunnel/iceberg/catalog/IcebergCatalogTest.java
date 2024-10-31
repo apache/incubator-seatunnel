@@ -194,7 +194,8 @@ class IcebergCatalogTest {
         TableSchema schema = builder.build();
         HashMap<String, String> options = new HashMap<>();
         options.put("write.parquet.compression-codec", "zstd");
+        options.put("comment", "test");
         return CatalogTable.of(
-                tableIdentifier, schema, options, Collections.singletonList("dt_col"), "null");
+                tableIdentifier, schema, options, Collections.singletonList("dt_col"), "test");
     }
 }

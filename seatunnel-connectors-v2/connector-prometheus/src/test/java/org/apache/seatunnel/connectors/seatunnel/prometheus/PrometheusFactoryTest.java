@@ -15,21 +15,19 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.clickhouse.tool;
+package org.apache.seatunnel.connectors.seatunnel.prometheus;
 
-import java.io.Serializable;
+import org.apache.seatunnel.connectors.seatunnel.prometheus.sink.PrometheusSinkFactory;
+import org.apache.seatunnel.connectors.seatunnel.prometheus.source.PrometheusSourceFactory;
 
-public class IntHolder implements Serializable {
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-    private static final long serialVersionUID = -1L;
+public class PrometheusFactoryTest {
 
-    private int value;
-
-    public int getValue() {
-        return value;
-    }
-
-    public void setValue(int value) {
-        this.value = value;
+    @Test
+    void optionRule() {
+        Assertions.assertNotNull((new PrometheusSourceFactory()).optionRule());
+        Assertions.assertNotNull((new PrometheusSinkFactory()).optionRule());
     }
 }

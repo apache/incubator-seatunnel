@@ -12,7 +12,7 @@ sidebar_position: 7
 
 SeaTunnel Engine支持以下检查点存储类型:
 
-- HDFS (OSS,S3,HDFS,LocalFile)
+- HDFS (OSS,COS,S3,HDFS,LocalFile)
 - LocalFile (本地)，(已弃用: 使用HDFS(LocalFile)替代).
 
 我们使用微内核设计模式将检查点存储模块从引擎中分离出来。这允许用户实现他们自己的检查点存储模块。
@@ -70,6 +70,42 @@ seatunnel:
 有关Hadoop Credential Provider API的更多信息，请参见: [Credential Provider API](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html).
 
 阿里云OSS凭证提供程序实现见: [验证凭证提供](https://github.com/aliyun/aliyun-oss-java-sdk/tree/master/src/main/java/com/aliyun/oss/common/auth)
+
+#### COS
+
+腾讯云COS基于hdfs-file，所以你可以参考[Hadoop COS文档](https://hadoop.apache.org/docs/stable/hadoop-cos/cloud-storage/)来配置COS.
+
+除了与公共COS buckets交互之外，COS客户端需要与buckets交互所需的凭据。
+客户端支持多种身份验证机制，并且可以配置使用哪种机制及其使用顺序。也可以使用com.qcloud.cos.auth.COSCredentialsProvider的自定义实现。
+如果您使用SimpleCredentialsProvider(可以从腾讯云API密钥管理中获得)，它们包括一个secretId和一个secretKey。
+您可以这样配置:
+
+```yaml
+seatunnel:
+  engine:
+    checkpoint:
+      interval: 6000
+      timeout: 7000
+      storage:
+        type: hdfs
+        max-retained: 3
+        plugin-config:
+          storage.type: cos
+          cos.bucket: cosn://your-bucket
+          fs.cosn.credentials.provider: org.apache.hadoop.fs.cosn.auth.SimpleCredentialsProvider
+          fs.cosn.userinfo.secretId: your-secretId
+          fs.cosn.userinfo.secretKey: your-secretKey
+          fs.cosn.bucket.region: your-region
+```
+
+有关Hadoop Credential Provider API的更多信息，请参见: [Credential Provider API](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html).
+
+腾讯云COS相关配置可参考：[Tencent Hadoop-COS文档](https://doc.fincloud.tencent.cn/tcloud/Storage/COS/846365/hadoop)
+
+使用前请将如下jar添加到lib目录下：
+- [hadoop-cos-3.4.1.jar](https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-cos/3.4.1)
+- [cos_api-bundle-5.6.69.jar](https://mvnrepository.com/artifact/com.qcloud/cos_api-bundle/5.6.69)
+- [hadoop-shaded-guava-1.1.1.jar](https://mvnrepository.com/artifact/org.apache.hadoop.thirdparty/hadoop-shaded-guava/1.1.1)
 
 #### S3
 

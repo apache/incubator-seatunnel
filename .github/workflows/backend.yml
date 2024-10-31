@@ -285,21 +285,17 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: seatunnel-pr
-
       - name: Checkout website repo
         uses: actions/checkout@v3
         with:
           repository: apache/seatunnel-website
           path: seatunnel-website
-
       - name: Sync PR changes to website
         run: |
           bash seatunnel-pr/tools/documents/sync.sh seatunnel-pr seatunnel-website
-
       - uses: actions/setup-node@v2
         with:
           node-version: 16.19.0
-
       - name: Run docusaurus build
         run: |
           cd seatunnel-website
@@ -368,7 +364,7 @@ jobs:
       matrix:
         java: [ '8', '11' ]
         os: [ 'ubuntu-latest' ]
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java }}

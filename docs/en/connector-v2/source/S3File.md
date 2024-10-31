@@ -196,7 +196,7 @@ If you assign file type to `parquet` `orc`, schema option not required, connecto
 
 ## Options
 
-|              name               |  type   | required |                     default value                     | Description                                                                                                                                                                                                                                                                                                                                                                                                |
+| name                            | type    | required | default value                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                |
 |---------------------------------|---------|----------|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | path                            | string  | yes      | -                                                     | The s3 path that needs to be read can have sub paths, but the sub paths need to meet certain format requirements. Specific requirements can be referred to "parse_partition_from_path" option                                                                                                                                                                                                              |
 | file_format_type                | string  | yes      | -                                                     | File type, supported as the following file types: `text` `csv` `parquet` `orc` `json` `excel` `xml` `binary`                                                                                                                                                                                                                                                                                               |
@@ -220,11 +220,65 @@ If you assign file type to `parquet` `orc`, schema option not required, connecto
 | compress_codec                  | string  | no       | none                                                  |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | archive_compress_codec          | string  | no       | none                                                  |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | encoding                        | string  | no       | UTF-8                                                 |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| file_filter_pattern             | string  | no       |                                                       | Filter pattern, which used for filtering files.                                                                                                                                                                                                                                                                                                                                                            |
 | common-options                  |         | no       | -                                                     | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details.                                                                                                                                                                                                                                                                                         |
 
 ### delimiter/field_delimiter [string]
 
 **delimiter** parameter will deprecate after version 2.3.5, please use **field_delimiter** instead.
+
+### file_filter_pattern [string]
+
+Filter pattern, which used for filtering files.
+
+The pattern follows standard regular expressions. For details, please refer to https://en.wikipedia.org/wiki/Regular_expression.
+There are some examples.
+
+File Structure Example:
+```
+/data/seatunnel/20241001/report.txt
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+/data/seatunnel/20241012/logo.png
+```
+Matching Rules Example:
+
+**Example 1**: *Match all .txt files*，Regular Expression:
+```
+/data/seatunnel/20241001/.*\.txt
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241001/report.txt
+```
+**Example 2**: *Match all file starting with abc*，Regular Expression:
+```
+/data/seatunnel/20241002/abc.*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+```
+**Example 3**: *Match all file starting with abc，And the fourth character is either h or g*, the Regular Expression:
+```
+/data/seatunnel/20241007/abc[h,g].*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+```
+**Example 4**: *Match third level folders starting with 202410 and files ending with .csv*, the Regular Expression:
+```
+/data/seatunnel/202410\d*/.*\.csv
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+```
 
 ### compress_codec [string]
 
@@ -346,6 +400,33 @@ transform {
 
 sink {
   Console {}
+}
+```
+
+### Filter File
+
+```hocon
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  S3File {
+    path = "/seatunnel/json"
+    bucket = "s3a://seatunnel-test"
+    fs.s3a.endpoint="s3.cn-north-1.amazonaws.com.cn"
+    fs.s3a.aws.credentials.provider="com.amazonaws.auth.InstanceProfileCredentialsProvider"
+    file_format_type = "json"
+    read_columns = ["id", "name"]
+    // file example abcD2024.csv
+    file_filter_pattern = "abc[DX]*.*"
+  }
+}
+
+sink {
+  Console {
+  }
 }
 ```
 

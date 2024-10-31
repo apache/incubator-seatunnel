@@ -78,6 +78,7 @@ public class ClickhouseSourceSplitEnumerator
             assigned = subtaskId;
             context.assignSplit(subtaskId, new ClickhouseSourceSplit());
         }
+        context.signalNoMoreSplits(subtaskId);
     }
 
     @Override

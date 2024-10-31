@@ -101,6 +101,12 @@ public class ClickhouseIT extends TestSuiteBase implements TestResource {
         clearSinkTable();
     }
 
+    @TestTemplate
+    public void testSourceParallelism(TestContainer container) throws Exception {
+        Container.ExecResult execResult = container.executeJob("/clickhouse_to_console.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
     @BeforeAll
     @Override
     public void startUp() throws Exception {

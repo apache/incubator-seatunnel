@@ -232,10 +232,12 @@ public class JdbcCatalogUtils {
                                                 && columnsOfPath
                                                         .get(column.getName())
                                                         .getDataType()
+                                                        .getSqlType()
                                                         .equals(
                                                                 columnsOfQuery
                                                                         .get(column.getName())
-                                                                        .getDataType()))
+                                                                        .getDataType()
+                                                                        .getSqlType()))
                         .map(column -> columnsOfPath.get(column.getName()))
                         .collect(Collectors.toList());
         boolean schemaIncludeAllColumns = columnsOfMerge.size() == columnKeysOfQuery.size();

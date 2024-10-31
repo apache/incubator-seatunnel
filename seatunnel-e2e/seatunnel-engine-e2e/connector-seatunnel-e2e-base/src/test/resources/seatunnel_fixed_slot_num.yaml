@@ -18,6 +18,7 @@
 seatunnel:
   engine:
     history-job-expire-minutes: 1
+    classloader-cache-mode: false
     backup-count: 2
     queue-type: blockingqueue
     print-execution-info-interval: 10

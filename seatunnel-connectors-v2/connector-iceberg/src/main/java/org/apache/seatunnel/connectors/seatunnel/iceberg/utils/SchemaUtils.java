@@ -28,6 +28,7 @@ import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
 import org.apache.seatunnel.api.table.catalog.exception.DatabaseNotExistException;
 import org.apache.seatunnel.api.table.catalog.exception.TableAlreadyExistException;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
+import org.apache.seatunnel.connectors.seatunnel.iceberg.catalog.IcebergCatalog;
 import org.apache.seatunnel.connectors.seatunnel.iceberg.config.SinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.iceberg.data.IcebergTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.iceberg.sink.schema.SchemaAddColumn;
@@ -105,6 +106,8 @@ public class SchemaUtils {
         SinkConfig config = new SinkConfig(readonlyConfig);
         // build auto create table
         Map<String, String> options = new HashMap<>(table.getOptions());
+        Optional.ofNullable(table.getComment())
+                .map(e -> options.put(IcebergCatalog.PROPS_TABLE_COMMENT, e));
         // override
         options.putAll(config.getAutoCreateProps());
         return createTable(catalog, toIcebergTableIdentifier(tablePath), config, schema, options);

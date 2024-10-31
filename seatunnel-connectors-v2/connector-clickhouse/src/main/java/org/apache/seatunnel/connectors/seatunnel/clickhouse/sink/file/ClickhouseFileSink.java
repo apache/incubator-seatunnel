@@ -38,10 +38,10 @@ import org.apache.seatunnel.connectors.seatunnel.clickhouse.config.FileReaderOpt
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.exception.ClickhouseConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.shard.Shard;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.shard.ShardMetadata;
-import org.apache.seatunnel.connectors.seatunnel.clickhouse.sink.client.ClickhouseProxy;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.state.CKFileAggCommitInfo;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.state.CKFileCommitInfo;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.state.ClickhouseSinkState;
+import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.ClickhouseProxy;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.ClickhouseUtil;
 
 import com.clickhouse.client.ClickHouseNode;

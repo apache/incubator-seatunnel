@@ -126,7 +126,7 @@ public class SapHanaTypeConverterTest {
                         .build();
         Column column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(new DecimalType(38, 368), column.getDataType());
+        Assertions.assertEquals(new DecimalType(38, 0), column.getDataType());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
 
         typeDefine =
@@ -139,7 +139,7 @@ public class SapHanaTypeConverterTest {
                         .build();
         column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(new DecimalType(10, 368), column.getDataType());
+        Assertions.assertEquals(new DecimalType(10, 5), column.getDataType());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
     }
 
@@ -153,7 +153,7 @@ public class SapHanaTypeConverterTest {
                         .build();
         Column column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(new DecimalType(34, 6176), column.getDataType());
+        Assertions.assertEquals(new DecimalType(34, 0), column.getDataType());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
 
         BasicTypeDefine<Object> typeDefine2 =

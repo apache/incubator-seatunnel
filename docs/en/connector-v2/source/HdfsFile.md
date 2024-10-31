@@ -41,7 +41,7 @@ Read data from hdfs file system.
 
 ## Source Options
 
-|           Name            |  Type   | Required |       Default       |                                                                                                                                                                  Description                                                                                                                                                                  |
+| Name                      | Type    | Required | Default             | Description                                                                                                                                                                                                                                                                                                                                   |
 |---------------------------|---------|----------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | path                      | string  | yes      | -                   | The source file path.                                                                                                                                                                                                                                                                                                                         |
 | file_format_type          | string  | yes      | -                   | We supported as the following file types:`text` `csv` `parquet` `orc` `json` `excel` `xml` `binary`.Please note that, The final file name will end with the file_format's suffix, the suffix of the text file is `txt`.                                                                                                                       |
@@ -62,6 +62,7 @@ Read data from hdfs file system.
 | sheet_name                | string  | no       | -                   | Reader the sheet of the workbook,Only used when file_format is excel.                                                                                                                                                                                                                                                                         |
 | xml_row_tag               | string  | no       | -                   | Specifies the tag name of the data rows within the XML file, only used when file_format is xml.                                                                                                                                                                                                                                               |
 | xml_use_attr_format       | boolean | no       | -                   | Specifies whether to process data using the tag attribute format, only used when file_format is xml.                                                                                                                                                                                                                                          |
+| file_filter_pattern       | string  | no       |                     | Filter pattern, which used for filtering files.                                                                                                                                                                                                                                                                                               |
 | compress_codec            | string  | no       | none                | The compress codec of files                                                                                                                                                                                                                                                                                                                   |
 | archive_compress_codec    | string  | no       | none                |
 | encoding                  | string  | no       | UTF-8               |                                                                                                                                                                                                                                                                                                                                               |
@@ -70,6 +71,59 @@ Read data from hdfs file system.
 ### delimiter/field_delimiter [string]
 
 **delimiter** parameter will deprecate after version 2.3.5, please use **field_delimiter** instead.
+
+### file_filter_pattern [string]
+
+Filter pattern, which used for filtering files.
+
+The pattern follows standard regular expressions. For details, please refer to https://en.wikipedia.org/wiki/Regular_expression.
+There are some examples.
+
+File Structure Example:
+```
+/data/seatunnel/20241001/report.txt
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+/data/seatunnel/20241012/logo.png
+```
+Matching Rules Example:
+
+**Example 1**: *Match all .txt files*，Regular Expression:
+```
+/data/seatunnel/20241001/.*\.txt
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241001/report.txt
+```
+**Example 2**: *Match all file starting with abc*，Regular Expression:
+```
+/data/seatunnel/20241002/abc.*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+```
+**Example 3**: *Match all file starting with abc，And the fourth character is either h or g*, the Regular Expression:
+```
+/data/seatunnel/20241007/abc[h,g].*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+```
+**Example 4**: *Match third level folders starting with 202410 and files ending with .csv*, the Regular Expression:
+```
+/data/seatunnel/202410\d*/.*\.csv
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+```
 
 ### compress_codec [string]
 
@@ -146,3 +200,26 @@ sink {
 }
 ```
 
+### Filter File
+
+```hocon
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  HdfsFile {
+    path = "/apps/hive/demo/student"
+    file_format_type = "json"
+    fs.defaultFS = "hdfs://namenode001"
+    // file example abcD2024.csv
+    file_filter_pattern = "abc[DX]*.*"
+  }
+}
+
+sink {
+  Console {
+  }
+}
+```

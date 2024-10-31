@@ -85,7 +85,7 @@ public class SeaTunnelRowDebeziumDeserializationConverters implements Serializab
             if (field == null) {
                 row.setField(i, null);
             } else {
-                Object fieldValue = struct.get(fieldName);
+                Object fieldValue = struct.getWithoutDefault(fieldName);
                 Schema fieldSchema = field.schema();
                 Object convertedField =
                         SeaTunnelRowDebeziumDeserializationConverters.convertField(
@@ -494,11 +494,11 @@ public class SeaTunnelRowDebeziumDeserializationConverters implements Serializab
                 SeaTunnelRow row = new SeaTunnelRow(arity);
                 for (int i = 0; i < arity; i++) {
                     String fieldName = fieldNames[i];
-                    Object fieldValue = struct.get(fieldName);
                     Field field = schema.field(fieldName);
                     if (field == null) {
                         row.setField(i, null);
                     } else {
+                        Object fieldValue = struct.getWithoutDefault(fieldName);
                         Schema fieldSchema = field.schema();
                         Object convertedField =
                                 SeaTunnelRowDebeziumDeserializationConverters.convertField(

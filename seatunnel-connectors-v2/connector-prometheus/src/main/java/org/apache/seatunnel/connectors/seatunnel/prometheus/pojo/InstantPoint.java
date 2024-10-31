@@ -14,22 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.seatunnel.connectors.seatunnel.prometheus.pojo;
 
-package org.apache.seatunnel.connectors.seatunnel.clickhouse.sink;
+import lombok.Data;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import java.util.List;
+import java.util.Map;
 
-import java.io.Serializable;
+@Data
+public class InstantPoint {
+    private Map<String, String> metric;
 
-@AllArgsConstructor
-@Getter
-public class DistributedEngine implements Serializable {
-
-    private static final long serialVersionUID = -1L;
-    private String clusterName;
-    private String database;
-    private String table;
-    private String tableEngine;
-    private String tableDDL;
+    private List value;
 }

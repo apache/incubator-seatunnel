@@ -39,7 +39,7 @@
 
 ## 源选项
 
-|            名称             |   类型    | 是否必须 |      默认值       |                                                                                                                     描述                                                                                                                      |
+| 名称                        | 类型      | 是否必须 | 默认值            | 描述                                                                                                                                                                                                                                          |
 |---------------------------|---------|------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | path                      | string  | 是    | -              | 源文件路径。                                                                                                                                                                                                                                      |
 | file_format_type          | string  | 是    | -              | 我们支持以下文件类型：`text` `json` `csv` `orc` `parquet` `excel`。请注意，最终文件名将以文件格式的后缀结束，文本文件的后缀是 `txt`。                                                                                                                                                 |
@@ -55,6 +55,7 @@
 | kerberos_principal        | string  | 否    | -              | kerberos 的 principal。                                                                                                                                                                                                                       |
 | kerberos_keytab_path      | string  | 否    | -              | kerberos 的 keytab 路径。                                                                                                                                                                                                                       |
 | skip_header_row_number    | long    | 否    | 0              | 跳过前几行，但仅适用于 txt 和 csv。例如，设置如下：`skip_header_row_number = 2`。然后 Seatunnel 将跳过源文件中的前两行。                                                                                                                                                        |
+| file_filter_pattern       | string  | 否    | -              | 过滤模式，用于过滤文件。                                                                                                                                                                                                                                |
 | schema                    | config  | 否    | -              | 上游数据的模式字段。                                                                                                                                                                                                                                  |
 | sheet_name                | string  | 否    | -              | 读取工作簿的表格，仅在文件格式为 excel 时使用。                                                                                                                                                                                                                 |
 | compress_codec            | string  | 否    | none           | 文件的压缩编解码器。                                                                                                                                                                                                                                  |
@@ -63,6 +64,60 @@
 ### delimiter/field_delimiter [string]
 
 **delimiter** 参数在版本 2.3.5 后将被弃用，请改用 **field_delimiter**。
+
+### file_filter_pattern [string]
+
+过滤模式，用于过滤文件。
+
+这个过滤规则遵循正则表达式. 关于详情，请参考 https://en.wikipedia.org/wiki/Regular_expression 学习
+
+这里是一些例子.
+
+文件清单:
+```
+/data/seatunnel/20241001/report.txt
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+/data/seatunnel/20241012/logo.png
+```
+匹配规则:
+
+**例子 1**: *匹配所有txt为后缀名的文件*，匹配正则为:
+```
+/data/seatunnel/20241001/.*\.txt
+```
+匹配的结果是:
+```
+/data/seatunnel/20241001/report.txt
+```
+**例子 2**: *匹配所有文件名以abc开头的文件*，匹配正则为:
+```
+/data/seatunnel/20241002/abc.*
+```
+匹配的结果是:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+```
+**例子 3**: *匹配所有文件名以abc开头，并且文件第四个字母是 h 或者 g 的文件*, 匹配正则为:
+```
+/data/seatunnel/20241007/abc[h,g].*
+```
+匹配的结果是:
+```
+/data/seatunnel/20241007/abch202410.csv
+```
+**例子 4**: *匹配所有文件夹第三级以 202410 开头并且文件后缀名是.csv的文件*, 匹配正则为:
+```
+/data/seatunnel/202410\d*/.*\.csv
+```
+匹配的结果是:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+```
 
 ### compress_codec [string]
 
@@ -125,3 +180,25 @@ sink {
 }
 ```
 
+### Filter File
+
+```hocon
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  HdfsFile {
+    path = "/apps/hive/demo/student"
+    file_format_type = "json"
+    fs.defaultFS = "hdfs://namenode001"
+    file_filter_pattern = "abc[DX]*.*"
+  }
+}
+
+sink {
+  Console {
+  }
+}
+```

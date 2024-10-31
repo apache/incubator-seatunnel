@@ -21,6 +21,7 @@ seatunnel:
     backup-count: 2
     queue-type: blockingqueue
     print-execution-info-interval: 10
+    classloader-cache-mode: false
     slot-service:
       dynamic-slot: true
     checkpoint:

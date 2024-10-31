@@ -64,6 +64,10 @@ public class HadoopFileSystemProxy implements Serializable, Closeable {
         return execute(() -> getFileSystem().exists(new Path(filePath)));
     }
 
+    public boolean isFile(@NonNull String filePath) throws IOException {
+        return execute(() -> getFileSystem().getFileStatus(new Path(filePath)).isFile());
+    }
+
     public void createFile(@NonNull String filePath) throws IOException {
         execute(
                 () -> {

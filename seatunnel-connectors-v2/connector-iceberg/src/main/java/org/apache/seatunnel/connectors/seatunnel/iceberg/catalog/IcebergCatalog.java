@@ -63,6 +63,8 @@ import static org.apache.seatunnel.connectors.seatunnel.iceberg.utils.SchemaUtil
 
 @Slf4j
 public class IcebergCatalog implements Catalog {
+    public static final String PROPS_TABLE_COMMENT = "comment";
+
     private final String catalogName;
     private final ReadonlyConfig readonlyConfig;
     private final IcebergCatalogLoader icebergCatalogLoader;
@@ -257,14 +259,17 @@ public class IcebergCatalog implements Catalog {
                 icebergTable.spec().fields().stream()
                         .map(PartitionField::name)
                         .collect(Collectors.toList());
-
+        String comment =
+                Optional.ofNullable(icebergTable.properties())
+                        .map(e -> e.get(PROPS_TABLE_COMMENT))
+                        .orElse(null);
         return CatalogTable.of(
                 org.apache.seatunnel.api.table.catalog.TableIdentifier.of(
                         catalogName, tablePath.getDatabaseName(), tablePath.getTableName()),
                 builder.build(),
                 icebergTable.properties(),
                 partitionKeys,
-                null,
+                comment,
                 catalogName);
     }
 

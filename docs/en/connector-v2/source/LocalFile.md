@@ -43,7 +43,7 @@ If you use SeaTunnel Engine, It automatically integrated the hadoop jar when you
 
 ## Options
 
-|           name            |  type   | required |            default value             |
+| name                      | type    | required | default value                        |
 |---------------------------|---------|----------|--------------------------------------|
 | path                      | string  | yes      | -                                    |
 | file_format_type          | string  | yes      | -                                    |
@@ -58,7 +58,7 @@ If you use SeaTunnel Engine, It automatically integrated the hadoop jar when you
 | sheet_name                | string  | no       | -                                    |
 | xml_row_tag               | string  | no       | -                                    |
 | xml_use_attr_format       | boolean | no       | -                                    |
-| file_filter_pattern       | string  | no       | -                                    |
+| file_filter_pattern       | string  | no       |                                      |
 | compress_codec            | string  | no       | none                                 |
 | archive_compress_codec    | string  | no       | none                                 |
 | encoding                  | string  | no       | UTF-8                                |
@@ -254,6 +254,55 @@ Specifies Whether to process data using the tag attribute format.
 
 Filter pattern, which used for filtering files.
 
+The pattern follows standard regular expressions. For details, please refer to https://en.wikipedia.org/wiki/Regular_expression.
+There are some examples.
+
+File Structure Example:
+```
+/data/seatunnel/20241001/report.txt
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+/data/seatunnel/20241012/logo.png
+```
+Matching Rules Example:
+
+**Example 1**: *Match all .txt files*，Regular Expression:
+```
+/data/seatunnel/20241001/.*\.txt
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241001/report.txt
+```
+**Example 2**: *Match all file starting with abc*，Regular Expression:
+```
+/data/seatunnel/20241002/abc.*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+```
+**Example 3**: *Match all file starting with abc，And the fourth character is either h or g*, the Regular Expression:
+```
+/data/seatunnel/20241007/abc[h,g].*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+```
+**Example 4**: *Match third level folders starting with 202410 and files ending with .csv*, the Regular Expression:
+```
+/data/seatunnel/202410\d*/.*\.csv
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+```
+
 ### compress_codec [string]
 
 The compress codec of files and the details that supported as the following shown:
@@ -404,6 +453,30 @@ sink {
   }
 }
 
+```
+
+### Filter File
+
+```hocon
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  LocalFile {
+    path = "/data/seatunnel/"
+    file_format_type = "csv"
+    skip_header_row_number = 1
+    // file example abcD2024.csv
+    file_filter_pattern = "abc[DX]*.*"
+  }
+}
+
+sink {
+  Console {
+  }
+}
 ```
 
 ## Changelog

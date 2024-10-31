@@ -173,7 +173,7 @@ seatunnel:
 This configuration mainly solves the problem of resource leakage caused by continuously creating and attempting to destroy class loaders.
 If you encounter an exception related to metaspace space overflow, you can try to enable this configuration.
 In order to reduce the frequency of creating class loaders, after enabling this configuration, SeaTunnel will not try to release the corresponding class loader when the job is completed, so that it can be used by subsequent jobs, that is to say, when not too many types of Source/Sink connector are used in the running job, it is more effective.
-The default value is false.
+The default value is true.
 Example
 
 ```yaml

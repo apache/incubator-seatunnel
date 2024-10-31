@@ -53,6 +53,10 @@ public class RedisSinkFactory implements TableSinkFactory {
                         RedisConfig.KEY_PATTERN,
                         RedisConfig.FORMAT,
                         RedisConfig.EXPIRE,
+                        RedisConfig.SUPPORT_CUSTOM_KEY,
+                        RedisConfig.VALUE_FIELD,
+                        RedisConfig.HASH_KEY_FIELD,
+                        RedisConfig.HASH_VALUE_FIELD,
                         SinkCommonOptions.MULTI_TABLE_SINK_REPLICA)
                 .conditional(RedisConfig.MODE, RedisConfig.RedisMode.CLUSTER, RedisConfig.NODES)
                 .build();

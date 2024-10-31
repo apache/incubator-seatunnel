@@ -187,6 +187,25 @@ public class FtpFileIT extends TestSuiteBase implements TestResource {
         deleteFileFromContainer(homePath);
     }
 
+    @TestTemplate
+    public void testFtpToFtpForBinary(TestContainer container)
+            throws IOException, InterruptedException {
+
+        Container.ExecResult execResult = container.executeJob("/text/ftp_to_ftp_for_binary.conf");
+        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+
+        String homePath = "/home/vsftpd/seatunnel/uploads/seatunnel";
+        Assertions.assertEquals(1, getFileListFromContainer(homePath).size());
+
+        // Confirm data is written correctly
+        Container.ExecResult resultExecResult =
+                ftpContainer.execInContainer(
+                        "sh", "-c", "awk 'END {print NR}' " + homePath + "/e2e.txt");
+        Assertions.assertEquals("5", resultExecResult.getStdout().trim());
+
+        deleteFileFromContainer(homePath);
+    }
+
     private void assertJobExecution(TestContainer container, String configPath, List<String> params)
             throws IOException, InterruptedException {
         Container.ExecResult execResult = container.executeJob(configPath, params);

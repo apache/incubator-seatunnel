@@ -207,7 +207,7 @@ public class ServerConfigOptions {
     public static final Option<Boolean> CLASSLOADER_CACHE_MODE =
             Options.key("classloader-cache-mode")
                     .booleanType()
-                    .defaultValue(false)
+                    .defaultValue(true)
                     .withDescription(
                             "Whether to use classloader cache mode. With cache mode, all jobs share the same classloader if the jars are the same");
 
