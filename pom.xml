@@ -159,6 +159,7 @@
         <enableSourceJarCreation>true</enableSourceJarCreation>
 
         <hadoop-aws.version>3.1.4</hadoop-aws.version>
+        <arrow.version>15.0.1</arrow.version>
 
     </properties>
 
@@ -487,6 +488,17 @@
                 <version>${project.version}</version>
                 <classifier>optional</classifier>
                 <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.arrow</groupId>
+                <artifactId>arrow-vector</artifactId>
+                <version>${arrow.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.arrow</groupId>
+                <artifactId>arrow-memory-netty</artifactId>
+                <version>${arrow.version}</version>
             </dependency>
 
         </dependencies>
