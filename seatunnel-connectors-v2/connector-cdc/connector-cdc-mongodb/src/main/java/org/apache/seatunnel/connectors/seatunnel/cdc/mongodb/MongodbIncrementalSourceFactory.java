@@ -17,18 +17,20 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.mongodb;
 
+import org.apache.seatunnel.api.common.CommonOptions;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
 import org.apache.seatunnel.api.source.SourceSplit;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.CatalogTableUtil;
-import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.schema.TableSchemaOptions;
 import org.apache.seatunnel.api.table.connector.TableSource;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.cdc.base.option.SourceOptions;
 import org.apache.seatunnel.connectors.cdc.base.option.StartupMode;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mongodb.config.MongodbSourceOptions;
@@ -37,7 +39,9 @@ import org.apache.seatunnel.connectors.seatunnel.cdc.mongodb.exception.MongodbCo
 import com.google.auto.service.AutoService;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -56,8 +60,8 @@ public class MongodbIncrementalSourceFactory implements TableSourceFactory {
                 .required(
                         MongodbSourceOptions.HOSTS,
                         MongodbSourceOptions.DATABASE,
-                        MongodbSourceOptions.COLLECTION,
-                        TableSchemaOptions.SCHEMA)
+                        MongodbSourceOptions.COLLECTION)
+                .exclusive(TableSchemaOptions.SCHEMA, TableSchemaOptions.TABLE_CONFIGS)
                 .optional(
                         MongodbSourceOptions.USERNAME,
                         MongodbSourceOptions.PASSWORD,
@@ -86,30 +90,58 @@ public class MongodbIncrementalSourceFactory implements TableSourceFactory {
     public <T, SplitT extends SourceSplit, StateT extends Serializable>
             TableSource<T, SplitT, StateT> createSource(TableSourceFactoryContext context) {
         return () -> {
-            List<CatalogTable> configCatalog =
-                    CatalogTableUtil.getCatalogTables(
-                            context.getOptions(), context.getClassLoader());
+            List<CatalogTable> catalogTables = buildWithConfig(context.getOptions());
             List<String> collections = context.getOptions().get(MongodbSourceOptions.COLLECTION);
-            if (collections.size() != configCatalog.size()) {
+            if (collections.size() != catalogTables.size()) {
                 throw new MongodbConnectorException(
                         ILLEGAL_ARGUMENT,
                         "The number of collections must be equal to the number of schema tables");
             }
-            List<CatalogTable> catalogTables =
-                    IntStream.range(0, configCatalog.size())
-                            .mapToObj(
-                                    i -> {
-                                        CatalogTable catalogTable = configCatalog.get(i);
-                                        String fullName = collections.get(i);
-                                        TableIdentifier tableIdentifier =
-                                                TableIdentifier.of(
-                                                        catalogTable.getCatalogName(),
-                                                        TablePath.of(fullName));
-                                        return CatalogTable.of(tableIdentifier, catalogTable);
-                                    })
-                            .collect(Collectors.toList());
+            IntStream.range(0, catalogTables.size())
+                    .forEach(
+                            i -> {
+                                CatalogTable catalogTable = catalogTables.get(i);
+                                String collect = collections.get(i);
+                                String fullName = catalogTable.getTablePath().getFullName();
+                                if (fullName.equals(TablePath.DEFAULT.getFullName())
+                                        && !collections.contains(TablePath.DEFAULT.getFullName())) {
+                                    throw new MongodbConnectorException(
+                                            ILLEGAL_ARGUMENT,
+                                            "The `schema` or `table_configs` configuration is incorrect, Please check the configuration.");
+                                }
+                                if (!fullName.equals(collect)) {
+                                    throw new MongodbConnectorException(
+                                            ILLEGAL_ARGUMENT,
+                                            "The collection name must be consistent with the schema table name, please configure in the order of `collection`");
+                                }
+                            });
             return (SeaTunnelSource<T, SplitT, StateT>)
                     new MongodbIncrementalSource<>(context.getOptions(), catalogTables);
         };
+    }
+
+    private List<CatalogTable> buildWithConfig(ReadonlyConfig config) {
+        String factoryId = config.get(CommonOptions.PLUGIN_NAME).replace("-CDC", "");
+        Map<String, Object> schemaMap = config.get(TableSchemaOptions.SCHEMA);
+        if (schemaMap != null) {
+            if (schemaMap.isEmpty()) {
+                throw new SeaTunnelException("Schema config can not be empty");
+            }
+            CatalogTable catalogTable = CatalogTableUtil.buildWithConfig(factoryId, config);
+            return Collections.singletonList(catalogTable);
+        }
+        List<Map<String, Object>> schemaMaps = config.get(TableSchemaOptions.TABLE_CONFIGS);
+        if (schemaMaps != null) {
+            if (schemaMaps.isEmpty()) {
+                throw new SeaTunnelException("tables_configs can not be empty");
+            }
+            return schemaMaps.stream()
+                    .map(
+                            map ->
+                                    CatalogTableUtil.buildWithConfig(
+                                            factoryId, ReadonlyConfig.fromMap(map)))
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 }
