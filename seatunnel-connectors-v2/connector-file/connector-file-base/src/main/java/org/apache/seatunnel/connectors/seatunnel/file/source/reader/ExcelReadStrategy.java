@@ -17,8 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
-import com.alibaba.excel.EasyExcel;
-import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelReaderListener;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.seatunnel.api.source.Collector;
@@ -32,8 +30,10 @@ import org.apache.seatunnel.common.utils.DateUtils;
 import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
+import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelReaderListener;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 
+import com.alibaba.excel.EasyExcel;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
@@ -73,9 +73,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             throws IOException {
         String filePath = path.substring(5);
 
-
-        if (skipHeaderNumber > Integer.MAX_VALUE
-                || skipHeaderNumber < Integer.MIN_VALUE ) {
+        if (skipHeaderNumber > Integer.MAX_VALUE || skipHeaderNumber < Integer.MIN_VALUE) {
             throw new FileConnectorException(
                     CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
                     "Skip the number of rows exceeds the maximum or minimum limit of Sheet");

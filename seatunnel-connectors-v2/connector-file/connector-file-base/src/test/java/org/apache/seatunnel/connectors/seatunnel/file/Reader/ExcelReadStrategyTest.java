@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.Reader;
 
-import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
@@ -55,7 +54,7 @@ public class ExcelReadStrategyTest {
 
     @Test
     public void testExcelRead() throws IOException, URISyntaxException {
-//        testExcelRead("/excel/test_read_excel.xlsx");
+        //        testExcelRead("/excel/test_read_excel.xlsx");
         testExcelRead("/excel/test_read_excel_date_string.xlsx");
     }
 
@@ -128,7 +127,8 @@ public class ExcelReadStrategyTest {
 
     @Test
     public void testLargeExcelRead() throws IOException, URISyntaxException {
-        URL excelFile =  ExcelReadStrategyTest.class.getResource("/excel/test_read_excel_large.xlsx");
+        URL excelFile =
+                ExcelReadStrategyTest.class.getResource("/excel/test_read_excel_large.xlsx");
         URL conf = ExcelReadStrategyTest.class.getResource("/excel/test_read_excel_large.conf");
 
         Assertions.assertNotNull(excelFile);

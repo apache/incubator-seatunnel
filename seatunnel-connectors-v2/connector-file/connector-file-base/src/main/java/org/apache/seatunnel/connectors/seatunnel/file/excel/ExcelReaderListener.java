@@ -1,11 +1,8 @@
 package org.apache.seatunnel.connectors.seatunnel.file.excel;
 
-import com.alibaba.excel.context.AnalysisContext;
-import com.alibaba.excel.event.AnalysisEventListener;
-import com.alibaba.excel.exception.ExcelDataConvertException;
-import com.alibaba.excel.metadata.data.ReadCellData;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.seatunnel.shade.com.typesafe.config.Config;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
@@ -18,8 +15,13 @@ import org.apache.seatunnel.common.utils.DateUtils;
 import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
-import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.seatunnel.shade.com.typesafe.config.Config;
+
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
+import com.alibaba.excel.exception.ExcelDataConvertException;
+import com.alibaba.excel.metadata.data.ReadCellData;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -46,14 +48,11 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
     private final DateTimeUtils.Formatter datetimeFormat = YYYY_MM_DD_HH_MM_SS;
     private final TimeUtils.Formatter timeFormat = TimeUtils.Formatter.HH_MM_SS;
 
-
     protected Config pluginConfig;
 
     protected SeaTunnelRowType seaTunnelRowType;
 
     private SeaTunnelDataType<?>[] fieldTypes;
-
-
 
     Map<Integer, String> customHeaders = new HashMap<>();
 
@@ -63,7 +62,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
             InputStream inputStream,
             Map<String, String> partitionsMap,
             Config pluginConfig,
-            SeaTunnelRowType seaTunnelRowType ) {
+            SeaTunnelRowType seaTunnelRowType) {
         this.tableId = tableId;
         this.output = output;
         this.inputStream = inputStream;
@@ -74,12 +73,11 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         fieldTypes = seaTunnelRowType.getFieldTypes();
     }
 
-
     @Override
     public void invokeHead(Map<Integer, ReadCellData<?>> headMap, AnalysisContext context) {
         for (int i = 0; i < headMap.size(); i++) {
             String header = headMap.get(i).getStringValue();
-            if (!"null".equals(header) ) {
+            if (!"null".equals(header)) {
                 customHeaders.put(i, header);
             }
         }
@@ -116,7 +114,6 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                     excelDataConvertException.getCellData());
         }
     }
-
 
     @SneakyThrows
     private Object convert(Object field, SeaTunnelDataType<?> fieldType) {
@@ -186,5 +183,4 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                         "User defined schema validation failed");
         }
     }
-
 }
