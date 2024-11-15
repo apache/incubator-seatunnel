@@ -55,8 +55,6 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
 
 
 
-    /** 每隔5条存储数据库，实际使用中可以100条，然后清理list ，方便内存回收 */
-    // 存储自定义表头
     Map<Integer, String> customHeaders = new HashMap<>();
 
     public ExcelReaderListener(
@@ -74,19 +72,11 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         this.seaTunnelRowType = seaTunnelRowType;
 
         fieldTypes = seaTunnelRowType.getFieldTypes();
-
-
     }
 
-    /**
-     * 这里会一行行的返回头
-     *
-     * @param headMap
-     * @param context
-     */
+
     @Override
     public void invokeHead(Map<Integer, ReadCellData<?>> headMap, AnalysisContext context) {
-
         for (int i = 0; i < headMap.size(); i++) {
             String header = headMap.get(i).getStringValue();
             if (!"null".equals(header) ) {
@@ -113,13 +103,6 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         log.info("excel parsing completed");
     }
 
-    /**
-     * 在转换异常 获取其他异常下会调用本接口。抛出异常则停止读取。如果这里不抛出异常则 继续读取下一行。
-     *
-     * @param exception
-     * @param context
-     * @throws Exception
-     */
     @Override
     public void onException(Exception exception, AnalysisContext context) {
         log.error("cell parsing exception :{}", exception.getMessage());
