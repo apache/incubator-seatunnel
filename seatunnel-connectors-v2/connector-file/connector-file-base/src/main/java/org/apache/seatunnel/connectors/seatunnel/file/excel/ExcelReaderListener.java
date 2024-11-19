@@ -1,7 +1,5 @@
 package org.apache.seatunnel.connectors.seatunnel.file.excel;
 
-import com.alibaba.excel.metadata.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
@@ -18,9 +16,12 @@ import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 
+import org.apache.poi.ss.usermodel.DateUtil;
+
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.excel.exception.ExcelDataConvertException;
+import com.alibaba.excel.metadata.Cell;
 import com.alibaba.excel.metadata.data.ReadCellData;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,7 +97,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         Map<Integer, Cell> cellMap = context.readRowHolder().getCellMap();
 
         for (int i = 0; i < cellCount; i++) {
-            Object cell = convert(data.get(i),cellMap.get(i), fieldTypes[i]);
+            Object cell = convert(data.get(i), cellMap.get(i), fieldTypes[i]);
             seaTunnelRow.setField(i, cell);
         }
         seaTunnelRow.setTableId(tableId);
@@ -120,12 +124,12 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
     }
 
     @SneakyThrows
-    private Object convert(Object field, Cell  cellRaw, SeaTunnelDataType<?> fieldType) {
+    private Object convert(Object field, Cell cellRaw, SeaTunnelDataType<?> fieldType) {
         if (field == null) {
             return "";
         }
         SqlType sqlType = fieldType.getSqlType();
-        DateTimeFormatter dateTimeFormatter ;
+        DateTimeFormatter dateTimeFormatter;
         ReadCellData cellData = (ReadCellData) cellRaw;
 
         switch (sqlType) {
@@ -154,12 +158,14 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 if (field instanceof LocalDateTime) {
                     return ((LocalDateTime) field).toLocalDate();
                 }
-                if (cellData.getOriginalNumberValue()!= null) {
+                if (cellData.getOriginalNumberValue() != null) {
                     BigDecimal originalNumberValue = cellData.getOriginalNumberValue();
                     Date javaDate = DateUtil.getJavaDate(originalNumberValue.doubleValue());
                     return javaDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                }else {
-                    return LocalDate.parse( cellData.getStringValue(), DateUtils.matchDateFormatter((String) field));
+                } else {
+                    return LocalDate.parse(
+                            cellData.getStringValue(),
+                            DateUtils.matchDateFormatter((String) field));
                 }
             case TIME:
                 if (field instanceof LocalDateTime) {
@@ -170,11 +176,15 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
             case TIMESTAMP:
                 if (field instanceof LocalDateTime) {
                     return field;
-                }else if (cellData.getOriginalNumberValue()!= null) {
-                    Date date = DateUtil.getJavaDate(cellData.getOriginalNumberValue().doubleValue());
+                } else if (cellData.getOriginalNumberValue() != null) {
+                    Date date =
+                            DateUtil.getJavaDate(cellData.getOriginalNumberValue().doubleValue());
                     return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-                }else {
-                    return LocalDateTime.parse( (String) field, Objects.requireNonNull(DateTimeUtils.matchDateTimeFormatter((String) field)));
+                } else {
+                    return LocalDateTime.parse(
+                            (String) field,
+                            Objects.requireNonNull(
+                                    DateTimeUtils.matchDateTimeFormatter((String) field)));
                 }
             case NULL:
                 return "";
@@ -189,7 +199,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 int length = context.length;
                 SeaTunnelRow seaTunnelRow = new SeaTunnelRow(length);
                 for (int j = 0; j < length; j++) {
-                    seaTunnelRow.setField(j, convert(context[j],null, ft.getFieldType(j)));
+                    seaTunnelRow.setField(j, convert(context[j], null, ft.getFieldType(j)));
                 }
                 return seaTunnelRow;
             default:

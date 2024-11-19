@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
-
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
@@ -37,10 +36,7 @@ import java.util.Map;
 
 public class ExcelReadStrategy extends AbstractReadStrategy {
 
-
     private int[] indexes;
-
-
 
     @SneakyThrows
     @Override
@@ -64,13 +60,15 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
         }
 
-        EasyExcel.read(inputStream, new ExcelReaderListener(
-                        tableId,
-                        output,
+        EasyExcel.read(
                         inputStream,
-                        partitionsMap,
-                        pluginConfig,
-                        seaTunnelRowType))
+                        new ExcelReaderListener(
+                                tableId,
+                                output,
+                                inputStream,
+                                partitionsMap,
+                                pluginConfig,
+                                seaTunnelRowType))
                 .sheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
                 .headRowNumber((int) skipHeaderNumber)
                 .doReadSync();

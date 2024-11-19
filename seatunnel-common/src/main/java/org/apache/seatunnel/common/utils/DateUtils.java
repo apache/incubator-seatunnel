@@ -50,7 +50,7 @@ public class DateUtils {
                 Pattern.compile("\\d{4}/\\d{2}/\\d{2}"),
                 Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}"),
                 Pattern.compile("\\d{8}"),
-                    Pattern.compile("\\d{4}/\\d{1,2}/\\d{1,2}")
+                Pattern.compile("\\d{4}/\\d{1,2}/\\d{1,2}")
             };
 
     public static final Map<Pattern, DateTimeFormatter> DATE_FORMATTER_MAP = new HashMap();

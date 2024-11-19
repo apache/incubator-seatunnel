@@ -93,7 +93,6 @@ public class DateTimeUtils {
     public static final Map<Pattern, DateTimeFormatter> YYYY_M_D_HH_MM_15_FORMATTER_MAP =
             new LinkedHashMap<>();
 
-
     // all Pattern in this set
     public static Set<Map.Entry<Pattern, DateTimeFormatter>>
             YYYY_M_D_HH_MM_SS_17_FORMATTER_MAP_ENTRY_SET = new LinkedHashSet<>();
@@ -101,8 +100,6 @@ public class DateTimeUtils {
     // all Pattern in this set
     public static Set<Map.Entry<Pattern, DateTimeFormatter>>
             YYYY_M_D_HH_MM_15_FORMATTER_MAP_ENTRY_SET = new LinkedHashSet<>();
-
-
 
     // if the datatime string length is 19, find the DateTimeFormatter from this map
     public static final Map<Pattern, DateTimeFormatter> YYYY_MM_DD_HH_MM_SS_19_FORMATTER_MAP =
@@ -120,7 +117,6 @@ public class DateTimeUtils {
     // if the datatime string length is 14, use this formatter
     public static final DateTimeFormatter YYYY_MM_DD_HH_MM_SS_14_FORMATTER =
             DateTimeFormatter.ofPattern(Formatter.YYYY_MM_DD_HH_MM_SS_NO_SPLIT.value);
-
 
     static {
         YYYY_MM_DD_HH_MM_SS_19_FORMATTER_MAP.put(
@@ -156,7 +152,6 @@ public class DateTimeUtils {
                 Pattern.compile("\\d{4}-\\d{1,2}-\\d{1,2}\\s\\d{2}:\\d{2}"),
                 DateTimeFormatter.ofPattern(Formatter.YYYY_M_D_HH_MM_ISO8601.value));
 
-
         YYYY_M_D_HH_MM_SS_17_FORMATTER_MAP.put(
                 Pattern.compile("\\d{4}/\\d{1,2}/\\d{1,2}\\s\\d{2}:\\d{2}:\\d{2}"),
                 DateTimeFormatter.ofPattern(Formatter.YYYY_M_D_HH_MM_SS_SLASH.value));
@@ -164,7 +159,6 @@ public class DateTimeUtils {
         YYYY_M_D_HH_MM_SS_17_FORMATTER_MAP.put(
                 Pattern.compile("\\d{4}-\\d{1,2}-\\d{1,2}\\s\\d{2}:\\d{2}:\\d{2}"),
                 DateTimeFormatter.ofPattern(Formatter.YYYY_M_D_HH_MM_SS_ISO8601.value));
-
 
         YYYY_MM_DD_HH_MM_SS_M19_FORMATTER_MAP.put(
                 Pattern.compile("\\d{4}/\\d{2}/\\d{2}\\s\\d{2}:\\d{2}.*"),
@@ -216,7 +210,6 @@ public class DateTimeUtils {
 
         YYYY_M_D_HH_MM_15_FORMATTER_MAP_ENTRY_SET.addAll(
                 YYYY_M_D_HH_MM_15_FORMATTER_MAP.entrySet());
-
     }
 
     /**
@@ -241,14 +234,14 @@ public class DateTimeUtils {
                     return entry.getValue();
                 }
             }
-        }else if (dateTime.length() == 17 ||dateTime.length() == 18) {
+        } else if (dateTime.length() == 17 || dateTime.length() == 18) {
             for (Map.Entry<Pattern, DateTimeFormatter> entry :
                     YYYY_M_D_HH_MM_SS_17_FORMATTER_MAP_ENTRY_SET) {
                 if (entry.getKey().matcher(dateTime).matches()) {
                     return entry.getValue();
                 }
             }
-        }else if (dateTime.length() == 15||dateTime.length() == 16) {
+        } else if (dateTime.length() == 15 || dateTime.length() == 16) {
             for (Map.Entry<Pattern, DateTimeFormatter> entry :
                     YYYY_M_D_HH_MM_15_FORMATTER_MAP_ENTRY_SET) {
                 if (entry.getKey().matcher(dateTime).matches()) {
