@@ -24,9 +24,6 @@ import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
-import org.apache.seatunnel.common.utils.DateTimeUtils;
-import org.apache.seatunnel.common.utils.DateUtils;
-import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelReaderListener;
@@ -38,14 +35,8 @@ import lombok.SneakyThrows;
 import java.io.InputStream;
 import java.util.Map;
 
-import static org.apache.seatunnel.common.utils.DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS;
-
 public class ExcelReadStrategy extends AbstractReadStrategy {
 
-    private final DateUtils.Formatter dateFormat = DateUtils.Formatter.YYYY_MM_DD;
-
-    private final DateTimeUtils.Formatter datetimeFormat = YYYY_MM_DD_HH_MM_SS;
-    private final TimeUtils.Formatter timeFormat = TimeUtils.Formatter.HH_MM_SS;
 
     private int[] indexes;
 

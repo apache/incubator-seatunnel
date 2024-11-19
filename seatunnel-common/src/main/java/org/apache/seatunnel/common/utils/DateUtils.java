@@ -49,7 +49,8 @@ public class DateUtils {
                 Pattern.compile("\\d{4}年\\d{2}月\\d{2}日"),
                 Pattern.compile("\\d{4}/\\d{2}/\\d{2}"),
                 Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}"),
-                Pattern.compile("\\d{8}")
+                Pattern.compile("\\d{8}"),
+                    Pattern.compile("\\d{4}/\\d{1,2}/\\d{1,2}")
             };
 
     public static final Map<Pattern, DateTimeFormatter> DATE_FORMATTER_MAP = new HashMap();
@@ -116,6 +117,12 @@ public class DateUtils {
                                         .appendValue(DAY_OF_MONTH, 2)
                                         .toFormatter())
                         .toFormatter());
+        DATE_FORMATTER_MAP.put(
+                PATTERN_ARRAY[5],
+                new DateTimeFormatterBuilder()
+                        .parseCaseInsensitive()
+                        .append(DateTimeFormatter.ofPattern("yyyy/M/d"))
+                        .toFormatter());
     }
 
     /**
@@ -153,8 +160,10 @@ public class DateUtils {
 
     public enum Formatter {
         YYYY_MM_DD("yyyy-MM-dd"),
+        YYYY_M_DD("yyyy/M/dd"),
         YYYY_MM_DD_SPOT("yyyy.MM.dd"),
         YYYY_MM_DD_SLASH("yyyy/MM/dd");
+
         private final String value;
 
         Formatter(String value) {

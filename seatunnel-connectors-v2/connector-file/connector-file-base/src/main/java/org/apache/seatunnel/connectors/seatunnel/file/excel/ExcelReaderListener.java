@@ -1,5 +1,6 @@
 package org.apache.seatunnel.connectors.seatunnel.file.excel;
 
+import com.alibaba.excel.metadata.Cell;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
@@ -88,8 +89,10 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
 
         cellCount = data.size();
         SeaTunnelRow seaTunnelRow = new SeaTunnelRow(cellCount);
+        Map<Integer, Cell> cellMap = context.readRowHolder().getCellMap();
+
         for (int i = 0; i < cellCount; i++) {
-            Object cell = convert(data.get(i), fieldTypes[i]);
+            Object cell = convert(data.get(i),cellMap.get(i), fieldTypes[i]);
             seaTunnelRow.setField(i, cell);
         }
         seaTunnelRow.setTableId(tableId);
@@ -116,11 +119,14 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
     }
 
     @SneakyThrows
-    private Object convert(Object field, SeaTunnelDataType<?> fieldType) {
+    private Object convert(Object field, Cell  cellRaw, SeaTunnelDataType<?> fieldType) {
         if (field == null) {
             return "";
         }
         SqlType sqlType = fieldType.getSqlType();
+        DateTimeFormatter dateTimeFormatter ;
+        ReadCellData cellData = (ReadCellData) cellRaw;
+
         switch (sqlType) {
             case MAP:
             case ARRAY:
@@ -147,8 +153,13 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 if (field instanceof LocalDateTime) {
                     return ((LocalDateTime) field).toLocalDate();
                 }
+
+
+
+                dateTimeFormatter = DateUtils.matchDateFormatter((String) field);
                 return LocalDate.parse(
-                        (String) field, DateTimeFormatter.ofPattern(dateFormat.getValue()));
+                        (String) field,dateTimeFormatter);
+
             case TIME:
                 if (field instanceof LocalDateTime) {
                     return ((LocalDateTime) field).toLocalTime();
@@ -159,8 +170,18 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 if (field instanceof LocalDateTime) {
                     return field;
                 }
-                return LocalDateTime.parse(
-                        (String) field, DateTimeFormatter.ofPattern(datetimeFormat.getValue()));
+
+
+                String format = cellData.getDataFormatData().getFormat();
+
+//                dateTimeFormatter = DateTimeUtils.matchDateTimeFormatter((String) field);
+
+                return LocalDate.parse(
+                        (String) field,DateTimeFormatter.ofPattern(format));
+
+
+//                return LocalDateTime.parse(
+//                        (String) field, DateTimeFormatter.ofPattern("yyyy-M-d HH:mm"));
             case NULL:
                 return "";
             case BYTES:
@@ -174,7 +195,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 int length = context.length;
                 SeaTunnelRow seaTunnelRow = new SeaTunnelRow(length);
                 for (int j = 0; j < length; j++) {
-                    seaTunnelRow.setField(j, convert(context[j], ft.getFieldType(j)));
+                    seaTunnelRow.setField(j, convert(context[j],null, ft.getFieldType(j)));
                 }
                 return seaTunnelRow;
             default:
