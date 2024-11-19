@@ -55,7 +55,7 @@ public class ExcelReadStrategyTest {
     @Test
     public void testExcelRead() throws IOException, URISyntaxException {
         testExcelRead("/excel/test_read_excel.xlsx");
-//        testExcelRead("/excel/test_read_excel_date_string.xlsx");
+        testExcelRead("/excel/test_read_excel_date_string.xlsx");
     }
 
     private void testExcelRead(String filePath) throws IOException, URISyntaxException {

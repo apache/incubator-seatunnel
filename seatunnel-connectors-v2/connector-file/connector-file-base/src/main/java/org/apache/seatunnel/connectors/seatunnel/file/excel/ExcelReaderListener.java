@@ -1,6 +1,7 @@
 package org.apache.seatunnel.connectors.seatunnel.file.excel;
 
 import com.alibaba.excel.metadata.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
@@ -27,12 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.apache.seatunnel.common.utils.DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS;
 
@@ -153,13 +154,13 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 if (field instanceof LocalDateTime) {
                     return ((LocalDateTime) field).toLocalDate();
                 }
-
-
-
-                dateTimeFormatter = DateUtils.matchDateFormatter((String) field);
-                return LocalDate.parse(
-                        (String) field,dateTimeFormatter);
-
+                if (cellData.getOriginalNumberValue()!= null) {
+                    BigDecimal originalNumberValue = cellData.getOriginalNumberValue();
+                    Date javaDate = DateUtil.getJavaDate(originalNumberValue.doubleValue());
+                    return javaDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                }else {
+                    return LocalDate.parse( cellData.getStringValue(), DateUtils.matchDateFormatter((String) field));
+                }
             case TIME:
                 if (field instanceof LocalDateTime) {
                     return ((LocalDateTime) field).toLocalTime();
@@ -169,19 +170,12 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
             case TIMESTAMP:
                 if (field instanceof LocalDateTime) {
                     return field;
+                }else if (cellData.getOriginalNumberValue()!= null) {
+                    Date date = DateUtil.getJavaDate(cellData.getOriginalNumberValue().doubleValue());
+                    return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+                }else {
+                    return LocalDateTime.parse( (String) field, Objects.requireNonNull(DateTimeUtils.matchDateTimeFormatter((String) field)));
                 }
-
-
-                String format = cellData.getDataFormatData().getFormat();
-
-//                dateTimeFormatter = DateTimeUtils.matchDateTimeFormatter((String) field);
-
-                return LocalDate.parse(
-                        (String) field,DateTimeFormatter.ofPattern(format));
-
-
-//                return LocalDateTime.parse(
-//                        (String) field, DateTimeFormatter.ofPattern("yyyy-M-d HH:mm"));
             case NULL:
                 return "";
             case BYTES:

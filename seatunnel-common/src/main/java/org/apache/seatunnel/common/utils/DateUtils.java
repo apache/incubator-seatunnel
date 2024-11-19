@@ -160,7 +160,7 @@ public class DateUtils {
 
     public enum Formatter {
         YYYY_MM_DD("yyyy-MM-dd"),
-        YYYY_M_DD("yyyy/M/dd"),
+        YYYY_M_D("yyyy/M/d"),
         YYYY_MM_DD_SPOT("yyyy.MM.dd"),
         YYYY_MM_DD_SLASH("yyyy/MM/dd");
 
