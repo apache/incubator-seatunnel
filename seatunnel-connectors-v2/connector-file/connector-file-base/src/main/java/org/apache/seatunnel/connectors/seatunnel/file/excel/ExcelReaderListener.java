@@ -34,10 +34,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static org.apache.seatunnel.common.utils.DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS;
 
@@ -50,9 +47,14 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
     private int cellCount;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final DateUtils.Formatter dateFormat = DateUtils.Formatter.YYYY_MM_DD;
+    private DateUtils.Formatter dateFormat = DateUtils.Formatter.YYYY_MM_DD;
     private final DateTimeUtils.Formatter datetimeFormat = YYYY_MM_DD_HH_MM_SS;
     private final TimeUtils.Formatter timeFormat = TimeUtils.Formatter.HH_MM_SS;
+
+    private DateTimeFormatter dateFormatter;
+    private DateTimeFormatter dateTimeFormatter;
+    private DateTimeFormatter timeFormatter;
+
 
     protected Config pluginConfig;
 
@@ -77,6 +79,19 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         this.seaTunnelRowType = seaTunnelRowType;
 
         fieldTypes = seaTunnelRowType.getFieldTypes();
+
+         if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
+             String dateFormatString =pluginConfig.getString(BaseSourceConfigOptions.DATE_FORMAT.key());
+             dateFormatter = DateTimeFormatter.ofPattern(dateFormatString);
+         }
+         if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
+             String datetimeFormatString =pluginConfig.getString(BaseSourceConfigOptions.DATETIME_FORMAT.key());
+             dateTimeFormatter = DateTimeFormatter.ofPattern(datetimeFormatString);
+         }
+         if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
+             String timeFormatString =pluginConfig.getString(BaseSourceConfigOptions.TIME_FORMAT.key());
+             timeFormatter = DateTimeFormatter.ofPattern(timeFormatString);
+         }
     }
 
     @Override
@@ -129,7 +144,6 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
             return "";
         }
         SqlType sqlType = fieldType.getSqlType();
-        DateTimeFormatter dateTimeFormatter;
         ReadCellData cellData = (ReadCellData) cellRaw;
 
         switch (sqlType) {
@@ -157,8 +171,11 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
             case DATE:
                 if (field instanceof LocalDateTime) {
                     return ((LocalDateTime) field).toLocalDate();
-                }
-                if (cellData.getOriginalNumberValue() != null) {
+                }else  if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
+                    return LocalDate.parse(
+                            (String)field,
+                            dateFormatter);
+                }else if (cellData.getOriginalNumberValue() != null) {
                     BigDecimal originalNumberValue = cellData.getOriginalNumberValue();
                     Date javaDate = DateUtil.getJavaDate(originalNumberValue.doubleValue());
                     return javaDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -170,12 +187,21 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
             case TIME:
                 if (field instanceof LocalDateTime) {
                     return ((LocalDateTime) field).toLocalTime();
+                }else  if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
+                    return LocalTime.parse(
+                            (String)field,
+                            timeFormatter);
+                }else {
+                    return LocalTime.parse(
+                            (String) field, DateTimeFormatter.ofPattern(timeFormat.getValue()));
                 }
-                return LocalTime.parse(
-                        (String) field, DateTimeFormatter.ofPattern(timeFormat.getValue()));
             case TIMESTAMP:
                 if (field instanceof LocalDateTime) {
                     return field;
+                }else  if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
+                    return LocalDateTime.parse(
+                            (String)field,
+                            dateTimeFormatter);
                 } else if (cellData.getOriginalNumberValue() != null) {
                     Date date =
                             DateUtil.getJavaDate(cellData.getOriginalNumberValue().doubleValue());
