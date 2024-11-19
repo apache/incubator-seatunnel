@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
-import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
@@ -36,7 +35,6 @@ import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorExc
 import com.alibaba.excel.EasyExcel;
 import lombok.SneakyThrows;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -51,9 +49,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
 
     private int[] indexes;
 
-    private int cellCount;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @SneakyThrows
     @Override
@@ -69,9 +65,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             Collector<SeaTunnelRow> output,
             InputStream inputStream,
             Map<String, String> partitionsMap,
-            String currentFileName)
-            throws IOException {
-        String filePath = path.substring(5);
+            String currentFileName) {
 
         if (skipHeaderNumber > Integer.MAX_VALUE || skipHeaderNumber < Integer.MIN_VALUE) {
             throw new FileConnectorException(
@@ -79,15 +73,13 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
         }
 
-        EasyExcel.read(
-                        filePath,
-                        new ExcelReaderListener(
-                                tableId,
-                                output,
-                                inputStream,
-                                partitionsMap,
-                                pluginConfig,
-                                seaTunnelRowType))
+        EasyExcel.read(inputStream, new ExcelReaderListener(
+                        tableId,
+                        output,
+                        inputStream,
+                        partitionsMap,
+                        pluginConfig,
+                        seaTunnelRowType))
                 .sheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
                 .headRowNumber((int) skipHeaderNumber)
                 .doReadSync();
