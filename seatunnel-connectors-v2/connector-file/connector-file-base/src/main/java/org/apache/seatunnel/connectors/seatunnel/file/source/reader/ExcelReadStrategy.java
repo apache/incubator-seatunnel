@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
-import com.alibaba.excel.read.builder.ExcelReaderBuilder;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
@@ -30,6 +29,7 @@ import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelReaderListener;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.read.builder.ExcelReaderBuilder;
 import lombok.SneakyThrows;
 
 import java.io.InputStream;
@@ -61,23 +61,22 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
         }
 
-        ExcelReaderBuilder read = EasyExcel.read(
-                inputStream,
-                new ExcelReaderListener(
-                        tableId,
-                        output,
+        ExcelReaderBuilder read =
+                EasyExcel.read(
                         inputStream,
-                        partitionsMap,
-                        pluginConfig,
-                        seaTunnelRowType));
+                        new ExcelReaderListener(
+                                tableId,
+                                output,
+                                inputStream,
+                                partitionsMap,
+                                pluginConfig,
+                                seaTunnelRowType));
         if (pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())) {
             read.sheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
                     .headRowNumber((int) skipHeaderNumber)
                     .doReadSync();
         } else {
-            read.sheet(0)
-                    .headRowNumber((int) skipHeaderNumber)
-                    .doReadSync();
+            read.sheet(0).headRowNumber((int) skipHeaderNumber).doReadSync();
         }
     }
 
