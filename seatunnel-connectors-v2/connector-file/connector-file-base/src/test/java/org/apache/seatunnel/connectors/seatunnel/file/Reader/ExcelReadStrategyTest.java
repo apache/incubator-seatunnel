@@ -130,8 +130,7 @@ public class ExcelReadStrategyTest {
 
     @Test
     public void testLargeExcelRead() throws IOException, URISyntaxException {
-        URL excelFile =
-                ExcelReadStrategyTest.class.getResource("/excel/test_read_excel.xlsx");
+        URL excelFile = ExcelReadStrategyTest.class.getResource("/excel/test_read_excel.xlsx");
         URL conf = ExcelReadStrategyTest.class.getResource("/excel/test_read_excel.conf");
 
         Assertions.assertNotNull(excelFile);
