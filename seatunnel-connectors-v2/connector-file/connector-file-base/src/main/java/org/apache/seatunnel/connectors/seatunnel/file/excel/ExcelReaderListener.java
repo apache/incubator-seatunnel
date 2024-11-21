@@ -197,7 +197,8 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 } else if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
                     return LocalTime.parse((String) field, timeFormatter);
                 } else {
-                    return LocalTime.parse( (String) field, TimeUtils.matchTimeFormatter((String) field) );
+                    return LocalTime.parse(
+                            (String) field, TimeUtils.matchTimeFormatter((String) field));
                 }
             case TIMESTAMP:
                 if (field instanceof LocalDateTime) {

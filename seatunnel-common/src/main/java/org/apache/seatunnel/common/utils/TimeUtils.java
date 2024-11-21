@@ -40,8 +40,8 @@ public class TimeUtils {
 
     public static final Pattern[] PATTERN_ARRAY =
             new Pattern[] {
-                    Pattern.compile("\\d{2}:\\d{2}:\\d{2}"),
-                    Pattern.compile("\\d{2}:\\d{2}:\\d{2}.\\d{3}"),
+                Pattern.compile("\\d{2}:\\d{2}:\\d{2}"),
+                Pattern.compile("\\d{2}:\\d{2}:\\d{2}.\\d{3}"),
             };
 
     public static DateTimeFormatter matchTimeFormatter(String dateTime) {
@@ -55,13 +55,13 @@ public class TimeUtils {
     }
 
     public static final Map<Pattern, DateTimeFormatter> Time_FORMATTER_MAP = new HashMap();
+
     static {
         Time_FORMATTER_MAP.put(
-                PATTERN_ARRAY[0],DateTimeFormatter.ofPattern(Formatter.HH_MM_SS.value));
+                PATTERN_ARRAY[0], DateTimeFormatter.ofPattern(Formatter.HH_MM_SS.value));
         Time_FORMATTER_MAP.put(
-                PATTERN_ARRAY[1],DateTimeFormatter.ofPattern(Formatter.HH_MM_SS_SSS.value));
+                PATTERN_ARRAY[1], DateTimeFormatter.ofPattern(Formatter.HH_MM_SS_SSS.value));
     }
-
 
     public static String toString(LocalTime time, Formatter formatter) {
         return time.format(FORMATTER_MAP.get(formatter));
