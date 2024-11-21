@@ -148,7 +148,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         }
     }
 
-    @SneakyThrows
+    @SneakyThrows(JsonProcessingException.class)
     private Object convert(Object field, Cell cellRaw, SeaTunnelDataType<?> fieldType) {
         if (field == null) {
             return "";
