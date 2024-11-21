@@ -64,13 +64,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
         ExcelReaderBuilder read =
                 EasyExcel.read(
                         inputStream,
-                        new ExcelReaderListener(
-                                tableId,
-                                output,
-                                inputStream,
-                                partitionsMap,
-                                pluginConfig,
-                                seaTunnelRowType));
+                        new ExcelReaderListener(tableId, output, pluginConfig, seaTunnelRowType));
         if (pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())) {
             read.sheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
                     .headRowNumber((int) skipHeaderNumber)

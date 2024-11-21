@@ -21,6 +21,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class TimeUtils {
     private static final Map<Formatter, DateTimeFormatter> FORMATTER_MAP =
@@ -36,6 +37,31 @@ public class TimeUtils {
     public static LocalTime parse(String time, Formatter formatter) {
         return LocalTime.parse(time, FORMATTER_MAP.get(formatter));
     }
+
+    public static final Pattern[] PATTERN_ARRAY =
+            new Pattern[] {
+                    Pattern.compile("\\d{2}:\\d{2}:\\d{2}"),
+                    Pattern.compile("\\d{2}:\\d{2}:\\d{2}.\\d{3}"),
+            };
+
+    public static DateTimeFormatter matchTimeFormatter(String dateTime) {
+        for (int j = 0; j < PATTERN_ARRAY.length; j++) {
+            if (PATTERN_ARRAY[j].matcher(dateTime).matches()) {
+                DateTimeFormatter dateTimeFormatter = Time_FORMATTER_MAP.get(PATTERN_ARRAY[j]);
+                return dateTimeFormatter;
+            }
+        }
+        return null;
+    }
+
+    public static final Map<Pattern, DateTimeFormatter> Time_FORMATTER_MAP = new HashMap();
+    static {
+        Time_FORMATTER_MAP.put(
+                PATTERN_ARRAY[0],DateTimeFormatter.ofPattern(Formatter.HH_MM_SS.value));
+        Time_FORMATTER_MAP.put(
+                PATTERN_ARRAY[1],DateTimeFormatter.ofPattern(Formatter.HH_MM_SS_SSS.value));
+    }
+
 
     public static String toString(LocalTime time, Formatter formatter) {
         return time.format(FORMATTER_MAP.get(formatter));

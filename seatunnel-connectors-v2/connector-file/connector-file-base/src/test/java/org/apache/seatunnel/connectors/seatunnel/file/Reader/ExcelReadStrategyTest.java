@@ -129,9 +129,16 @@ public class ExcelReadStrategyTest {
     }
 
     @Test
-    public void testLargeExcelRead() throws IOException, URISyntaxException {
-        URL excelFile = ExcelReadStrategyTest.class.getResource("/excel/test_read_excel.xlsx");
-        URL conf = ExcelReadStrategyTest.class.getResource("/excel/test_read_excel.conf");
+    public void testEasyExcelRead() throws IOException, URISyntaxException {
+        testLargeExcelRead("/excel/test_read_excel.xlsx", "/excel/test_read_excel.conf", 1);
+        testLargeExcelRead("/excel/e2e.xls", "/excel/e2exls.conf", 5);
+        testLargeExcelRead("/excel/e2e.xlsx", "/excel/e2exls.conf", 5);
+    }
+
+    private void testLargeExcelRead(String filePath, String configPath, int rowCount)
+            throws IOException, URISyntaxException {
+        URL excelFile = ExcelReadStrategyTest.class.getResource(filePath);
+        URL conf = ExcelReadStrategyTest.class.getResource(configPath);
 
         Assertions.assertNotNull(excelFile);
         Assertions.assertNotNull(conf);
@@ -150,7 +157,7 @@ public class ExcelReadStrategyTest {
         TestCollector testCollector = new TestCollector();
         excelReadStrategy.read(fileNamesByPath.get(0), "", testCollector);
 
-        Assertions.assertEquals(testCollector.getRows().size(), 1);
+        Assertions.assertEquals(testCollector.getRows().size(), rowCount);
     }
 
     @Getter

@@ -43,7 +43,6 @@ import com.alibaba.excel.metadata.data.ReadCellData;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -56,20 +55,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.apache.seatunnel.common.utils.DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS;
-
 @Slf4j
 public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Object>> {
     private final String tableId;
     private final Collector<SeaTunnelRow> output;
-    private final InputStream inputStream;
-    private final Map<String, String> partitionsMap;
     private int cellCount;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private DateUtils.Formatter dateFormat = DateUtils.Formatter.YYYY_MM_DD;
-    private final DateTimeUtils.Formatter datetimeFormat = YYYY_MM_DD_HH_MM_SS;
-    private final TimeUtils.Formatter timeFormat = TimeUtils.Formatter.HH_MM_SS;
 
     private DateTimeFormatter dateFormatter;
     private DateTimeFormatter dateTimeFormatter;
@@ -86,14 +78,10 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
     public ExcelReaderListener(
             String tableId,
             Collector<SeaTunnelRow> output,
-            InputStream inputStream,
-            Map<String, String> partitionsMap,
             Config pluginConfig,
             SeaTunnelRowType seaTunnelRowType) {
         this.tableId = tableId;
         this.output = output;
-        this.inputStream = inputStream;
-        this.partitionsMap = partitionsMap;
         this.pluginConfig = pluginConfig;
         this.seaTunnelRowType = seaTunnelRowType;
 
@@ -195,14 +183,13 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                     return ((LocalDateTime) field).toLocalDate();
                 } else if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
                     return LocalDate.parse((String) field, dateFormatter);
-                } else if (cellData.getOriginalNumberValue() != null) {
+                } else if (cellData != null && cellData.getOriginalNumberValue() != null) {
                     BigDecimal originalNumberValue = cellData.getOriginalNumberValue();
                     Date javaDate = DateUtil.getJavaDate(originalNumberValue.doubleValue());
                     return javaDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                 } else {
                     return LocalDate.parse(
-                            cellData.getStringValue(),
-                            DateUtils.matchDateFormatter((String) field));
+                            (String) field, DateUtils.matchDateFormatter((String) field));
                 }
             case TIME:
                 if (field instanceof LocalDateTime) {
@@ -210,15 +197,14 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                 } else if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
                     return LocalTime.parse((String) field, timeFormatter);
                 } else {
-                    return LocalTime.parse(
-                            (String) field, DateTimeFormatter.ofPattern(timeFormat.getValue()));
+                    return LocalTime.parse( (String) field, TimeUtils.matchTimeFormatter((String) field) );
                 }
             case TIMESTAMP:
                 if (field instanceof LocalDateTime) {
                     return field;
                 } else if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
                     return LocalDateTime.parse((String) field, dateTimeFormatter);
-                } else if (cellData.getOriginalNumberValue() != null) {
+                } else if (cellData != null && cellData.getOriginalNumberValue() != null) {
                     Date date =
                             DateUtil.getJavaDate(cellData.getOriginalNumberValue().doubleValue());
                     return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
