@@ -44,6 +44,9 @@ import com.alibaba.excel.metadata.data.ReadCellData;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -57,7 +60,8 @@ import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
-public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Object>> {
+public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Object>>
+        implements Serializable, Closeable {
     private final String tableId;
     private final Collector<SeaTunnelRow> output;
     private int cellCount;
@@ -122,7 +126,8 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         SeaTunnelRow seaTunnelRow = new SeaTunnelRow(cellCount);
         Map<Integer, Cell> cellMap = context.readRowHolder().getCellMap();
 
-        for (int i = 0; i < cellCount; i++) {
+        Integer i = new Integer(0);
+        for (; i < cellCount; i++) {
             Object cell = convert(data.get(i), cellMap.get(i), fieldTypes[i]);
             seaTunnelRow.setField(i, cell);
         }
@@ -238,4 +243,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                         "User defined schema validation failed");
         }
     }
+
+    @Override
+    public void close() throws IOException {}
 }
