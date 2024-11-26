@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.excel;
 
-import com.alibaba.excel.enums.CellDataTypeEnum;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
@@ -38,6 +37,7 @@ import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorExc
 import org.apache.poi.ss.usermodel.DateUtil;
 
 import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.enums.CellDataTypeEnum;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.excel.exception.ExcelDataConvertException;
 import com.alibaba.excel.metadata.Cell;
@@ -127,9 +127,9 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         Map<Integer, Cell> cellMap = context.readRowHolder().getCellMap();
         int i = 0;
         for (; i < fieldTypes.length; i++) {
-            if (cellMap.get(i) == null){
+            if (cellMap.get(i) == null) {
                 seaTunnelRow.setField(i, null);
-            }else {
+            } else {
                 Object cell = convert(data.get(i), cellMap.get(i), fieldTypes[i]);
                 seaTunnelRow.setField(i, cell);
             }
@@ -161,14 +161,13 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
 
         if (cellData.getStringValue() != null) {
             return cellData.getStringValue();
-        }else if(cellData.getNumberValue() != null        ) {
+        } else if (cellData.getNumberValue() != null) {
             return cellData.getNumberValue().toString();
-        }else if (cellData.getOriginalNumberValue() != null) {
+        } else if (cellData.getOriginalNumberValue() != null) {
             return cellData.getOriginalNumberValue().toString();
-        }else if ( cellData.getBooleanValue() != null){
+        } else if (cellData.getBooleanValue() != null) {
             return cellData.getBooleanValue().toString();
-        }
-        else if ( cellData.getType()== CellDataTypeEnum.EMPTY){
+        } else if (cellData.getType() == CellDataTypeEnum.EMPTY) {
             return "";
         }
         return null;
@@ -177,10 +176,16 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
     @SneakyThrows(JsonProcessingException.class)
     private Object convert(Object field, Cell cellRaw, SeaTunnelDataType<?> fieldType) {
 
+        if (cellRaw == null && field == null) {
+            return null;
+        }
+        String cellValue = (String) field;
         ReadCellData cellData = (ReadCellData) cellRaw;
+        if (cellRaw != null) {
+            cellValue = getCellValue(cellData);
+        }
         SqlType sqlType = fieldType.getSqlType();
 
-        String cellValue = getCellValue(cellData);
         if (cellValue == null || (cellValue.equals("") && sqlType != SqlType.STRING)) {
             return null;
         }
@@ -208,9 +213,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
             case DECIMAL:
                 return BigDecimal.valueOf(Double.parseDouble(field.toString()));
             case DATE:
-                if (field instanceof LocalDateTime) {
-                    return ((LocalDateTime) field).toLocalDate();
-                } else if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
+                if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
                     return LocalDate.parse((String) field, dateFormatter);
                 } else if (cellData != null && cellData.getOriginalNumberValue() != null) {
                     BigDecimal originalNumberValue = cellData.getOriginalNumberValue();
@@ -218,21 +221,19 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                     return javaDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                 } else {
                     return LocalDate.parse(
-                            (String) field, DateUtils.matchDateFormatter((String) field));
+                            (String) field,
+                            Objects.requireNonNull(DateUtils.matchDateFormatter((String) field)));
                 }
             case TIME:
-                if (field instanceof LocalDateTime) {
-                    return ((LocalDateTime) field).toLocalTime();
-                } else if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
+                if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
                     return LocalTime.parse((String) field, timeFormatter);
                 } else {
                     return LocalTime.parse(
-                            (String) field, TimeUtils.matchTimeFormatter((String) field));
+                            (String) field,
+                            Objects.requireNonNull(TimeUtils.matchTimeFormatter((String) field)));
                 }
             case TIMESTAMP:
-                if (field instanceof LocalDateTime) {
-                    return field;
-                } else if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
+                if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
                     return LocalDateTime.parse((String) field, dateTimeFormatter);
                 } else if (cellData != null && cellData.getOriginalNumberValue() != null) {
                     Date date =
@@ -265,6 +266,10 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                         CommonErrorCodeDeprecated.UNSUPPORTED_DATA_TYPE,
                         "User defined schema validation failed");
         }
+    }
+
+    private <T> boolean isNullOrEmpty(T[] arr) {
+        return arr == null || arr.length == 0;
     }
 
     @Override
