@@ -97,9 +97,9 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
         }
 
-        if (pluginConfig.hasPath(BaseSourceConfigOptions.EXCEL_ENGIN.key())
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.EXCEL_ENGINE.key())
                 && pluginConfig
-                        .getString(BaseSourceConfigOptions.EXCEL_ENGIN.key())
+                        .getString(BaseSourceConfigOptions.EXCEL_ENGINE.key())
                         .equals("EasyExcel")) {
             ExcelReaderBuilder read =
                     EasyExcel.read(
