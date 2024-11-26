@@ -223,7 +223,7 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
                                     DateTimeUtils.matchDateTimeFormatter((String) field)));
                 }
             case NULL:
-                return "";
+                return null;
             case BYTES:
                 return field.toString().getBytes(StandardCharsets.UTF_8);
             case ROW:
