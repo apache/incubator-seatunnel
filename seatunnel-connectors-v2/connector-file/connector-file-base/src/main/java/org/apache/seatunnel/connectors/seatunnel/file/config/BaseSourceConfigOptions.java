@@ -144,8 +144,8 @@ public class BaseSourceConfigOptions {
             Options.key("excel_engin")
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("To switch excel read engin, POI or EasyExcel,only valid for excel files");
-
+                    .withDescription(
+                            "To switch excel read engin, POI or EasyExcel,only valid for excel files");
 
     public static final Option<String> XML_ROW_TAG =
             Options.key("xml_row_tag")
