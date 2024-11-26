@@ -35,16 +35,16 @@ import org.apache.seatunnel.common.utils.DateUtils;
 import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
+import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelReaderListener;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 
 import org.apache.poi.ss.usermodel.DateUtil;
 
 import org.dhatim.fastexcel.reader.Cell;
 import org.dhatim.fastexcel.reader.CellType;
-import org.dhatim.fastexcel.reader.ReadableWorkbook;
-import org.dhatim.fastexcel.reader.Row;
-import org.dhatim.fastexcel.reader.Sheet;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.read.builder.ExcelReaderBuilder;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
@@ -57,10 +57,8 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class ExcelReadStrategy extends AbstractReadStrategy {
 
@@ -97,78 +95,81 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
         }
 
-        fieldTypes = seaTunnelRowType.getFieldTypes();
-
-        ReadableWorkbook wb = new ReadableWorkbook(inputStream);
-        Sheet sheet;
-        if (pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())) {
-            sheet =
-                    wb.findSheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
-                            .get();
-        } else {
-            sheet = wb.getFirstSheet();
-        }
-        Stream<Row> rowStream = sheet.openStream();
-
-        //        long count = rowStream.count();
-
-        if (skipHeaderNumber > Integer.MAX_VALUE || skipHeaderNumber < Integer.MIN_VALUE
-        //                || count <= skipHeaderNumber
-        ) {
-            throw new FileConnectorException(
-                    CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
-                    "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
-        }
-
-        if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
-            String dateFormatString =
-                    pluginConfig.getString(BaseSourceConfigOptions.DATE_FORMAT.key());
-            dateFormatter = DateTimeFormatter.ofPattern(dateFormatString);
-        }
-        if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
-            String datetimeFormatString =
-                    pluginConfig.getString(BaseSourceConfigOptions.DATETIME_FORMAT.key());
-            dateTimeFormatter = DateTimeFormatter.ofPattern(datetimeFormatString);
-        }
-        if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
-            String timeFormatString =
-                    pluginConfig.getString(BaseSourceConfigOptions.TIME_FORMAT.key());
-            timeFormatter = DateTimeFormatter.ofPattern(timeFormatString);
-        }
-
-        Iterator<Row> iterator = rowStream.iterator();
-        int rowCounter = 0;
-        while (iterator.hasNext()) {
-            if (rowCounter++ < skipHeaderNumber) {
-                iterator.next();
-                continue;
-            }
-            Row row = iterator.next();
-            SeaTunnelRow seaTunnelRow = new SeaTunnelRow(row.getCellCount());
-            int cellCounter = 0;
-            Iterator<org.dhatim.fastexcel.reader.Cell> cellIterator = row.stream().iterator();
-            while (cellIterator.hasNext()) {
-                org.dhatim.fastexcel.reader.Cell cell = cellIterator.next();
-                Object cellCovert = convert(cell.getText(), cell, fieldTypes[cellCounter]);
-                seaTunnelRow.setField(cellCounter, cellCovert);
-                cellCounter++;
-            }
-            seaTunnelRow.setTableId(tableId);
-            output.collect(seaTunnelRow);
-        }
-
-        //        ExcelReaderBuilder read =
-        //                EasyExcel.read(
-        //                        inputStream,
-        //                        new ExcelReaderListener(tableId, output, pluginConfig,
-        // seaTunnelRowType));
+        //        fieldTypes = seaTunnelRowType.getFieldTypes();
+        //
+        //        ReadableWorkbook wb = new ReadableWorkbook(inputStream);
+        //        Sheet sheet;
         //        if (pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())) {
-        //            read.sheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
-        //                    .headRowNumber((int) skipHeaderNumber)
-        //                    .doReadSync();
+        //            sheet =
+        //
+        // wb.findSheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
+        //                            .get();
         //        } else {
-        //            read.sheet(0).headRowNumber((int) skipHeaderNumber).doReadSync();
+        //            sheet = wb.getFirstSheet();
         //        }
+        //        Stream<Row> rowStream = sheet.openStream();
+        //
+        //        //        long count = rowStream.count();
+        //
+        //        if (skipHeaderNumber > Integer.MAX_VALUE || skipHeaderNumber < Integer.MIN_VALUE
+        //        //                || count <= skipHeaderNumber
+        //        ) {
+        //            throw new FileConnectorException(
+        //                    CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
+        //                    "Skip the number of rows exceeds the maximum or minimum limit of
+        // Sheet");
+        //        }
+        //
+        //        if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
+        //            String dateFormatString =
+        //                    pluginConfig.getString(BaseSourceConfigOptions.DATE_FORMAT.key());
+        //            dateFormatter = DateTimeFormatter.ofPattern(dateFormatString);
+        //        }
+        //        if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
+        //            String datetimeFormatString =
+        //                    pluginConfig.getString(BaseSourceConfigOptions.DATETIME_FORMAT.key());
+        //            dateTimeFormatter = DateTimeFormatter.ofPattern(datetimeFormatString);
+        //        }
+        //        if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
+        //            String timeFormatString =
+        //                    pluginConfig.getString(BaseSourceConfigOptions.TIME_FORMAT.key());
+        //            timeFormatter = DateTimeFormatter.ofPattern(timeFormatString);
+        //        }
+        //
+        //        Iterator<Row> iterator = rowStream.iterator();
+        //        int rowCounter = 0;
+        //        while (iterator.hasNext()) {
+        //            if (rowCounter++ < skipHeaderNumber) {
+        //                iterator.next();
+        //                continue;
+        //            }
+        //            Row row = iterator.next();
+        //            SeaTunnelRow seaTunnelRow = new SeaTunnelRow(row.getCellCount());
+        //            int cellCounter = 0;
+        //            Iterator<org.dhatim.fastexcel.reader.Cell> cellIterator =
+        // row.stream().iterator();
+        //            while (cellIterator.hasNext()) {
+        //                org.dhatim.fastexcel.reader.Cell cell = cellIterator.next();
+        //                Object cellCovert = convert(cell.getText(), cell,
+        // fieldTypes[cellCounter]);
+        //                seaTunnelRow.setField(cellCounter, cellCovert);
+        //                cellCounter++;
+        //            }
+        //            seaTunnelRow.setTableId(tableId);
+        //            output.collect(seaTunnelRow);
+        //        }
+
+        ExcelReaderBuilder read =
+                EasyExcel.read(
+                        inputStream,
+                        new ExcelReaderListener(tableId, output, pluginConfig, seaTunnelRowType));
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())) {
+            read.sheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
+                    .headRowNumber((int) skipHeaderNumber)
+                    .doReadSync();
+        } else {
+            read.sheet(0).headRowNumber((int) skipHeaderNumber).doReadSync();
+        }
     }
 
     @SneakyThrows(JsonProcessingException.class)
@@ -205,7 +206,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     return ((LocalDateTime) field).toLocalDate();
                 } else if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
                     return LocalDate.parse((String) field, dateFormatter);
-                } else if ( cellRaw != null && cellRaw.getType() == CellType.NUMBER) {
+                } else if (cellRaw != null && cellRaw.getType() == CellType.NUMBER) {
                     double v = Double.parseDouble(cellRaw.getText());
                     Date javaDate = DateUtil.getJavaDate(v);
                     return javaDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -216,7 +217,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             case TIME:
                 if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
                     return LocalTime.parse((String) field, timeFormatter);
-                } else if ( cellRaw!= null && cellRaw.getType() == CellType.NUMBER) {
+                } else if (cellRaw != null && cellRaw.getType() == CellType.NUMBER) {
                     double v = Double.parseDouble(cellRaw.getText());
                     Date javaDate = DateUtil.getJavaDate(v);
                     LocalTime localTime =
@@ -232,7 +233,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             case TIMESTAMP:
                 if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
                     return LocalDateTime.parse((String) field, dateTimeFormatter);
-                } else if ( cellRaw != null && cellRaw.getType() == CellType.NUMBER) {
+                } else if (cellRaw != null && cellRaw.getType() == CellType.NUMBER) {
                     double v = Double.parseDouble(cellRaw.getText());
                     Date date = DateUtil.getJavaDate(v);
                     return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());

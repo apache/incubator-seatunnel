@@ -125,11 +125,12 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         cellCount = data.size();
         SeaTunnelRow seaTunnelRow = new SeaTunnelRow(cellCount);
         Map<Integer, Cell> cellMap = context.readRowHolder().getCellMap();
-
-        Integer i = new Integer(0);
-        for (; i < cellCount; i++) {
-            Object cell = convert(data.get(i), cellMap.get(i), fieldTypes[i]);
-            seaTunnelRow.setField(i, cell);
+        int i = 0;
+        synchronized (this) {
+            for (; i < cellCount; i++) {
+                Object cell = convert(data.get(i), cellMap.get(i), fieldTypes[i]);
+                seaTunnelRow.setField(i, cell);
+            }
         }
         seaTunnelRow.setTableId(tableId);
         output.collect(seaTunnelRow);
