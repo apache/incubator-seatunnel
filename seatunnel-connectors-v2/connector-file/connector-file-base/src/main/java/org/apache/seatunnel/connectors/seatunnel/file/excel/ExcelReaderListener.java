@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.excel;
 
+import com.alibaba.excel.enums.CellDataTypeEnum;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
@@ -121,13 +122,14 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
 
     @Override
     public void invoke(Map<Integer, Object> data, AnalysisContext context) {
-
         cellCount = data.size();
-        SeaTunnelRow seaTunnelRow = new SeaTunnelRow(cellCount);
+        SeaTunnelRow seaTunnelRow = new SeaTunnelRow(fieldTypes.length);
         Map<Integer, Cell> cellMap = context.readRowHolder().getCellMap();
         int i = 0;
-        synchronized (this) {
-            for (; i < cellCount; i++) {
+        for (; i < fieldTypes.length; i++) {
+            if (cellMap.get(i) == null){
+                seaTunnelRow.setField(i, null);
+            }else {
                 Object cell = convert(data.get(i), cellMap.get(i), fieldTypes[i]);
                 seaTunnelRow.setField(i, cell);
             }
@@ -155,34 +157,54 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
         }
     }
 
-    @SneakyThrows(JsonProcessingException.class)
-    private Object convert(Object field, Cell cellRaw, SeaTunnelDataType<?> fieldType) {
-        if (field == null) {
+    private String getCellValue(ReadCellData cellData) {
+
+        if (cellData.getStringValue() != null) {
+            return cellData.getStringValue();
+        }else if(cellData.getNumberValue() != null        ) {
+            return cellData.getNumberValue().toString();
+        }else if (cellData.getOriginalNumberValue() != null) {
+            return cellData.getOriginalNumberValue().toString();
+        }else if ( cellData.getBooleanValue() != null){
+            return cellData.getBooleanValue().toString();
+        }
+        else if ( cellData.getType()== CellDataTypeEnum.EMPTY){
             return "";
         }
-        SqlType sqlType = fieldType.getSqlType();
+        return null;
+    }
+
+    @SneakyThrows(JsonProcessingException.class)
+    private Object convert(Object field, Cell cellRaw, SeaTunnelDataType<?> fieldType) {
+
         ReadCellData cellData = (ReadCellData) cellRaw;
+        SqlType sqlType = fieldType.getSqlType();
+
+        String cellValue = getCellValue(cellData);
+        if (cellValue == null || (cellValue.equals("") && sqlType != SqlType.STRING)) {
+            return null;
+        }
 
         switch (sqlType) {
             case MAP:
             case ARRAY:
-                return objectMapper.readValue((String) field, fieldType.getTypeClass());
+                return objectMapper.readValue(cellValue, fieldType.getTypeClass());
             case STRING:
-                return String.valueOf(field);
+                return cellValue;
             case DOUBLE:
-                return Double.parseDouble(field.toString());
+                return Double.parseDouble(cellValue);
             case BOOLEAN:
-                return Boolean.parseBoolean(field.toString());
+                return Boolean.parseBoolean(cellValue);
             case FLOAT:
-                return (float) Double.parseDouble(field.toString());
+                return (float) Double.parseDouble(cellValue);
             case BIGINT:
-                return (long) Double.parseDouble(field.toString());
+                return (long) Double.parseDouble(cellValue);
             case INT:
-                return (int) Double.parseDouble(field.toString());
+                return (int) Double.parseDouble(cellValue);
             case TINYINT:
                 return (byte) Double.parseDouble(field.toString());
             case SMALLINT:
-                return (short) Double.parseDouble(field.toString());
+                return (short) Double.parseDouble(cellValue);
             case DECIMAL:
                 return BigDecimal.valueOf(Double.parseDouble(field.toString()));
             case DATE:
