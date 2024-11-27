@@ -140,12 +140,11 @@ public class BaseSourceConfigOptions {
                     .noDefaultValue()
                     .withDescription("To be read sheet name,only valid for excel files");
 
-    public static final Option<String> EXCEL_ENGINE =
+    public static final Option<ExcelEngine> EXCEL_ENGINE =
             Options.key("excel_engine")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(
-                            "To switch excel read engine, POI or EasyExcel,only valid for excel files");
+                    .objectType(ExcelEngine.class)
+                    .defaultValue(ExcelEngine.POI)
+                    .withDescription("To switch excel read engine,  e.g. POI , EasyExcel");
 
     public static final Option<String> XML_ROW_TAG =
             Options.key("xml_row_tag")

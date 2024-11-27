@@ -31,6 +31,7 @@ import org.apache.seatunnel.common.utils.DateTimeUtils;
 import org.apache.seatunnel.common.utils.DateUtils;
 import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.config.ExcelEngine;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelReaderListener;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
@@ -47,6 +48,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.read.builder.ExcelReaderBuilder;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,6 +64,7 @@ import java.util.stream.IntStream;
 
 import static org.apache.seatunnel.common.utils.DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS;
 
+@Slf4j
 public class ExcelReadStrategy extends AbstractReadStrategy {
 
     private int[] indexes;
@@ -100,7 +103,9 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
         if (pluginConfig.hasPath(BaseSourceConfigOptions.EXCEL_ENGINE.key())
                 && pluginConfig
                         .getString(BaseSourceConfigOptions.EXCEL_ENGINE.key())
-                        .equals("EasyExcel")) {
+                        .equals(ExcelEngine.EASY_EXCEL.getExcelEngineName())) {
+            log.info("Parsing Excel with EasyExcel");
+
             ExcelReaderBuilder read =
                     EasyExcel.read(
                             inputStream,
@@ -114,6 +119,8 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                 read.sheet(0).headRowNumber((int) skipHeaderNumber).doReadSync();
             }
         } else {
+            log.info("Parsing Excel with POI");
+
             Workbook workbook;
             if (currentFileName.endsWith(".xls")) {
                 workbook = new HSSFWorkbook(inputStream);
@@ -134,9 +141,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             cellCount = partitionsMap.isEmpty() ? cellCount : cellCount + partitionsMap.size();
             SeaTunnelDataType<?>[] fieldTypes = seaTunnelRowType.getFieldTypes();
             int rowCount = sheet.getPhysicalNumberOfRows();
-            if (skipHeaderNumber > Integer.MAX_VALUE
-                    || skipHeaderNumber < Integer.MIN_VALUE
-                    || skipHeaderNumber > rowCount) {
+            if (skipHeaderNumber > rowCount) {
                 throw new FileConnectorException(
                         CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
                         "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
