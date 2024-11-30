@@ -140,13 +140,15 @@ The compress codec of files and the details that supported as the following show
 
 The compress codec of archive files and the details that supported as the following shown:
 
-| archive_compress_codec | file_format        | archive_compress_suffix |
-|------------------------|--------------------|-------------------------|
+| archive_compress_codec | file_format       | archive_compress_suffix |
+|------------------------|-------------------|-------------------------|
 | ZIP                    | txt,json,excel,xml | .zip                    |
 | TAR                    | txt,json,excel,xml | .tar                    |
 | TAR_GZ                 | txt,json,excel,xml | .tar.gz                 |
-| GZ                     | txt,json,xml       | .gz                     |
+| GZ                     | txt,json,excel,xml | .gz                     |
 | NONE                   | all                | .*                      |
+
+Note: gz compressed excel file needs to compress the original file or specify the file suffix, such as e2e.xls ->e2e_test.xls.gz
 
 ### encoding [string]
 

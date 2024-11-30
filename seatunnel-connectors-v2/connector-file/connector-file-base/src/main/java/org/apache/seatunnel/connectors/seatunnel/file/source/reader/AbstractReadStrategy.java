@@ -34,6 +34,7 @@ import org.apache.seatunnel.connectors.seatunnel.file.hadoop.HadoopFileSystemPro
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipParameters;
 import org.apache.hadoop.fs.FileStatus;
 
 import lombok.extern.slf4j.Slf4j;
@@ -241,7 +242,15 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
             case GZ:
                 GzipCompressorInputStream gzipIn =
                         new GzipCompressorInputStream(hadoopFileSystemProxy.getInputStream(path));
-                readProcess(path, tableId, output, copyInputStream(gzipIn), partitionsMap, path);
+                GzipParameters parameters = gzipIn.getMetaData();
+                String fileName = parameters.getFilename();
+                if (fileName == null) {
+                    // remove file suffix
+                    // eg: excel need full compressed name
+                    fileName = path.substring(0, path.length() - 3);
+                }
+                readProcess(
+                        path, tableId, output, copyInputStream(gzipIn), partitionsMap, fileName);
                 break;
             case NONE:
                 readProcess(
