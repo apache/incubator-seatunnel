@@ -44,6 +44,7 @@ import java.io.InputStreamReader;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class ClickhouseFileSinkWriter
                     + "<access_management>1</access_management></default></users><profiles><default/></profiles><quotas><default/></quotas></yandex>";
     private static final String CLICKHOUSE_SETTINGS_KEY = "SETTINGS";
     private static final String CLICKHOUSE_DDL_SETTING_FILTER = "storage_policy";
-    private static final String CLICKHOUSE_LOCAL_FILE_SUFFIX = "/local_data.log";
+    private static final String CLICKHOUSE_LOCAL_FILE_SUFFIX = "/local_data.csv";
     private static final int UUID_LENGTH = 10;
     private final FileReaderOption readerOption;
     private final ShardRouter shardRouter;
@@ -317,6 +318,7 @@ public class ClickhouseFileSinkWriter
             command.add("--path");
             command.add("\"" + clickhouseLocalFile + "\"");
         }
+        removewLastLineBreak(clickhouseLocalFileTmpFile);
         log.info("Generate clickhouse local file command: {}", String.join(" ", command));
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", String.join(" ", command));
         Process start = processBuilder.start();
@@ -432,5 +434,16 @@ public class ClickhouseFileSinkWriter
                     createTableDDL.substring(0, p) + CLICKHOUSE_SETTINGS_KEY + filteredSetting;
         }
         return createTableDDL;
+    }
+
+    public static void removewLastLineBreak(String filePath) throws IOException {
+        List<String> lines = Files.readAllLines(Paths.get(filePath));
+        if (!lines.isEmpty()) {
+            String lastLine = lines.get(lines.size() - 1);
+            if (lastLine.trim().isEmpty() || lastLine.endsWith("\n")) {
+                lines.remove(lines.size() - 1);
+            }
+        }
+        Files.write(Paths.get(filePath), lines);
     }
 }
