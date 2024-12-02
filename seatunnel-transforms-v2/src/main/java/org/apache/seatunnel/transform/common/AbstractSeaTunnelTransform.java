@@ -17,7 +17,6 @@
 package org.apache.seatunnel.transform.common;
 
 import org.apache.seatunnel.api.common.CommonOptions;
-import org.apache.seatunnel.api.common.metrics.Counter;
 import org.apache.seatunnel.api.common.metrics.MetricNames;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
@@ -49,8 +48,6 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
     protected String outTableName;
 
     protected MetricsContext metricsContext;
-
-    protected volatile Counter counter;
 
     @Override
     public void open() {}
@@ -147,11 +144,6 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
         this.metricsContext = metricsContext;
     }
 
-    @Override
-    public MetricsContext getMetricsContext() {
-        return metricsContext;
-    }
-
     protected void hazelcastMetric(long size) {
         if (metricsContext != null) {
             metricsContext.counter(getTransformMetricName(this)).inc(size);
@@ -160,7 +152,7 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
 
     protected void hazelcastMetric() {
         if (metricsContext != null) {
-            metricsContext.counter(getTransformMetricName(this)).inc();
+            hazelcastMetric(1);
         }
     }
 

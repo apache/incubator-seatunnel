@@ -57,6 +57,4 @@ public interface SeaTunnelTransform<T>
     default void close() {}
 
     void setMetricsContext(MetricsContext metricsContext);
-
-    MetricsContext getMetricsContext();
 }
