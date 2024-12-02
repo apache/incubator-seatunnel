@@ -18,6 +18,8 @@
 package org.apache.seatunnel.connectors.doris.sink.writer;
 
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.common.utils.ExceptionUtils;
@@ -35,8 +37,6 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,10 +52,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
-import static com.google.common.base.Preconditions.checkState;
 import static org.apache.seatunnel.connectors.doris.sink.writer.LoadConstants.LINE_DELIMITER_DEFAULT;
 import static org.apache.seatunnel.connectors.doris.sink.writer.LoadConstants.LINE_DELIMITER_KEY;
 import static org.apache.seatunnel.connectors.doris.util.ResponseUtil.LABEL_EXIST_PATTERN;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkState;
 
 /** load data to doris. */
 @Slf4j

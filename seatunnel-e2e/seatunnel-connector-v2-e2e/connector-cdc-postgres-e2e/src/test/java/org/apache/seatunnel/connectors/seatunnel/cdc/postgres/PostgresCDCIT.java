@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.postgres;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfigFactory;
 import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config.PostgresSourceConfigFactory;
@@ -43,7 +45,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 
-import com.google.common.collect.Lists;
 import io.debezium.jdbc.JdbcConnection;
 import io.debezium.relational.TableId;
 import lombok.extern.slf4j.Slf4j;

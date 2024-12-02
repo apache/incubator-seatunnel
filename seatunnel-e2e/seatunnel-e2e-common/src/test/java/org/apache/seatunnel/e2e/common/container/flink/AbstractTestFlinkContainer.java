@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.e2e.common.container.flink;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.e2e.common.container.AbstractTestContainer;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
@@ -29,7 +31,6 @@ import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerLoggerFactory;
 
-import com.google.common.collect.Lists;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

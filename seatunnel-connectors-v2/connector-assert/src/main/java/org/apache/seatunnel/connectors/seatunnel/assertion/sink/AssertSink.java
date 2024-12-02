@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.assertion.sink;
 
+import org.apache.seatunnel.shade.com.google.common.base.Throwables;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigException;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
@@ -33,8 +34,6 @@ import org.apache.seatunnel.connectors.seatunnel.assertion.rule.AssertFieldRule;
 import org.apache.seatunnel.connectors.seatunnel.assertion.rule.AssertRuleParser;
 import org.apache.seatunnel.connectors.seatunnel.assertion.rule.AssertTableRule;
 import org.apache.seatunnel.connectors.seatunnel.common.sink.AbstractSimpleSink;
-
-import com.google.common.base.Throwables;
 
 import java.util.ArrayList;
 import java.util.List;

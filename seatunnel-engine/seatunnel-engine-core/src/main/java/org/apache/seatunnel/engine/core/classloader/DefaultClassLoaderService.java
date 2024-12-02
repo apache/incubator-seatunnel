@@ -17,11 +17,12 @@
 
 package org.apache.seatunnel.engine.core.classloader;
 
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+
 import org.apache.seatunnel.engine.common.exception.ClassLoaderErrorCode;
 import org.apache.seatunnel.engine.common.exception.ClassLoaderException;
 import org.apache.seatunnel.engine.common.loader.SeaTunnelChildFirstClassLoader;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hazelcast.spi.impl.NodeEngine;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import lombok.SneakyThrows;

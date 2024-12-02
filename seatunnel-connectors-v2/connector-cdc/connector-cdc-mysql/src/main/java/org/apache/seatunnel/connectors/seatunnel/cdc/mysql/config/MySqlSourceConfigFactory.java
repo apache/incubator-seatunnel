@@ -26,7 +26,7 @@ import io.debezium.connector.mysql.MySqlConnectorConfig;
 import java.util.Properties;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 /** A factory to initialize {@link MySqlSourceConfig}. */
 public class MySqlSourceConfigFactory extends JdbcSourceConfigFactory {

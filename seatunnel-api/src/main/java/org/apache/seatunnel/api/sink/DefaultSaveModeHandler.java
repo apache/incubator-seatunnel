@@ -43,6 +43,7 @@ public class DefaultSaveModeHandler implements SaveModeHandler {
     @Nonnull public TablePath tablePath;
     @Nullable public CatalogTable catalogTable;
     @Nullable public String customSql;
+    private boolean isNewTableCreated;
 
     public DefaultSaveModeHandler(
             SchemaSaveMode schemaSaveMode,
@@ -56,7 +57,18 @@ public class DefaultSaveModeHandler implements SaveModeHandler {
                 catalog,
                 catalogTable.getTableId().toTablePath(),
                 catalogTable,
-                customSql);
+                customSql,
+                false);
+    }
+
+    public DefaultSaveModeHandler(
+            SchemaSaveMode schemaSaveMode,
+            DataSaveMode dataSaveMode,
+            Catalog catalog,
+            TablePath tablePath,
+            CatalogTable catalogTable,
+            String customSql) {
+        this(schemaSaveMode, dataSaveMode, catalog, tablePath, catalogTable, customSql, false);
     }
 
     @Override
@@ -123,7 +135,7 @@ public class DefaultSaveModeHandler implements SaveModeHandler {
     }
 
     protected void keepSchemaDropData() {
-        if (tableExists()) {
+        if (tableExists() && !isNewTableCreated) {
             truncateTable();
         }
     }
@@ -187,6 +199,7 @@ public class DefaultSaveModeHandler implements SaveModeHandler {
     protected void createTable() {
         createTablePreCheck();
         catalog.createTable(tablePath, catalogTable, true);
+        isNewTableCreated = true;
     }
 
     protected void truncateTable() {

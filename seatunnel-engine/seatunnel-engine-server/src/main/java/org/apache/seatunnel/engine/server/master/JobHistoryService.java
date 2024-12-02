@@ -183,7 +183,7 @@ public class JobHistoryService {
     }
 
     public JobMetrics getJobMetrics(Long jobId) {
-        return finishedJobMetricsImap.getOrDefault(jobId, null);
+        return finishedJobMetricsImap.getOrDefault(jobId, JobMetrics.empty());
     }
 
     public JobDAGInfo getJobDAGInfo(Long jobId) {

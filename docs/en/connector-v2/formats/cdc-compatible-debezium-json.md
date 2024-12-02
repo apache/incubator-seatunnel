@@ -46,6 +46,7 @@ sink {
     plugin_input = "table1"
 
     bootstrap.servers = "localhost:9092"
+    topic = "${topic}"
 
     # compatible_debezium_json options
     format = compatible_debezium_json

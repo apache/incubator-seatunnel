@@ -71,8 +71,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.seatunnel.connectors.seatunnel.milvus.config.MilvusSinkConfig.CREATE_INDEX;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MilvusCatalog implements Catalog {

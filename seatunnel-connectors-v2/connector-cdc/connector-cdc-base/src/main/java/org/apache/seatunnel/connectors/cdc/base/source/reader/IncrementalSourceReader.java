@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkState;
 
 /**
  * The multi-parallel source reader for table snapshot phase from {@link SnapshotSplit} and then

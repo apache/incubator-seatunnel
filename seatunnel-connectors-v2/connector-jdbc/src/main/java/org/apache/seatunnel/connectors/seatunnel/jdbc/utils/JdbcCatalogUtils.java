@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.utils;
 
+import org.apache.seatunnel.shade.com.google.common.base.Strings;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
@@ -43,7 +45,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.source.JdbcSourceTable;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;

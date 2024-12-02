@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.server;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.common.metrics.MetricTags;
 import org.apache.seatunnel.api.event.Event;
 import org.apache.seatunnel.api.tracing.MDCExecutorService;
@@ -53,7 +55,6 @@ import org.apache.seatunnel.engine.server.task.operation.NotifyTaskStatusOperati
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import com.google.common.collect.Lists;
 import com.hazelcast.core.OperationTimeoutException;
 import com.hazelcast.instance.impl.NodeState;
 import com.hazelcast.internal.metrics.DynamicMetricsProvider;

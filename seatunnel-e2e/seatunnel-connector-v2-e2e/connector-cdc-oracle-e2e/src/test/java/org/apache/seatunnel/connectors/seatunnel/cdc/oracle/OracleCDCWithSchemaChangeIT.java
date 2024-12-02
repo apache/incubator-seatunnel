@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.oracle;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.TablePath;
@@ -49,7 +51,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerLoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.mysql.cj.MysqlType;
 import lombok.extern.slf4j.Slf4j;
 

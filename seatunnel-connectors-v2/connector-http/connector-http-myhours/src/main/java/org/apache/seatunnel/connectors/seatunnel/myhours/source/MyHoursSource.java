@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.myhours.source;
 
+import org.apache.seatunnel.shade.com.google.common.base.Strings;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode;
@@ -36,7 +37,6 @@ import org.apache.seatunnel.connectors.seatunnel.myhours.source.config.MyHoursSo
 import org.apache.seatunnel.connectors.seatunnel.myhours.source.exception.MyHoursConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.myhours.source.exception.MyHoursConnectorException;
 
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

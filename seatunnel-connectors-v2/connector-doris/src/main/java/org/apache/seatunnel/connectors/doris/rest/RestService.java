@@ -17,6 +17,11 @@
 
 package org.apache.seatunnel.connectors.doris.rest;
 
+import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonParseException;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonMappingException;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.connectors.doris.config.DorisSourceConfig;
 import org.apache.seatunnel.connectors.doris.config.DorisSourceOptions;
@@ -38,10 +43,6 @@ import org.apache.http.entity.StringEntity;
 
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
