@@ -189,7 +189,7 @@ source {
 ```
 
 ## Changelog
-If you want to read the changelog of the Paimon table, first set the `changelog-producer` for the Paimon source table and then use the Seatunmel stream task to read it.
+If you want to read the changelog of the Paimon table, first set the `changelog-producer` for the Paimon source table and then use the SeaTunnel stream task to read it.
 
 ### Note:
 
