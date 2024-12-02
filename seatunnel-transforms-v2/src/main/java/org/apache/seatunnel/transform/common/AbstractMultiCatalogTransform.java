@@ -96,11 +96,6 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
         this.metricsContext = metricsContext;
     }
 
-    @Override
-    public MetricsContext getMetricsContext() {
-        return metricsContext;
-    }
-
     protected abstract SeaTunnelTransform<SeaTunnelRow> buildTransform(
             CatalogTable inputCatalogTable, ReadonlyConfig config);
 
