@@ -144,7 +144,7 @@ public class DefaultClassLoaderService implements ClassLoaderService {
 
     /** Only for test */
     @VisibleForTesting
-    Optional<ClassLoader> queryClassLoaderById(long jobId, Collection<URL> jars) {
+    public Optional<ClassLoader> queryClassLoaderById(long jobId, Collection<URL> jars) {
         if (cacheMode) {
             // with cache mode, all jobs share the same classloader if the jars are the same
             jobId = 1L;
@@ -162,7 +162,7 @@ public class DefaultClassLoaderService implements ClassLoaderService {
 
     /** Only for test */
     @VisibleForTesting
-    int queryClassLoaderReferenceCount(long jobId, Collection<URL> jars) {
+    public int queryClassLoaderReferenceCount(long jobId, Collection<URL> jars) {
         if (cacheMode) {
             // with cache mode, all jobs share the same classloader if the jars are the same
             jobId = 1L;
@@ -180,7 +180,7 @@ public class DefaultClassLoaderService implements ClassLoaderService {
 
     /** Only for test */
     @VisibleForTesting
-    int queryClassLoaderCount() {
+    public int queryClassLoaderCount() {
         AtomicInteger count = new AtomicInteger();
         classLoaderCache.values().forEach(map -> count.addAndGet(map.size()));
         return count.get();

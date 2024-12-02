@@ -17,24 +17,15 @@
 
 package org.apache.seatunnel.api.common;
 
-import org.apache.seatunnel.api.table.catalog.TableSchema;
-import org.apache.seatunnel.common.config.Common;
 import org.apache.seatunnel.common.constants.JobMode;
 
 import java.io.Serializable;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-/** This class is used to store the context of the job. e.g. the table schema, catalog...etc. */
+/** This class is used to store the context of the job. e.g. the job id, job mode ...etc. */
 public final class JobContext implements Serializable {
 
     private static final long serialVersionUID = -1L;
-
-    // tableName -> tableSchema
-    private final Map<String, TableSchema> tableSchemaMap =
-            new ConcurrentHashMap<>(Common.COLLECTION_SIZE);
 
     private JobMode jobMode;
 
@@ -46,26 +37,6 @@ public final class JobContext implements Serializable {
 
     public JobContext(Long jobId) {
         this.jobId = jobId + "";
-    }
-
-    /**
-     * Put table schema.
-     *
-     * @param tableName table name
-     * @param tableSchema table schema
-     */
-    public void addSchema(String tableName, TableSchema tableSchema) {
-        tableSchemaMap.put(tableName, tableSchema);
-    }
-
-    /**
-     * Get table schema.
-     *
-     * @param tableName table name.
-     * @return table schema.
-     */
-    public Optional<TableSchema> getSchema(String tableName) {
-        return Optional.ofNullable(tableSchemaMap.get(tableName));
     }
 
     public JobContext setJobMode(JobMode jobMode) {
