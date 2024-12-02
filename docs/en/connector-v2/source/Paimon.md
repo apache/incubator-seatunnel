@@ -191,7 +191,7 @@ source {
 ## Changelog
 If you want to read the changelog of the Paimon table, first set the `changelog-producer` for the Paimon source table and then use the SeaTunnel stream task to read it.
 
-### Note:
+### Note
 
 Currently, batch reads are always the latest snapshot read, so to read full changelog data, you need to use stream reads and start stream reads before writing data to the Piamon table, and to ensure order, the parallelism of the stream read task should be set to 1.
 
