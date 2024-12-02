@@ -247,7 +247,16 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
                 if (fileName == null) {
                     // remove file suffix
                     // eg: excel need full compressed name
-                    fileName = path.substring(0, path.length() - 3);
+                    if (fileFormat == FileFormat.EXCEL) {
+                        if (path.endsWith(".gz")) {
+                            fileName = path.substring(0, path.length() - 3);
+                        } else {
+                            throw new IllegalArgumentException(
+                                    "Excel file must have a .gz extension. File: " + path);
+                        }
+                    } else {
+                        fileName = path;
+                    }
                 }
                 readProcess(
                         path, tableId, output, copyInputStream(gzipIn), partitionsMap, fileName);
