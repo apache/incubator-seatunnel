@@ -24,6 +24,7 @@ import org.apache.seatunnel.api.source.SeaTunnelSource;
 import org.apache.seatunnel.api.source.SourceSplit;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.CatalogTableUtil;
+import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.schema.TableSchemaOptions;
 import org.apache.seatunnel.api.table.connector.TableSource;
@@ -43,7 +44,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT;
 
@@ -92,32 +92,45 @@ public class MongodbIncrementalSourceFactory implements TableSourceFactory {
         return () -> {
             List<CatalogTable> catalogTables = buildWithConfig(context.getOptions());
             List<String> collections = context.getOptions().get(MongodbSourceOptions.COLLECTION);
-            if (collections.size() != catalogTables.size()) {
-                throw new MongodbConnectorException(
-                        ILLEGAL_ARGUMENT,
-                        "The number of collections must be equal to the number of schema tables");
-            }
-            IntStream.range(0, catalogTables.size())
-                    .forEach(
-                            i -> {
-                                CatalogTable catalogTable = catalogTables.get(i);
-                                String collect = collections.get(i);
-                                String fullName = catalogTable.getTablePath().getFullName();
-                                if (fullName.equals(TablePath.DEFAULT.getFullName())
-                                        && !collections.contains(TablePath.DEFAULT.getFullName())) {
-                                    throw new MongodbConnectorException(
-                                            ILLEGAL_ARGUMENT,
-                                            "The `schema` or `table_configs` configuration is incorrect, Please check the configuration.");
-                                }
-                                if (!fullName.equals(collect)) {
-                                    throw new MongodbConnectorException(
-                                            ILLEGAL_ARGUMENT,
-                                            "The collection name must be consistent with the schema table name, please configure in the order of `collection`");
-                                }
-                            });
+            validateCatalogTablesAndCollections(catalogTables, collections);
+            catalogTables = updateAndValidateCatalogTableId(catalogTables, collections);
             return (SeaTunnelSource<T, SplitT, StateT>)
                     new MongodbIncrementalSource<>(context.getOptions(), catalogTables);
         };
+    }
+
+    private List<CatalogTable> updateAndValidateCatalogTableId(
+            List<CatalogTable> catalogTables, List<String> collections) {
+        for (int i = 0; i < catalogTables.size(); i++) {
+            CatalogTable catalogTable = catalogTables.get(i);
+            String collectionName = collections.get(i);
+            String fullName = catalogTable.getTablePath().getFullName();
+            if (fullName.equals(TablePath.DEFAULT.getFullName())) {
+                if (catalogTables.size() == 1) {
+                    TableIdentifier updatedIdentifier =
+                            TableIdentifier.of(
+                                    catalogTable.getCatalogName(), TablePath.of(collectionName));
+                    return Collections.singletonList(
+                            CatalogTable.of(updatedIdentifier, catalogTable));
+                } else if (!fullName.equals(collectionName)) {
+                    throw new MongodbConnectorException(
+                            ILLEGAL_ARGUMENT,
+                            String.format(
+                                    "Inconsistent naming found at index %d: The collection name '%s' must match the schema table name '%s'.",
+                                    i, collectionName, fullName));
+                }
+            }
+        }
+        return catalogTables;
+    }
+
+    private void validateCatalogTablesAndCollections(
+            List<CatalogTable> catalogTables, List<String> collections) {
+        if (catalogTables.size() != collections.size()) {
+            throw new MongodbConnectorException(
+                    ILLEGAL_ARGUMENT,
+                    "The number of collections must be equal to the number of schema tables");
+        }
     }
 
     private List<CatalogTable> buildWithConfig(ReadonlyConfig config) {
