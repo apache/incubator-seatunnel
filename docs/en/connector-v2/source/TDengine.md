@@ -78,7 +78,7 @@ source {
           stable : "meters"
           lower_bound : "2018-10-03 14:38:05.000"
           upper_bound : "2018-10-03 14:38:16.800"
-          result_table_name = "tdengine_result"
+          plugin_output = "tdengine_result"
         }
 }
 ```

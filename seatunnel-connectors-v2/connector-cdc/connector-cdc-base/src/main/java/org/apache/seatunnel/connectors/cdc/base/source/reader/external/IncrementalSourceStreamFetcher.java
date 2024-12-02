@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.cdc.base.source.reader.external;
 
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.cdc.base.schema.SchemaChangeResolver;
 import org.apache.seatunnel.connectors.cdc.base.source.offset.Offset;
@@ -29,7 +31,6 @@ import org.apache.seatunnel.connectors.cdc.base.utils.SourceRecordUtils;
 
 import org.apache.kafka.connect.source.SourceRecord;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.debezium.connector.base.ChangeEventQueue;
 import io.debezium.pipeline.DataChangeEvent;
 import io.debezium.relational.TableId;
@@ -187,12 +188,15 @@ public class IncrementalSourceStreamFetcher implements Fetcher<SourceRecords, So
     @Override
     public void close() {
         try {
-            if (taskContext != null) {
-                taskContext.close();
-            }
+            // 1. try close the split task
             if (streamFetchTask != null) {
-                streamFetchTask.shutdown();
+                try {
+                    streamFetchTask.shutdown();
+                } catch (Exception e) {
+                    log.error("Close stream split read task error", e);
+                }
             }
+            // 2. close the fetcher thread
             if (executorService != null) {
                 executorService.shutdown();
                 if (!executorService.awaitTermination(
@@ -205,6 +209,11 @@ public class IncrementalSourceStreamFetcher implements Fetcher<SourceRecords, So
             }
         } catch (Exception e) {
             log.error("Close stream fetcher error", e);
+        } finally {
+            // 3. close the task context
+            if (taskContext != null) {
+                taskContext.close();
+            }
         }
     }
 

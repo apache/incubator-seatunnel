@@ -17,12 +17,16 @@
 
 package org.apache.seatunnel.transform.sql.zeta;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.transform.exception.TransformException;
 import org.apache.seatunnel.transform.sql.SQLEngine;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +39,9 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.LateralView;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 import javax.annotation.Nullable;
@@ -150,12 +154,6 @@ public class ZetaSQLEngine implements SQLEngine {
             if (selectBody.getLimit() != null || selectBody.getOffset() != null) {
                 throw new IllegalArgumentException("Unsupported LIMIT,OFFSET syntax");
             }
-
-            // for (SelectItem selectItem : selectBody.getSelectItems()) {
-            //     if (selectItem instanceof AllColumns) {
-            //         throw new IllegalArgumentException("Unsupported all columns select syntax");
-            //     }
-            // }
         } catch (Exception e) {
             throw new TransformException(
                     CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
@@ -165,7 +163,7 @@ public class ZetaSQLEngine implements SQLEngine {
 
     @Override
     public SeaTunnelRowType typeMapping(List<String> inputColumnsMapping) {
-        List<SelectItem> selectItems = selectBody.getSelectItems();
+        List<SelectItem<?>> selectItems = selectBody.getSelectItems();
 
         // count number of all columns
         int columnsSize = countColumnsSize(selectItems);
@@ -183,7 +181,7 @@ public class ZetaSQLEngine implements SQLEngine {
 
         int idx = 0;
         for (SelectItem selectItem : selectItems) {
-            if (selectItem instanceof AllColumns) {
+            if (selectItem.getExpression() instanceof AllColumns) {
                 for (int i = 0; i < inputRowType.getFieldNames().length; i++) {
                     fieldNames[idx] = inputRowType.getFieldName(i);
                     seaTunnelDataTypes[idx] = inputRowType.getFieldType(i);
@@ -192,11 +190,10 @@ public class ZetaSQLEngine implements SQLEngine {
                     }
                     idx++;
                 }
-            } else if (selectItem instanceof SelectExpressionItem) {
-                SelectExpressionItem expressionItem = (SelectExpressionItem) selectItem;
-                Expression expression = expressionItem.getExpression();
-                if (expressionItem.getAlias() != null) {
-                    String aliasName = expressionItem.getAlias().getName();
+            } else {
+                Expression expression = selectItem.getExpression();
+                if (selectItem.getAlias() != null) {
+                    String aliasName = selectItem.getAlias().getName();
                     if (aliasName.startsWith(ESCAPE_IDENTIFIER)
                             && aliasName.endsWith(ESCAPE_IDENTIFIER)) {
                         aliasName = aliasName.substring(1, aliasName.length() - 1);
@@ -218,15 +215,18 @@ public class ZetaSQLEngine implements SQLEngine {
 
                 seaTunnelDataTypes[idx] = zetaSQLType.getExpressionType(expression);
                 idx++;
-            } else {
-                idx++;
             }
         }
-        return new SeaTunnelRowType(fieldNames, seaTunnelDataTypes);
+        List<LateralView> lateralViews = selectBody.getLateralViews();
+        if (CollectionUtils.isEmpty(lateralViews)) {
+            return new SeaTunnelRowType(fieldNames, seaTunnelDataTypes);
+        }
+        return zetaSQLFunction.lateralViewMapping(
+                fieldNames, seaTunnelDataTypes, lateralViews, inputColumnsMapping);
     }
 
     @Override
-    public SeaTunnelRow transformBySQL(SeaTunnelRow inputRow) {
+    public List<SeaTunnelRow> transformBySQL(SeaTunnelRow inputRow, SeaTunnelRowType outRowType) {
         // ------Physical Query Plan Execution------
         // Scan Table
         Object[] inputFields = scanTable(inputRow);
@@ -243,7 +243,12 @@ public class ZetaSQLEngine implements SQLEngine {
         SeaTunnelRow seaTunnelRow = new SeaTunnelRow(outputFields);
         seaTunnelRow.setRowKind(inputRow.getRowKind());
         seaTunnelRow.setTableId(inputRow.getTableId());
-        return seaTunnelRow;
+        List<LateralView> lateralViews = selectBody.getLateralViews();
+        if (CollectionUtils.isEmpty(lateralViews)) {
+            return Lists.newArrayList(seaTunnelRow);
+        }
+        return zetaSQLFunction.lateralView(
+                Lists.newArrayList(seaTunnelRow), lateralViews, outRowType);
     }
 
     private Object[] scanTable(SeaTunnelRow inputRow) {
@@ -252,7 +257,7 @@ public class ZetaSQLEngine implements SQLEngine {
     }
 
     private Object[] project(Object[] inputFields) {
-        List<SelectItem> selectItems = selectBody.getSelectItems();
+        List<SelectItem<?>> selectItems = selectBody.getSelectItems();
 
         int columnsSize = countColumnsSize(selectItems);
 
@@ -260,30 +265,27 @@ public class ZetaSQLEngine implements SQLEngine {
 
         int idx = 0;
         for (SelectItem selectItem : selectItems) {
-            if (selectItem instanceof AllColumns) {
+            if (selectItem.getExpression() instanceof AllColumns) {
                 for (Object inputField : inputFields) {
                     fields[idx] = inputField;
                     idx++;
                 }
-            } else if (selectItem instanceof SelectExpressionItem) {
-                SelectExpressionItem expressionItem = (SelectExpressionItem) selectItem;
-                Expression expression = expressionItem.getExpression();
-                fields[idx] = zetaSQLFunction.computeForValue(expression, inputFields);
-                idx++;
             } else {
+                Expression expression = selectItem.getExpression();
+                fields[idx] = zetaSQLFunction.computeForValue(expression, inputFields);
                 idx++;
             }
         }
         return fields;
     }
 
-    private int countColumnsSize(List<SelectItem> selectItems) {
+    private int countColumnsSize(List<SelectItem<?>> selectItems) {
         if (allColumnsCount != null) {
             return allColumnsCount;
         }
         int allColumnsCnt = 0;
         for (SelectItem selectItem : selectItems) {
-            if (selectItem instanceof AllColumns) {
+            if (selectItem.getExpression() instanceof AllColumns) {
                 allColumnsCnt++;
             }
         }

@@ -20,15 +20,17 @@ package org.apache.seatunnel.engine.server.task.flow;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.serialization.Serializer;
-import org.apache.seatunnel.api.sink.MultiTableResourceManager;
 import org.apache.seatunnel.api.sink.SinkCommitter;
 import org.apache.seatunnel.api.sink.SinkWriter;
-import org.apache.seatunnel.api.sink.SupportResourceShare;
+import org.apache.seatunnel.api.sink.SinkWriter.Context;
+import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSinkWriter;
 import org.apache.seatunnel.api.sink.event.WriterCloseEvent;
 import org.apache.seatunnel.api.sink.multitablesink.MultiTableSink;
+import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TablePath;
-import org.apache.seatunnel.api.table.event.SchemaChangeEvent;
+import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.api.table.type.Record;
+import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.engine.core.checkpoint.InternalCheckpointListener;
 import org.apache.seatunnel.engine.core.dag.actions.SinkAction;
@@ -53,7 +55,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -70,7 +74,7 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
 
     private final SinkAction<T, StateT, CommitInfoT, AggregatedCommitInfoT> sinkAction;
     private SinkWriter<T, CommitInfoT, StateT> writer;
-    private SinkWriter.Context writerContext;
+    private Context writerContext;
 
     private transient Optional<Serializer<CommitInfoT>> commitInfoSerializer;
     private transient Optional<Serializer<StateT>> writerStateSerializer;
@@ -93,9 +97,10 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
 
     private final boolean containAggCommitter;
 
-    private MultiTableResourceManager resourceManager;
-
     private EventListener eventListener;
+
+    /** Mapping relationship between upstream tablepath and downstream tablepath. */
+    private final Map<TablePath, TablePath> tablesMaps = new HashMap<>();
 
     public SinkFlowLifeCycle(
             SinkAction<T, StateT, CommitInfoT, AggregatedCommitInfoT> sinkAction,
@@ -118,6 +123,21 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
         boolean isMulti = sinkAction.getSink() instanceof MultiTableSink;
         if (isMulti) {
             sinkTables = ((MultiTableSink) sinkAction.getSink()).getSinkTables();
+            String[] upstreamTablePaths =
+                    ((MultiTableSink) sinkAction.getSink())
+                            .getSinks()
+                            .keySet()
+                            .toArray(new String[0]);
+            for (int i = 0; i < ((MultiTableSink) sinkAction.getSink()).getSinks().size(); i++) {
+                tablesMaps.put(TablePath.of(upstreamTablePaths[i]), sinkTables.get(i));
+            }
+        } else {
+            Optional<CatalogTable> catalogTable = sinkAction.getSink().getWriteCatalogTable();
+            if (catalogTable.isPresent()) {
+                sinkTables.add(catalogTable.get().getTablePath());
+            } else {
+                sinkTables.add(TablePath.DEFAULT);
+            }
         }
         this.taskMetricsCalcContext =
                 new TaskMetricsCalcContext(metricsContext, PluginType.SINK, isMulti, sinkTables);
@@ -153,13 +173,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
         super.close();
         writer.close();
         writerContext.getEventListener().onEvent(new WriterCloseEvent());
-        try {
-            if (resourceManager != null) {
-                resourceManager.close();
-            }
-        } catch (Throwable e) {
-            log.error("close resourceManager error", e);
-        }
     }
 
     private void registerCommitter() {
@@ -185,7 +198,7 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
                 }
                 if (barrier.snapshot()) {
                     try {
-                        lastCommitInfo = writer.prepareCommit();
+                        lastCommitInfo = writer.prepareCommit(barrier.getId());
                     } catch (Exception e) {
                         writer.abortPrepare();
                         throw e;
@@ -241,13 +254,49 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
                     return;
                 }
                 SchemaChangeEvent event = (SchemaChangeEvent) record.getData();
-                writer.applySchemaChange(event);
+                if (writer instanceof SupportSchemaEvolutionSinkWriter) {
+                    ((SupportSchemaEvolutionSinkWriter) writer).applySchemaChange(event);
+                } else {
+                    // todo remove deprecated method
+                    writer.applySchemaChange(event);
+                }
             } else {
                 if (prepareClose) {
                     return;
                 }
+                String tableId = "";
                 writer.write((T) record.getData());
-                taskMetricsCalcContext.updateMetrics(record.getData());
+                if (record.getData() instanceof SeaTunnelRow) {
+                    if (this.sinkAction.getSink() instanceof MultiTableSink) {
+                        if (((SeaTunnelRow) record.getData()).getTableId() == null
+                                || ((SeaTunnelRow) record.getData()).getTableId().isEmpty()) {
+                            tableId = ((SeaTunnelRow) record.getData()).getTableId();
+                        } else {
+
+                            TablePath tablePath =
+                                    tablesMaps.get(
+                                            TablePath.of(
+                                                    ((SeaTunnelRow) record.getData())
+                                                            .getTableId()));
+                            tableId =
+                                    tablePath != null
+                                            ? tablePath.getFullName()
+                                            : TablePath.DEFAULT.getFullName();
+                        }
+
+                    } else {
+                        Optional<CatalogTable> writeCatalogTable =
+                                this.sinkAction.getSink().getWriteCatalogTable();
+                        tableId =
+                                writeCatalogTable
+                                        .map(
+                                                catalogTable ->
+                                                        catalogTable.getTablePath().getFullName())
+                                        .orElseGet(TablePath.DEFAULT::getFullName);
+                    }
+
+                    taskMetricsCalcContext.updateMetrics(record.getData(), tableId);
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -293,11 +342,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
             this.writer = sinkAction.getSink().createWriter(writerContext);
         } else {
             this.writer = sinkAction.getSink().restoreWriter(writerContext, states);
-        }
-        if (this.writer instanceof SupportResourceShare) {
-            resourceManager =
-                    ((SupportResourceShare) this.writer).initMultiTableResourceManager(1, 1);
-            ((SupportResourceShare) this.writer).setMultiTableResourceManager(resourceManager, 0);
         }
     }
 }

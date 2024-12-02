@@ -29,6 +29,7 @@ import org.apache.seatunnel.engine.server.execution.TaskGroupLocation;
 import org.apache.seatunnel.engine.server.service.jar.ConnectorPackageService;
 import org.apache.seatunnel.engine.server.service.slot.DefaultSlotService;
 import org.apache.seatunnel.engine.server.service.slot.SlotService;
+import org.apache.seatunnel.engine.server.telemetry.log.TaskLogManagerService;
 import org.apache.seatunnel.engine.server.telemetry.metrics.entity.ThreadPoolStatus;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -46,6 +47,7 @@ import com.hazelcast.spi.impl.operationservice.LiveOperations;
 import com.hazelcast.spi.impl.operationservice.LiveOperationsTracker;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -55,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.spi.properties.ClusterProperty.INVOCATION_MAX_RETRY_COUNT;
 import static com.hazelcast.spi.properties.ClusterProperty.INVOCATION_RETRY_PAUSE;
 
+@Slf4j
 public class SeaTunnelServer
         implements ManagedService, MembershipAwareService, LiveOperationsTracker {
 
@@ -69,7 +72,10 @@ public class SeaTunnelServer
     private TaskExecutionService taskExecutionService;
     private ClassLoaderService classLoaderService;
     private CoordinatorService coordinatorService;
+    @Getter private CheckpointService checkpointService;
     private ScheduledExecutorService monitorService;
+    private JettyService jettyService;
+    private TaskLogManagerService taskLogManagerService;
 
     @Getter private SeaTunnelHealthMonitor seaTunnelHealthMonitor;
 
@@ -117,7 +123,7 @@ public class SeaTunnelServer
 
         classLoaderService =
                 new DefaultClassLoaderService(
-                        seaTunnelConfig.getEngineConfig().isClassloaderCacheMode());
+                        seaTunnelConfig.getEngineConfig().isClassloaderCacheMode(), nodeEngine);
 
         eventService = new EventService(nodeEngine);
 
@@ -135,6 +141,22 @@ public class SeaTunnelServer
 
         seaTunnelHealthMonitor = new SeaTunnelHealthMonitor(((NodeEngineImpl) engine).getNode());
 
+        // task log manager service
+        if (seaTunnelConfig.getEngineConfig().getTelemetryConfig() != null
+                && seaTunnelConfig.getEngineConfig().getTelemetryConfig().getLogs() != null
+                && seaTunnelConfig.getEngineConfig().getTelemetryConfig().getLogs().isEnabled()) {
+            taskLogManagerService =
+                    new TaskLogManagerService(
+                            seaTunnelConfig.getEngineConfig().getTelemetryConfig().getLogs());
+            taskLogManagerService.initClean();
+        }
+
+        // Start Jetty server
+        if (seaTunnelConfig.getEngineConfig().getHttpConfig().isEnabled()) {
+            jettyService = new JettyService(nodeEngine, seaTunnelConfig);
+            jettyService.createJettyServer();
+        }
+
         // a trick way to fix StatisticsDataReferenceCleaner thread class loader leak.
         // see https://issues.apache.org/jira/browse/HADOOP-19049
         FileSystem.Statistics statistics = new FileSystem.Statistics("SeaTunnel");
@@ -143,6 +165,8 @@ public class SeaTunnelServer
     private void startMaster() {
         coordinatorService =
                 new CoordinatorService(nodeEngine, this, seaTunnelConfig.getEngineConfig());
+        checkpointService =
+                new CheckpointService(seaTunnelConfig.getEngineConfig().getCheckpointConfig());
         monitorService = Executors.newSingleThreadScheduledExecutor();
         monitorService.scheduleAtFixedRate(
                 this::printExecutionInfo,
@@ -165,6 +189,10 @@ public class SeaTunnelServer
     @Override
     public void shutdown(boolean terminate) {
         isRunning = false;
+
+        if (jettyService != null) {
+            jettyService.shutdownJettyServer();
+        }
         if (taskExecutionService != null) {
             taskExecutionService.shutdown();
         }
@@ -324,6 +352,10 @@ public class SeaTunnelServer
 
     public ConnectorPackageService getConnectorPackageService() {
         return getCoordinatorService().getConnectorPackageService();
+    }
+
+    public TaskLogManagerService getTaskLogManagerService() {
+        return taskLogManagerService;
     }
 
     public ThreadPoolStatus getThreadPoolStatusMetrics() {

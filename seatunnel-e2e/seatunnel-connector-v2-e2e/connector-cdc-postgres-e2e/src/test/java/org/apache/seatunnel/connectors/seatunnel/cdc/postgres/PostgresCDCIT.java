@@ -17,6 +17,12 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.postgres;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
+import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfigFactory;
+import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config.PostgresSourceConfigFactory;
+import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source.PostgresDialect;
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
@@ -24,10 +30,12 @@ import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +45,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 
-import com.google.common.collect.Lists;
+import io.debezium.jdbc.JdbcConnection;
+import io.debezium.relational.TableId;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -52,6 +61,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -186,6 +196,49 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
     @TestTemplate
     @DisabledOnContainer(
             value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testMPostgresCdcMetadataTrans(TestContainer container) throws InterruptedException {
+
+        Long jobId = JobIdGenerator.newJobId();
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        container.executeJob(
+                                "/postgrescdc_to_postgres.conf", String.valueOf(jobId));
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                });
+        TimeUnit.SECONDS.sleep(10);
+        // insert update delete
+        upsertDeleteSourceTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+
+        TimeUnit.SECONDS.sleep(20);
+        await().atMost(2, TimeUnit.MINUTES)
+                .untilAsserted(
+                        () -> {
+                            String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                            Assertions.assertEquals("RUNNING", jobStatus);
+                        });
+
+        try {
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // Clear related content to ensure that multiple operations are not affected
+            clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+        }
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
             type = {EngineType.SPARK},
             disabledReason = "Currently SPARK do not support cdc")
     public void testPostgresCdcMultiTableE2e(TestContainer container) {
@@ -274,12 +327,14 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
             disabledReason = "Currently SPARK and FLINK do not support restore")
     public void testMultiTableWithRestore(TestContainer container)
             throws IOException, InterruptedException {
+        Long jobId = JobIdGenerator.newJobId();
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             return container.executeJob(
-                                    "/pgcdc_to_pg_with_multi_table_mode_one_table.conf");
+                                    "/pgcdc_to_pg_with_multi_table_mode_one_table.conf",
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -305,26 +360,15 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                                                                             POSTGRESQL_SCHEMA,
                                                                             SINK_TABLE_1)))));
 
-            Pattern jobIdPattern =
-                    Pattern.compile(
-                            ".*Init JobMaster for Job pgcdc_to_pg_with_multi_table_mode_one_table.conf \\(([0-9]*)\\).*",
-                            Pattern.DOTALL);
-            Matcher matcher = jobIdPattern.matcher(container.getServerLogs());
-            String jobId;
-            if (matcher.matches()) {
-                jobId = matcher.group(1);
-            } else {
-                throw new RuntimeException("Can not find jobId");
-            }
-
-            Assertions.assertEquals(0, container.savepointJob(jobId).getExitCode());
+            Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
 
             // Restore job with add a new table
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             container.restoreJob(
-                                    "/pgcdc_to_pg_with_multi_table_mode_two_table.conf", jobId);
+                                    "/pgcdc_to_pg_with_multi_table_mode_two_table.conf",
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -382,12 +426,14 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
             disabledReason = "Currently SPARK and FLINK do not support restore")
     public void testAddFiledWithRestore(TestContainer container)
             throws IOException, InterruptedException {
+        Long jobId = JobIdGenerator.newJobId();
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             return container.executeJob(
-                                    "/postgrescdc_to_postgres_test_add_Filed.conf");
+                                    "/postgrescdc_to_postgres_test_add_Filed.conf",
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -410,19 +456,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                                                                             POSTGRESQL_SCHEMA,
                                                                             SINK_TABLE_3)))));
 
-            Pattern jobIdPattern =
-                    Pattern.compile(
-                            ".*Init JobMaster for Job postgrescdc_to_postgres_test_add_Filed.conf \\(([0-9]*)\\).*",
-                            Pattern.DOTALL);
-            Matcher matcher = jobIdPattern.matcher(container.getServerLogs());
-            String jobId;
-            if (matcher.matches()) {
-                jobId = matcher.group(1);
-            } else {
-                throw new RuntimeException("Can not find jobId");
-            }
-
-            Assertions.assertEquals(0, container.savepointJob(jobId).getExitCode());
+            Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
 
             // add filed add insert source table data
             addFieldsForTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_3);
@@ -434,7 +468,8 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                     () -> {
                         try {
                             container.restoreJob(
-                                    "/postgrescdc_to_postgres_test_add_Filed.conf", jobId);
+                                    "/postgrescdc_to_postgres_test_add_Filed.conf",
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -568,6 +603,32 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
         }
     }
 
+    @Test
+    public void testDialectCheckDisabledCDCTable() throws SQLException {
+        JdbcSourceConfigFactory factory =
+                new PostgresSourceConfigFactory()
+                        .hostname(POSTGRES_CONTAINER.getHost())
+                        .port(5432)
+                        .username("postgres")
+                        .password("postgres")
+                        .databaseList(POSTGRESQL_DATABASE);
+        PostgresDialect dialect =
+                new PostgresDialect((PostgresSourceConfigFactory) factory, Collections.emptyList());
+        try (JdbcConnection connection = dialect.openJdbcConnection(factory.create(0))) {
+            SeaTunnelException exception =
+                    Assertions.assertThrows(
+                            SeaTunnelException.class,
+                            () ->
+                                    dialect.checkAllTablesEnabledCapture(
+                                            connection,
+                                            Collections.singletonList(
+                                                    TableId.parse(SINK_TABLE_1))));
+            Assertions.assertEquals(
+                    "Table sink_postgres_cdc_table_1 does not have a full replica identity, please execute: ALTER TABLE sink_postgres_cdc_table_1 REPLICA IDENTITY FULL;",
+                    exception.getMessage());
+        }
+    }
+
     private Connection getJdbcConnection() throws SQLException {
         return DriverManager.getConnection(
                 POSTGRES_CONTAINER.getJdbcUrl(),
@@ -662,7 +723,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                         + tableName
                         + " VALUES (2, '2', 32767, 65535, 2147483647, 5.5, 6.6, 123.12345, 404.4443, true,\n"
                         + "        'Hello World', 'a', 'abc', 'abcd..xyz', '2020-07-17 18:00:22.123', '2020-07-17 18:00:22.123456',\n"
-                        + "        '2020-07-17', '18:00:22', 500);");
+                        + "        '2020-07-17', '18:00:22', 500,'192.168.1.1');");
 
         executeSql(
                 "INSERT INTO "
@@ -671,7 +732,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                         + tableName
                         + " VALUES (3, '2', 32767, 65535, 2147483647, 5.5, 6.6, 123.12345, 404.4443, true,\n"
                         + "        'Hello World', 'a', 'abc', 'abcd..xyz', '2020-07-17 18:00:22.123', '2020-07-17 18:00:22.123456',\n"
-                        + "        '2020-07-17', '18:00:22', 500);");
+                        + "        '2020-07-17', '18:00:22', 500,'192.168.1.1');");
 
         executeSql("DELETE FROM " + database + "." + tableName + " where id = 2;");
 

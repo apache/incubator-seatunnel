@@ -145,6 +145,17 @@ class IcebergCatalogTest {
 
     @Test
     @Order(8)
+    void executeDeleteSQL() {
+        CatalogTable table = icebergCatalog.getTable(tablePath);
+        icebergCatalog.executeSql(
+                tablePath,
+                "DELETE FROM "
+                        + tablePath.getFullName()
+                        + " WHERE id > 1 and timestamp_col = '2024-01-01 01:01:01.999'");
+    }
+
+    @Test
+    @Order(9)
     void dropTable() {
         icebergCatalog.dropTable(tablePath, false);
         Assertions.assertFalse(icebergCatalog.tableExists(tablePath));
@@ -194,7 +205,8 @@ class IcebergCatalogTest {
         TableSchema schema = builder.build();
         HashMap<String, String> options = new HashMap<>();
         options.put("write.parquet.compression-codec", "zstd");
+        options.put("comment", "test");
         return CatalogTable.of(
-                tableIdentifier, schema, options, Collections.singletonList("dt_col"), "null");
+                tableIdentifier, schema, options, Collections.singletonList("dt_col"), "test");
     }
 }

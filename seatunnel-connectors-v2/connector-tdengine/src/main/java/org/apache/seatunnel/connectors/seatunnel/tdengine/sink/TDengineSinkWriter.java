@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.tdengine.sink;
 
+import org.apache.seatunnel.shade.com.google.common.base.Throwables;
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -29,8 +31,6 @@ import org.apache.seatunnel.connectors.seatunnel.tdengine.exception.TDengineConn
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 

@@ -174,6 +174,19 @@
             <scope>provided</scope>
         </dependencySet>
 
+        <!-- ============ SeaTunnel Hadoop-AWS Uber Jar============  -->
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <unpack>false</unpack>
+            <includes>
+                <include>org.apache.seatunnel:seatunnel-hadoop-aws:jar:*:optional</include>
+            </includes>
+            <outputFileNameMapping>${artifact.file.name}</outputFileNameMapping>
+            <outputDirectory>/lib</outputDirectory>
+            <scope>provided</scope>
+        </dependencySet>
+
         <!-- ============ Connectors Jars And Transforms V2 Jar ============  -->
         <!-- SeaTunnel connectors for Demo -->
         <dependencySet>

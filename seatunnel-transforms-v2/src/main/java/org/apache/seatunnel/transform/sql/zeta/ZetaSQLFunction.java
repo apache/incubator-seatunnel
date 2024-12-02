@@ -17,6 +17,9 @@
 
 package org.apache.seatunnel.transform.sql.zeta;
 
+import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
+import org.apache.seatunnel.api.table.type.ArrayType;
+import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.DecimalType;
 import org.apache.seatunnel.api.table.type.MapType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
@@ -24,12 +27,14 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.api.table.type.SqlType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
+import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.transform.exception.TransformException;
 import org.apache.seatunnel.transform.sql.zeta.functions.DateTimeFunction;
 import org.apache.seatunnel.transform.sql.zeta.functions.NumericFunction;
 import org.apache.seatunnel.transform.sql.zeta.functions.StringFunction;
 import org.apache.seatunnel.transform.sql.zeta.functions.SystemFunction;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -45,6 +50,7 @@ import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.SignedExpression;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.TimeKeyExpression;
+import net.sf.jsqlparser.expression.TrimFunction;
 import net.sf.jsqlparser.expression.WhenClause;
 import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
 import net.sf.jsqlparser.expression.operators.arithmetic.Concat;
@@ -54,12 +60,17 @@ import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.LateralView;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.UUID.randomUUID;
+import static org.apache.seatunnel.transform.exception.TransformCommonErrorCode.INPUT_FIELDS_NOT_FOUND;
 
 public class ZetaSQLFunction {
     // ============================internal functions=====================
@@ -79,6 +90,8 @@ public class ZetaSQLFunction {
     public static final String INSERT = "INSERT";
     public static final String LOWER = "LOWER";
     public static final String LCASE = "LCASE";
+    public static final String BINARY = "BINARY";
+    public static final String BYTE = "BYTE";
     public static final String UPPER = "UPPER";
     public static final String UCASE = "UCASE";
     public static final String LEFT = "LEFT";
@@ -102,6 +115,7 @@ public class ZetaSQLFunction {
     public static final String SUBSTR = "SUBSTR";
     public static final String TO_CHAR = "TO_CHAR";
     public static final String TRANSLATE = "TRANSLATE";
+    public static final String SPLIT = "SPLIT";
 
     // -------------------------numeric functions----------------------------
     public static final String ABS = "ABS";
@@ -166,10 +180,16 @@ public class ZetaSQLFunction {
     public static final String YEAR = "YEAR";
     public static final String FROM_UNIXTIME = "FROM_UNIXTIME";
 
+    // -------------------------lateralView functions----------------------------
+    public static final String EXPLODE = "EXPLODE";
+    public static final String ARRAY = "ARRAY";
+
     // -------------------------system functions----------------------------
     public static final String COALESCE = "COALESCE";
     public static final String IFNULL = "IFNULL";
     public static final String NULLIF = "NULLIF";
+
+    public static final String UUID = "UUID";
 
     private final SeaTunnelRowType inputRowType;
     private final ZetaSQLType zetaSQLType;
@@ -188,6 +208,18 @@ public class ZetaSQLFunction {
     public Object computeForValue(Expression expression, Object[] inputFields) {
         if (expression instanceof NullValue) {
             return null;
+        }
+        if (expression instanceof TrimFunction) {
+            TrimFunction function = (TrimFunction) expression;
+            Column column = (Column) function.getExpression();
+            List<Object> functionArgs = new ArrayList<>();
+            if (column != null) {
+                functionArgs.add(computeForValue(column, inputFields));
+                if (function.getFromExpression() != null) {
+                    functionArgs.add(((StringValue) function.getFromExpression()).getValue());
+                }
+            }
+            return executeFunctionExpr(TRIM, functionArgs);
         }
         if (expression instanceof SignedExpression) {
             SignedExpression signedExpression = (SignedExpression) expression;
@@ -276,7 +308,8 @@ public class ZetaSQLFunction {
         }
         if (expression instanceof Function) {
             Function function = (Function) expression;
-            ExpressionList expressionList = function.getParameters();
+            ExpressionList<Expression> expressionList =
+                    (ExpressionList<Expression>) function.getParameters();
             List<Object> functionArgs = new ArrayList<>();
             if (expressionList != null) {
                 for (Expression funcArgExpression : expressionList.getExpressions()) {
@@ -299,6 +332,7 @@ public class ZetaSQLFunction {
             Parenthesis parenthesis = (Parenthesis) expression;
             return computeForValue(parenthesis.getExpression(), inputFields);
         }
+        // bytes not supported at the moment,use BINARY instead.
         if (expression instanceof CaseExpression) {
             CaseExpression caseExpression = (CaseExpression) expression;
             final Object value = executeCaseExpr(caseExpression, inputFields);
@@ -408,6 +442,8 @@ public class ZetaSQLFunction {
                 return StringFunction.toChar(args);
             case TRANSLATE:
                 return StringFunction.translate(args);
+            case SPLIT:
+                return StringFunction.split(args);
             case ABS:
                 return NumericFunction.abs(args);
             case ACOS:
@@ -515,6 +551,10 @@ public class ZetaSQLFunction {
                 return SystemFunction.ifnull(args);
             case NULLIF:
                 return SystemFunction.nullif(args);
+            case ARRAY:
+                return SystemFunction.array(args);
+            case UUID:
+                return randomUUID().toString();
             default:
                 for (ZetaUDF udf : udfList) {
                     if (udf.functionName().equalsIgnoreCase(functionName)) {
@@ -545,12 +585,12 @@ public class ZetaSQLFunction {
     }
 
     public Object executeCastExpr(CastExpression castExpression, Object arg) {
-        String dataType = castExpression.getType().getDataType();
+        String dataType = castExpression.getColDataType().getDataType();
         List<Object> args = new ArrayList<>(2);
         args.add(arg);
         args.add(dataType.toUpperCase());
         if (dataType.equalsIgnoreCase("DECIMAL")) {
-            List<String> ps = castExpression.getType().getArgumentsStringList();
+            List<String> ps = castExpression.getColDataType().getArgumentsStringList();
             args.add(Integer.parseInt(ps.get(0)));
             args.add(Integer.parseInt(ps.get(1)));
         }
@@ -658,5 +698,191 @@ public class ZetaSQLFunction {
         throw new TransformException(
                 CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
                 String.format("Unsupported SQL Expression: %s ", binaryExpression));
+    }
+
+    public List<SeaTunnelRow> lateralView(
+            List<SeaTunnelRow> seaTunnelRows,
+            List<LateralView> lateralViews,
+            SeaTunnelRowType outRowType) {
+        for (LateralView lateralView : lateralViews) {
+            Function function = lateralView.getGeneratorFunction();
+            boolean isUsingOuter = lateralView.isUsingOuter();
+            String functionName = function.getName();
+            String alias = lateralView.getColumnAlias().getName();
+            if (EXPLODE.equalsIgnoreCase(functionName)) {
+                seaTunnelRows = explode(seaTunnelRows, function, outRowType, isUsingOuter, alias);
+            } else {
+                throw new SeaTunnelRuntimeException(
+                        CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
+                        "Transform config error! UnSupport function:" + functionName);
+            }
+        }
+
+        return seaTunnelRows;
+    }
+
+    private List<SeaTunnelRow> explode(
+            List<SeaTunnelRow> seaTunnelRows,
+            Function lateralViewFunction,
+            SeaTunnelRowType outRowType,
+            boolean isUsingOuter,
+            String alias) {
+        ExpressionList<?> expressions = lateralViewFunction.getParameters();
+        int aliasFieldIndex = outRowType.indexOf(alias);
+        for (Expression expression : expressions) {
+            if (expression instanceof Column) {
+                String column = ((Column) expression).getColumnName();
+                List<SeaTunnelRow> next = new ArrayList<>();
+                for (SeaTunnelRow row : seaTunnelRows) {
+                    int fieldIndex = outRowType.indexOf(column);
+                    Object splitFieldValue = row.getField(fieldIndex);
+                    transformExplodeValue(
+                            splitFieldValue,
+                            outRowType,
+                            isUsingOuter,
+                            next,
+                            aliasFieldIndex,
+                            row,
+                            expression,
+                            true);
+                }
+                seaTunnelRows = next;
+            } else if (expression instanceof Function) {
+                List<SeaTunnelRow> next = new ArrayList<>();
+                for (SeaTunnelRow row : seaTunnelRows) {
+                    Object splitFieldValue = computeForValue(expression, row.getFields());
+                    transformExplodeValue(
+                            splitFieldValue,
+                            outRowType,
+                            isUsingOuter,
+                            next,
+                            aliasFieldIndex,
+                            row,
+                            expression,
+                            false);
+                }
+                seaTunnelRows = next;
+            }
+        }
+        return seaTunnelRows;
+    }
+
+    private void transformExplodeValue(
+            Object splitFieldValue,
+            SeaTunnelRowType outRowType,
+            boolean isUsingOuter,
+            List<SeaTunnelRow> next,
+            int aliasFieldIndex,
+            SeaTunnelRow row,
+            Expression expression,
+            boolean keepValueType) {
+        if (splitFieldValue == null) {
+            if (isUsingOuter) {
+                next.add(
+                        copySeaTunnelRowWithNewValue(
+                                outRowType.getTotalFields(), row, aliasFieldIndex, null));
+            }
+            return;
+        }
+        if (splitFieldValue.getClass().isArray()) {
+            if (ArrayUtils.isEmpty((Object[]) splitFieldValue)) {
+                if (isUsingOuter) {
+                    next.add(
+                            copySeaTunnelRowWithNewValue(
+                                    outRowType.getTotalFields(), row, aliasFieldIndex, null));
+                }
+                return;
+            }
+            for (Object fieldValue : (Object[]) splitFieldValue) {
+
+                if (!isUsingOuter && fieldValue == null) {
+                    continue;
+                }
+                Object value =
+                        fieldValue == null
+                                ? null
+                                : (keepValueType ? fieldValue : String.valueOf(fieldValue));
+                next.add(
+                        copySeaTunnelRowWithNewValue(
+                                outRowType.getTotalFields(), row, aliasFieldIndex, value));
+            }
+        } else {
+            throw new SeaTunnelRuntimeException(
+                    CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
+                    "Transform config error! UnSupport explode function:"
+                            + ((Function) expression).getName());
+        }
+    }
+
+    private SeaTunnelRow copySeaTunnelRowWithNewValue(
+            int length, SeaTunnelRow row, int fieldIndex, Object fieldValue) {
+        Object[] fields = new Object[length];
+        System.arraycopy(row.getFields(), 0, fields, 0, row.getFields().length);
+        SeaTunnelRow outputRow = new SeaTunnelRow(fields);
+        outputRow.setRowKind(row.getRowKind());
+        outputRow.setTableId(row.getTableId());
+        outputRow.setField(fieldIndex, fieldValue);
+        return outputRow;
+    }
+
+    public SeaTunnelRowType lateralViewMapping(
+            String[] fieldNames,
+            SeaTunnelDataType<?>[] seaTunnelDataTypes,
+            List<LateralView> lateralViews,
+            List<String> inputColumnsMapping) {
+        for (LateralView lateralView : lateralViews) {
+            Function function = lateralView.getGeneratorFunction();
+            String functionName = function.getName();
+            String alias = lateralView.getColumnAlias().getName();
+            if (EXPLODE.equalsIgnoreCase(functionName)) {
+                ExpressionList<?> expressions = function.getParameters();
+                int aliasIndex = Arrays.asList(fieldNames).indexOf(alias);
+                for (Expression expression : expressions) {
+                    if (expression instanceof Column) {
+                        String column = ((Column) expression).getColumnName();
+                        int columnIndex = Arrays.asList(fieldNames).indexOf(column);
+                        if (columnIndex == -1) {
+                            throw new TransformException(
+                                    INPUT_FIELDS_NOT_FOUND,
+                                    "Lateral view field must be in select item:" + fieldNames);
+                        }
+                        ArrayType arrayType = (ArrayType) seaTunnelDataTypes[columnIndex];
+                        SeaTunnelDataType seaTunnelDataType =
+                                PhysicalColumn.of(
+                                                column,
+                                                arrayType.getElementType(),
+                                                200,
+                                                true,
+                                                "",
+                                                "")
+                                        .getDataType();
+                        if (aliasIndex == -1) {
+                            fieldNames = ArrayUtils.add(fieldNames, alias);
+                            seaTunnelDataTypes =
+                                    ArrayUtils.add(seaTunnelDataTypes, seaTunnelDataType);
+                            inputColumnsMapping.add(alias);
+                        } else {
+                            seaTunnelDataTypes[columnIndex] = seaTunnelDataType;
+                        }
+                    } else {
+                        // default string type
+                        SeaTunnelDataType seaTunnelDataType =
+                                PhysicalColumn.of(alias, BasicType.STRING_TYPE, 10L, true, "", "")
+                                        .getDataType();
+                        if (aliasIndex == -1) {
+                            fieldNames = ArrayUtils.add(fieldNames, alias);
+                            seaTunnelDataTypes =
+                                    ArrayUtils.add(seaTunnelDataTypes, seaTunnelDataType);
+                            inputColumnsMapping.add(alias);
+                        }
+                    }
+                }
+            } else {
+                throw new SeaTunnelRuntimeException(
+                        CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
+                        "Transform config error! UnSupport function:" + functionName);
+            }
+        }
+        return new SeaTunnelRowType(fieldNames, seaTunnelDataTypes);
     }
 }

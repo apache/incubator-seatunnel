@@ -24,6 +24,7 @@ import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.container.TestContainerId;
 import org.apache.seatunnel.e2e.common.container.flink.AbstractTestFlinkContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
@@ -96,12 +97,14 @@ public class CheckpointEnableIT extends TestSuiteBase {
     public void testZetaStreamingCheckpointInterval(TestContainer container)
             throws IOException, InterruptedException, ExecutionException {
         // start job
+        Long jobId = JobIdGenerator.newJobId();
         CompletableFuture<Container.ExecResult> startFuture =
                 CompletableFuture.supplyAsync(
                         () -> {
                             try {
                                 return container.executeJob(
-                                        "/checkpoint-streaming-enable-test-resources/stream_fakesource_to_localfile_interval.conf");
+                                        "/checkpoint-streaming-enable-test-resources/stream_fakesource_to_localfile_interval.conf",
+                                        String.valueOf(jobId));
                             } catch (Exception e) {
                                 log.error("Commit task exception :" + e.getMessage());
                                 throw new RuntimeException(e);
@@ -109,24 +112,9 @@ public class CheckpointEnableIT extends TestSuiteBase {
                         });
 
         // wait obtain job id
-        AtomicReference<String> jobId = new AtomicReference<>();
-        await().atMost(60000, TimeUnit.MILLISECONDS)
-                .untilAsserted(
-                        () -> {
-                            Pattern jobIdPattern =
-                                    Pattern.compile(
-                                            ".*Init JobMaster for Job stream_fakesource_to_localfile_interval.conf \\(([0-9]*)\\).*",
-                                            Pattern.DOTALL);
-                            Matcher matcher = jobIdPattern.matcher(container.getServerLogs());
-                            if (matcher.matches()) {
-                                jobId.set(matcher.group(1));
-                            }
-                            Assertions.assertNotNull(jobId.get());
-                        });
-
         Thread.sleep(15000);
         Assertions.assertTrue(container.getServerLogs().contains("checkpoint is enabled"));
-        Assertions.assertEquals(0, container.savepointJob(jobId.get()).getExitCode());
+        Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
         Assertions.assertEquals(0, startFuture.get().getExitCode());
         // restore job
         CompletableFuture.supplyAsync(
@@ -134,7 +122,7 @@ public class CheckpointEnableIT extends TestSuiteBase {
                     try {
                         return container.restoreJob(
                                 "/checkpoint-streaming-enable-test-resources/stream_fakesource_to_localfile_interval.conf",
-                                jobId.get());
+                                String.valueOf(jobId));
                     } catch (Exception e) {
                         log.error("Commit task exception :" + e.getMessage());
                         throw new RuntimeException(e);
@@ -164,36 +152,22 @@ public class CheckpointEnableIT extends TestSuiteBase {
     public void testZetaStreamingCheckpointNoInterval(TestContainer container)
             throws IOException, InterruptedException {
         // start job
+        Long jobId = JobIdGenerator.newJobId();
         CompletableFuture.supplyAsync(
                 () -> {
                     try {
                         return container.executeJob(
-                                "/checkpoint-streaming-enable-test-resources/stream_fakesource_to_localfile.conf");
+                                "/checkpoint-streaming-enable-test-resources/stream_fakesource_to_localfile.conf",
+                                String.valueOf(jobId));
                     } catch (Exception e) {
                         log.error("Commit task exception :" + e.getMessage());
                         throw new RuntimeException(e);
                     }
                 });
 
-        // wait obtain job id
-        AtomicReference<String> jobId = new AtomicReference<>();
-        await().atMost(60000, TimeUnit.MILLISECONDS)
-                .untilAsserted(
-                        () -> {
-                            Pattern jobIdPattern =
-                                    Pattern.compile(
-                                            ".*Init JobMaster for Job stream_fakesource_to_localfile.conf \\(([0-9]*)\\).*",
-                                            Pattern.DOTALL);
-                            Matcher matcher = jobIdPattern.matcher(container.getServerLogs());
-                            if (matcher.matches()) {
-                                jobId.set(matcher.group(1));
-                            }
-                            Assertions.assertNotNull(jobId.get());
-                        });
-
         Thread.sleep(15000);
         Assertions.assertTrue(container.getServerLogs().contains("checkpoint is enabled"));
-        Assertions.assertEquals(0, container.savepointJob(jobId.get()).getExitCode());
+        Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
 
         // restore job
         CompletableFuture.supplyAsync(
@@ -202,7 +176,7 @@ public class CheckpointEnableIT extends TestSuiteBase {
                         return container
                                 .restoreJob(
                                         "/checkpoint-streaming-enable-test-resources/stream_fakesource_to_localfile.conf",
-                                        jobId.get())
+                                        String.valueOf(jobId))
                                 .getExitCode();
                     } catch (Exception e) {
                         log.error("Commit task exception :" + e.getMessage());
@@ -226,7 +200,7 @@ public class CheckpointEnableIT extends TestSuiteBase {
 
     @TestTemplate
     @DisabledOnContainer(
-            value = {TestContainerId.FLINK_1_17, TestContainerId.FLINK_1_18},
+            value = {},
             type = {EngineType.SEATUNNEL, EngineType.SPARK},
             disabledReason =
                     "depending on the engine, the logic for determining whether a checkpoint is enabled is different")
@@ -258,8 +232,14 @@ public class CheckpointEnableIT extends TestSuiteBase {
          * disabled. reference {@link
          * org.apache.flink.runtime.jobgraph.JobGraph#isCheckpointingEnabled()}
          */
-        Assertions.assertEquals(Long.MAX_VALUE, jobConfig.getOrDefault("interval", 0L));
-        Assertions.assertEquals(0, enableExecResult.getExitCode());
+        if (container.identifier().equals(TestContainerId.FLINK_1_13)
+                || container.identifier().equals(TestContainerId.FLINK_1_14)
+                || container.identifier().equals(TestContainerId.FLINK_1_15)
+                || container.identifier().equals(TestContainerId.FLINK_1_16)) {
+            Assertions.assertEquals(Long.MAX_VALUE, jobConfig.getOrDefault("interval", 0L));
+        } else {
+            Assertions.assertEquals(0, jobConfig.getOrDefault("interval", 0));
+        }
     }
 
     @TestTemplate

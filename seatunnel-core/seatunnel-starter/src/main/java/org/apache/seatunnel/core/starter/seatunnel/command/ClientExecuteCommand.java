@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.core.starter.seatunnel.command;
 
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.apache.seatunnel.common.utils.DateTimeUtils;
 import org.apache.seatunnel.common.utils.StringFormatUtils;
 import org.apache.seatunnel.core.starter.command.Command;
@@ -28,6 +30,7 @@ import org.apache.seatunnel.engine.client.SeaTunnelClient;
 import org.apache.seatunnel.engine.client.job.ClientJobExecutionEnvironment;
 import org.apache.seatunnel.engine.client.job.ClientJobProxy;
 import org.apache.seatunnel.engine.client.job.JobMetricsRunner;
+import org.apache.seatunnel.engine.client.job.JobStatusRunner;
 import org.apache.seatunnel.engine.common.Constant;
 import org.apache.seatunnel.engine.common.config.ConfigProvider;
 import org.apache.seatunnel.engine.common.config.EngineConfig;
@@ -41,7 +44,6 @@ import org.apache.seatunnel.engine.server.SeaTunnelNodeContext;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.impl.HazelcastInstanceFactory;
@@ -84,7 +86,9 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
         try {
             String clusterName = clientCommandArgs.getClusterName();
             ClientConfig clientConfig = ConfigProvider.locateAndGetClientConfig();
-            if (clientCommandArgs.getMasterType().equals(MasterType.LOCAL)) {
+            //  get running mode
+            boolean isLocalMode = clientCommandArgs.getMasterType().equals(MasterType.LOCAL);
+            if (isLocalMode) {
                 clusterName =
                         creatRandomClusterName(
                                 StringUtils.isNotEmpty(clusterName)
@@ -159,7 +163,7 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                 // create job proxy
                 ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
                 if (clientCommandArgs.isAsync()) {
-                    if (clientCommandArgs.getMasterType().equals(MasterType.LOCAL)) {
+                    if (isLocalMode) {
                         log.warn("The job is running in local mode, can not use async mode.");
                     } else {
                         return;
@@ -187,7 +191,8 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                 long jobId = clientJobProxy.getJobId();
                 JobMetricsRunner jobMetricsRunner = new JobMetricsRunner(engineClient, jobId);
                 executorService =
-                        Executors.newSingleThreadScheduledExecutor(
+                        Executors.newScheduledThreadPool(
+                                2,
                                 new ThreadFactoryBuilder()
                                         .setNameFormat("job-metrics-runner-%d")
                                         .setDaemon(true)
@@ -197,6 +202,15 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                         0,
                         seaTunnelConfig.getEngineConfig().getPrintJobMetricsInfoInterval(),
                         TimeUnit.SECONDS);
+
+                if (!isLocalMode) {
+                    // LOCAL mode does not require running the job status runner
+                    executorService.schedule(
+                            new JobStatusRunner(engineClient.getJobClient(), jobId),
+                            0,
+                            TimeUnit.SECONDS);
+                }
+
                 // wait for job complete
                 JobResult jobResult = clientJobProxy.waitForJobCompleteV2();
                 jobStatus = jobResult.getStatus();

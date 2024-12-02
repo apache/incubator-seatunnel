@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class StarRocksSaveModeUtil {
@@ -108,12 +108,15 @@ public class StarRocksSaveModeUtil {
     private static String columnToStarrocksType(Column column) {
         checkNotNull(column, "The column is required.");
         return String.format(
-                "`%s` %s %s ",
+                "`%s` %s %s %s",
                 column.getName(),
                 dataTypeToStarrocksType(
                         column.getDataType(),
                         column.getColumnLength() == null ? 0 : column.getColumnLength()),
-                column.isNullable() ? "NULL" : "NOT NULL");
+                column.isNullable() ? "NULL" : "NOT NULL",
+                StringUtils.isEmpty(column.getComment())
+                        ? ""
+                        : "COMMENT '" + column.getComment() + "'");
     }
 
     private static String mergeColumnInTemplate(

@@ -93,6 +93,18 @@ public class TestEmbeddingIT extends TestSuiteBase implements TestResource {
         Assertions.assertEquals(0, execResult.getExitCode());
     }
 
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK},
+            disabledReason = "Currently SPARK do not multi table transform")
+    @TestTemplate
+    public void testEmbeddingMultiTable(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob("/embedding_transform_multi_table.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
     @TestTemplate
     public void testEmbeddingWithCustomModel(TestContainer container)
             throws IOException, InterruptedException {

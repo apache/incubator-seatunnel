@@ -105,13 +105,14 @@ For specific types in MongoDB, we use Extended JSON format to map them to Seatun
 
 ## Source Options
 
-|                Name                |  Type  | Required | Default |                                                                                                                                 Description                                                                                                                                 |
+| Name                               | Type   | Required | Default | Description                                                                                                                                                                                                                                                                 |
 |------------------------------------|--------|----------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | hosts                              | String | Yes      | -       | The comma-separated list of hostname and port pairs of the MongoDB servers. eg. `localhost:27017,localhost:27018`                                                                                                                                                           |
 | username                           | String | No       | -       | Name of the database user to be used when connecting to MongoDB.                                                                                                                                                                                                            |
 | password                           | String | No       | -       | Password to be used when connecting to MongoDB.                                                                                                                                                                                                                             |
 | database                           | List   | Yes      | -       | Name of the database to watch for changes. If not set then all databases will be captured. The database also supports regular expressions to monitor multiple databases matching the regular expression. eg. `db1,db2`.                                                     |
 | collection                         | List   | Yes      | -       | Name of the collection in the database to watch for changes. If not set then all collections will be captured. The collection also supports regular expressions to monitor multiple collections matching fully-qualified collection identifiers. eg. `db1.coll1,db2.coll2`. |
+| schema                             |        | yes      | -       | The structure of the data, including field names and field types.                                                                                                                                                                                                           |
 | connection.options                 | String | No       | -       | The ampersand-separated connection options of MongoDB.  eg. `replicaSet=test&connectTimeoutMS=300000`.                                                                                                                                                                      |
 | batch.size                         | Long   | No       | 1024    | The cursor batch size.                                                                                                                                                                                                                                                      |
 | poll.max.batch.size                | Enum   | No       | 1024    | Maximum number of change stream documents to include in a single batch when polling for new data.                                                                                                                                                                           |
@@ -185,6 +186,14 @@ source {
     collection = ["inventory.products"]
     username = stuser
     password = stpw
+    schema = {
+      fields {
+        "_id" : string,
+        "name" : string,
+        "description" : string,
+        "weight" : string
+      }
+    }
   }
 }
 
@@ -204,76 +213,6 @@ sink {
 }
 ```
 
-## Multi-table Synchronization
-
-The following example demonstrates how to create a data synchronization job that read the cdc data of multiple library tables mongodb and prints it on the local client:
-
-```hocon
-env {
-  # You can set engine configuration here
-  parallelism = 1
-  job.mode = "STREAMING"
-  checkpoint.interval = 5000
-}
-
-source {
-  MongoDB-CDC {
-    hosts = "mongo0:27017"
-    database = ["inventory","crm"]
-    collection = ["inventory.products","crm.test"]
-    username = stuser
-    password = stpw
-  }
-}
-
-# Console printing of the read Mongodb data
-sink {
-  Console {
-    parallelism = 1
-  }
-}
-```
-
-### Tips:
-
-> 1.The cdc synchronization of multiple library tables cannot specify the schema, and can only output json data downstream.
-> This is because MongoDB does not provide metadata information for querying, so if you want to support multiple tables, all tables can only be read as one structure.
-
-## Regular Expression Matching for Multiple Tables
-
-The following example demonstrates how to create a data synchronization job that through regular expression read the data of multiple library tables mongodb and prints it on the local client:
-
-| Matching example | Expressions |   |                                        Describe                                        |
-|------------------|-------------|---|----------------------------------------------------------------------------------------|
-| Prefix matching  | ^(test).*   |   | Match the database name or table name with the prefix test, such as test1, test2, etc. |
-| Suffix matching  | .*[p$]      |   | Match the database name or table name with the suffix p, such as cdcp, edcp, etc.      |
-
-```hocon
-env {
-  # You can set engine configuration here
-  parallelism = 1
-  job.mode = "STREAMING"
-  checkpoint.interval = 5000
-}
-
-source {
-  MongoDB-CDC {
-    hosts = "mongo0:27017"
-    # So this example is used (^(test).*|^(tpc).*|txc|.*[p$]|t{2}).(t[5-8]|tt),matching txc.tt、test2.test5.
-    database = ["(^(test).*|^(tpc).*|txc|.*[p$]|t{2})"]
-    collection = ["(t[5-8]|tt)"]
-    username = stuser
-    password = stpw
-  }
-}
-
-# Console printing of the read Mongodb data
-sink {
-  Console {
-    parallelism = 1
-  }
-}
-```
 
 ## Format of real-time streaming data
 
@@ -309,4 +248,3 @@ sink {
    }
 }
 ```
-

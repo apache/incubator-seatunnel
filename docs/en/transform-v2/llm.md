@@ -11,7 +11,7 @@ more.
 ## Options
 
 | name                   | type   | required | default value |
-|------------------------| ------ | -------- |---------------|
+|------------------------|--------|----------|---------------|
 | model_provider         | enum   | yes      |               |
 | output_data_type       | enum   | no       | String        |
 | output_column_name     | string | no       | llm_output    |
@@ -28,7 +28,9 @@ more.
 ### model_provider
 
 The model provider to use. The available options are:
-OPENAI, DOUBAO, KIMIAI, CUSTOM
+OPENAI, DOUBAO, KIMIAI, MICROSOFT, CUSTOM
+
+> tips: If you use Microsoft, please make sure api_path cannot be empty
 
 ### output_data_type
 
@@ -254,6 +256,7 @@ sink {
   }
 }
 ```
+
 ### Customize the LLM model
 
 ```hocon
@@ -277,13 +280,13 @@ source {
       {fields = [4, "Eric"], kind = INSERT}
       {fields = [5, "Guangdong Liu"], kind = INSERT}
     ]
-    result_table_name = "fake"
+    plugin_output = "fake"
   }
 }
 
 transform {
   LLM {
-    source_table_name = "fake"
+    plugin_input = "fake"
     model_provider = CUSTOM
     model = gpt-4o-mini
     api_key = sk-xxx
@@ -308,13 +311,13 @@ transform {
                 }]
             }
         }
-    result_table_name = "llm_output"
+    plugin_output = "llm_output"
   }
 }
 
 sink {
   Assert {
-    source_table_name = "llm_output"
+    plugin_input = "llm_output"
     rules =
       {
         field_rules = [

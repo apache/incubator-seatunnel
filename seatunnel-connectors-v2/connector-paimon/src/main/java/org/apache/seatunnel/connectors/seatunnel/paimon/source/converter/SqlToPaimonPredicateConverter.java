@@ -54,8 +54,6 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectBody;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.math.BigDecimal;
@@ -83,7 +81,7 @@ public class SqlToPaimonPredicateConverter {
             throw new IllegalArgumentException("Only SELECT statements are supported.");
         }
         Select select = (Select) statement;
-        SelectBody selectBody = select.getSelectBody();
+        Select selectBody = select.getSelectBody();
         if (!(selectBody instanceof PlainSelect)) {
             throw new IllegalArgumentException("Only simple SELECT statements are supported.");
         }
@@ -101,18 +99,15 @@ public class SqlToPaimonPredicateConverter {
     public static int[] convertSqlSelectToPaimonProjectionIndex(
             String[] fieldNames, PlainSelect plainSelect) {
         int[] projectionIndex = null;
-        List<SelectItem> selectItems = plainSelect.getSelectItems();
+        List<SelectItem<?>> selectItems = plainSelect.getSelectItems();
 
         List<String> columnNames = new ArrayList<>();
         for (SelectItem selectItem : selectItems) {
-            if (selectItem instanceof AllColumns) {
+            if (selectItem.getExpression() instanceof AllColumns) {
                 return null;
-            } else if (selectItem instanceof SelectExpressionItem) {
-                SelectExpressionItem selectExpressionItem = (SelectExpressionItem) selectItem;
-                String columnName = selectExpressionItem.getExpression().toString();
-                columnNames.add(columnName);
             } else {
-                throw new IllegalArgumentException("Error encountered parsing query fields.");
+                String columnName = ((Column) selectItem.getExpression()).getColumnName();
+                columnNames.add(columnName);
             }
         }
 

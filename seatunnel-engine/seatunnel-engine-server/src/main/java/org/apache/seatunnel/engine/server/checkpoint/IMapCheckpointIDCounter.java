@@ -30,8 +30,8 @@ import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.seatunnel.engine.common.Constant.IMAP_CHECKPOINT_ID;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 public class IMapCheckpointIDCounter implements CheckpointIDCounter {
 

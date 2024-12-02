@@ -202,10 +202,12 @@ const sidebars = {
                 "seatunnel-engine/engine-jar-storage-mode",
                 "seatunnel-engine/tcp",
                 "seatunnel-engine/resource-isolation",
-                "seatunnel-engine/rest-api",
+                "seatunnel-engine/rest-api-v1",
+                "seatunnel-engine/rest-api-v2",
                 "seatunnel-engine/user-command",
                 "seatunnel-engine/logging",
-                "seatunnel-engine/telemetry"
+                "seatunnel-engine/telemetry",
+                "seatunnel-engine/web-ui"
             ]
         },
         {
@@ -224,6 +226,7 @@ const sidebars = {
                 'contribution/new-license',
                 'contribution/coding-guide',
                 'contribution/contribute-transform-v2-guide',
+                'contribution/how-to-create-your-connector'
             ],
         },
         "faq"

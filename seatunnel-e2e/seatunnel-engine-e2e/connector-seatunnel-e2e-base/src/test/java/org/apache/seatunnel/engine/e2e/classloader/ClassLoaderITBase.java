@@ -110,7 +110,7 @@ public abstract class ClassLoaderITBase extends SeaTunnelContainer {
                                     + "\t\"source\": [\n"
                                     + "\t\t{\n"
                                     + "\t\t\t\"plugin_name\": \"FakeSource\",\n"
-                                    + "\t\t\t\"result_table_name\": \"fake\",\n"
+                                    + "\t\t\t\"plugin_output\": \"fake\",\n"
                                     + "\t\t\t\"parallelism\": 10,\n"
                                     + "\t\t\t\"schema\": {\n"
                                     + "\t\t\t\t\"fields\": {\n"
@@ -125,7 +125,7 @@ public abstract class ClassLoaderITBase extends SeaTunnelContainer {
                                     + "\t\"sink\": [\n"
                                     + "\t\t{\n"
                                     + "\t\t\t\"plugin_name\": \"InMemory\",\n"
-                                    + "\t\t\t\"source_table_name\": \"fake\"\n"
+                                    + "\t\t\t\"plugin_input\": \"fake\"\n"
                                     + "\t\t}\n"
                                     + "\t]\n"
                                     + "}")
@@ -135,6 +135,7 @@ public abstract class ClassLoaderITBase extends SeaTunnelContainer {
                                     + server.getHost()
                                     + colon
                                     + server.getFirstMappedPort()
+                                    + RestConstant.CONTEXT_PATH
                                     + RestConstant.SUBMIT_JOB_URL)
                     .then()
                     .statusCode(200);
@@ -148,6 +149,7 @@ public abstract class ClassLoaderITBase extends SeaTunnelContainer {
                                                             + server.getHost()
                                                             + colon
                                                             + server.getFirstMappedPort()
+                                                            + RestConstant.CONTEXT_PATH
                                                             + RestConstant.FINISHED_JOBS_INFO
                                                             + "/FINISHED")
                                             .then()

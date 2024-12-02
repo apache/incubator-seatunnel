@@ -31,7 +31,7 @@ libfb303-xxx.jar
 
 ## Options
 
-|            name             |  type  | required |        default value         | Description                                                                                                                                                      |
+|            name             | type   | required | default value                | Description                                                                                                                                                      |
 |-----------------------------|--------|----------|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | warehouse                   | String | Yes      | -                            | Paimon warehouse path                                                                                                                                            |
 | catalog_type                | String | No       | filesystem                   | Catalog type of Paimon, support filesystem and hive                                                                                                              |
@@ -43,7 +43,7 @@ libfb303-xxx.jar
 | data_save_mode              | Enum   | No       | APPEND_DATA                  | The data save mode                                                                                                                                               |
 | paimon.table.primary-keys   | String | No       | -                            | Default comma-separated list of columns (primary key) that identify a row in tables.(Notice: The partition field needs to be included in the primary key fields) |
 | paimon.table.partition-keys | String | No       | -                            | Default comma-separated list of partition fields to use when creating tables.                                                                                    |
-| paimon.table.write-props    | Map    | No       | -                            | Properties passed through to paimon table initialization, [reference](https://paimon.apache.org/docs/master/maintenance/configurations/#coreoptions).               |
+| paimon.table.write-props    | Map    | No       | -                            | Properties passed through to paimon table initialization, [reference](https://paimon.apache.org/docs/master/maintenance/configurations/#coreoptions).            |
 | paimon.hadoop.conf          | Map    | No       | -                            | Properties in hadoop conf                                                                                                                                        |
 | paimon.hadoop.conf-path     | String | No       | -                            | The specified loading path for the 'core-site.xml', 'hdfs-site.xml', 'hive-site.xml' files                                                                       |
 
@@ -52,9 +52,21 @@ You must configure the `changelog-producer=input` option to enable the changelog
 
 The changelog producer mode of the paimon table has [four mode](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/) which is `none`、`input`、`lookup` and `full-compaction`.
 
-Currently, we only support the `none` and `input` mode. The default is `none` which will not output the changelog file. The `input` mode will output the changelog file in paimon table.
+All `changelog-producer` modes are currently supported. The default is `none`.
 
-When you use a streaming mode to read paimon table, these two mode will produce [different results](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/source/Paimon.md#changelog).
+* [`none`](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/#none)
+* [`input`](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/#input)
+* [`lookup`](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/#lookup)
+* [`full-compaction`](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/#full-compaction)
+> note： 
+> When you use a streaming mode to read paimon table，different mode will produce [different results](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/source/Paimon.md#changelog)。
+
+## Filesystems
+The Paimon connector supports writing data to multiple file systems. Currently, the supported file systems are hdfs and s3.
+If you use the s3 filesystem. You can configure the `fs.s3a.access-key`、`fs.s3a.secret-key`、`fs.s3a.endpoint`、`fs.s3a.path.style.access`、`fs.s3a.aws.credentials.provider` properties in the `paimon.hadoop.conf` option.
+Besides, the warehouse should start with `s3a://`.
+
+
 
 ## Examples
 
@@ -85,6 +97,53 @@ sink {
     warehouse="file:///tmp/seatunnel/paimon/hadoop-sink/"
     database="seatunnel"
     table="role"
+  }
+}
+```
+
+### Single table with s3 filesystem
+
+```hocon
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  FakeSource {
+    schema = {
+      fields {
+        c_map = "map<string, string>"
+        c_array = "array<int>"
+        c_string = string
+        c_boolean = boolean
+        c_tinyint = tinyint
+        c_smallint = smallint
+        c_int = int
+        c_bigint = bigint
+        c_float = float
+        c_double = double
+        c_bytes = bytes
+        c_date = date
+        c_decimal = "decimal(38, 18)"
+        c_timestamp = timestamp
+      }
+    }
+  }
+}
+
+sink {
+  Paimon {
+    warehouse = "s3a://test/"
+    database = "seatunnel_namespace11"
+    table = "st_test"
+    paimon.hadoop.conf = {
+        fs.s3a.access-key=G52pnxg67819khOZ9ezX
+        fs.s3a.secret-key=SHJuAQqHsLrgZWikvMa3lJf5T0NfM5LMFliJh9HF
+        fs.s3a.endpoint="http://minio4:9000"
+        fs.s3a.path.style.access=true
+        fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider
+    }
   }
 }
 ```
@@ -247,6 +306,38 @@ sink {
     paimon.table.partition-keys = "dt"
     paimon.table.primary-keys = "pk_id,dt"
   }
+}
+```
+
+#### Write with the `changelog-producer` attribute
+
+```hocon
+env {
+ parallelism = 1
+ job.mode = "STREAMING"
+ checkpoint.interval = 5000
+}
+
+source {
+ Mysql-CDC {
+  base-url = "jdbc:mysql://127.0.0.1:3306/seatunnel"
+  username = "root"
+  password = "******"
+  table-names = ["seatunnel.role"]
+ }
+}
+
+sink {
+ Paimon {
+  catalog_name = "seatunnel_test"
+  warehouse = "file:///tmp/seatunnel/paimon/hadoop-sink/"
+  database = "seatunnel"
+  table = "role"
+  paimon.table.write-props = {
+   changelog-producer = full-compaction
+   changelog-tmp-path = /tmp/paimon/changelog
+  }
+ }
 }
 ```
 

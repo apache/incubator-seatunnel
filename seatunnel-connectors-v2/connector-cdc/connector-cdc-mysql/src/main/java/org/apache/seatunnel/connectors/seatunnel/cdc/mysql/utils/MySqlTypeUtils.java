@@ -30,7 +30,6 @@ import io.debezium.relational.Column;
 import io.debezium.relational.RelationalDatabaseConnectorConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /** Utilities for converting from MySQL types to SeaTunnel types. */
@@ -70,7 +69,6 @@ public class MySqlTypeUtils {
         Optional<String> defaultValueExpression = column.defaultValueExpression();
         Object defaultValue = defaultValueExpression.orElse(null);
         if (defaultValueExpression.isPresent()
-                && Objects.nonNull(defaultValue)
                 && !MysqlDefaultValueUtils.isSpecialDefaultValue(defaultValue)) {
             defaultValue =
                     mySqlDefaultValueConverter
@@ -82,11 +80,14 @@ public class MySqlTypeUtils {
                         .name(column.name())
                         .columnType(column.typeName())
                         .dataType(column.typeName())
-                        .length((long) column.length())
-                        .precision((long) column.length())
                         .scale(column.scale().orElse(0))
                         .nullable(column.isOptional())
                         .defaultValue(defaultValue);
+
+        if (column.length() >= 0) {
+            builder.length((long) column.length()).precision((long) column.length());
+        }
+
         switch (column.typeName().toUpperCase()) {
             case MySqlTypeConverter.MYSQL_CHAR:
             case MySqlTypeConverter.MYSQL_VARCHAR:

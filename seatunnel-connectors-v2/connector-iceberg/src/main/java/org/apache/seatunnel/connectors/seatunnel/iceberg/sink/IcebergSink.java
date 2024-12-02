@@ -28,9 +28,11 @@ import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSink;
 import org.apache.seatunnel.api.sink.SupportSaveMode;
+import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSink;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.factory.CatalogFactory;
+import org.apache.seatunnel.api.table.schema.SchemaChangeType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.connectors.seatunnel.iceberg.config.SinkConfig;
@@ -41,6 +43,7 @@ import org.apache.seatunnel.connectors.seatunnel.iceberg.sink.commit.IcebergComm
 import org.apache.seatunnel.connectors.seatunnel.iceberg.sink.state.IcebergSinkState;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -54,7 +57,8 @@ public class IcebergSink
                         IcebergCommitInfo,
                         IcebergAggregatedCommitInfo>,
                 SupportSaveMode,
-                SupportMultiTableSink {
+                SupportMultiTableSink,
+                SupportSchemaEvolutionSink {
     private static String PLUGIN_NAME = "Iceberg";
     private final SinkConfig config;
     private final ReadonlyConfig readonlyConfig;
@@ -131,6 +135,20 @@ public class IcebergSink
                         config.getDataSaveMode(),
                         catalog,
                         catalogTable,
-                        null));
+                        config.getDataSaveModeSQL()));
+    }
+
+    @Override
+    public Optional<CatalogTable> getWriteCatalogTable() {
+        return Optional.ofNullable(catalogTable);
+    }
+
+    @Override
+    public List<SchemaChangeType> supports() {
+        return Arrays.asList(
+                SchemaChangeType.ADD_COLUMN,
+                SchemaChangeType.DROP_COLUMN,
+                SchemaChangeType.RENAME_COLUMN,
+                SchemaChangeType.UPDATE_COLUMN);
     }
 }

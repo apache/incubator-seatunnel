@@ -125,7 +125,8 @@ Companies and organizations worldwide use SeaTunnel for research, production, an
 
 ### 1. How do I install SeaTunnel?
 
-Follow the [Installation Guide](https://seatunnel.apache.org/docs/2.3.3/start-v2/locally/deployment/) on our website to get started.
+Follow the [Installation Guide](https://seatunnel.apache.org/docs/start-v2/locally/deployment/) on our website to get
+started.
 
 ### 2. How can I contribute to SeaTunnel?
 
@@ -143,6 +144,7 @@ Yes, SeaTunnel is available under the Apache 2.0 License, allowing commercial us
 
 Our [Official Documentation](https://seatunnel.apache.org/docs) includes detailed guides and tutorials to help you get started.
 
-### 7. Is there a community or support channel?
+### 6. Is there a community or support channel?
 
 Join our Slack community for support and discussions: [SeaTunnel Slack](https://s.apache.org/seatunnel-slack).
+More information, please refer to [FAQ](https://seatunnel.apache.org/docs/faq). 

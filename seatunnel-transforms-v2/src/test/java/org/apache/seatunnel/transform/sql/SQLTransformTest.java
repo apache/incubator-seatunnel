@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class SQLTransformTest {
@@ -168,11 +169,11 @@ public class SQLTransformTest {
                                 "select id, trim(`apply`) as `apply` from test where `apply` = 'a'"));
         SQLTransform sqlTransform = new SQLTransform(config, table);
         TableSchema tableSchema = sqlTransform.transformTableSchema();
-        SeaTunnelRow result =
+        List<SeaTunnelRow> result =
                 sqlTransform.transformRow(
                         new SeaTunnelRow(new Object[] {Integer.valueOf(1), String.valueOf("a")}));
         Assertions.assertEquals("apply", tableSchema.getFieldNames()[1]);
-        Assertions.assertEquals("a", result.getField(1));
+        Assertions.assertEquals("a", result.get(0).getField(1));
         result =
                 sqlTransform.transformRow(
                         new SeaTunnelRow(new Object[] {Integer.valueOf(1), String.valueOf("b")}));
@@ -191,7 +192,7 @@ public class SQLTransformTest {
         Assertions.assertEquals("apply", tableSchema.getFieldNames()[1]);
         Assertions.assertEquals(
                 BasicType.STRING_TYPE, tableSchema.getColumns().get(1).getDataType());
-        Assertions.assertEquals("a", result.getField(1));
+        Assertions.assertEquals("a", result.get(0).getField(1));
 
         table =
                 CatalogTableUtil.getCatalogTable(
@@ -211,7 +212,7 @@ public class SQLTransformTest {
                         new SeaTunnelRow(new Object[] {Integer.valueOf(1), Long.valueOf(1)}));
         Assertions.assertEquals("apply", tableSchema.getFieldNames()[1]);
         Assertions.assertEquals(BasicType.LONG_TYPE, tableSchema.getColumns().get(1).getDataType());
-        Assertions.assertEquals(Long.valueOf(2), result.getField(1));
+        Assertions.assertEquals(Long.valueOf(2), result.get(0).getField(1));
         result =
                 sqlTransform.transformRow(
                         new SeaTunnelRow(new Object[] {Integer.valueOf(1), Long.valueOf(0)}));
@@ -243,7 +244,7 @@ public class SQLTransformTest {
         Assertions.assertEquals("apply", tableSchema.getFieldNames()[1]);
         Assertions.assertEquals(
                 BasicType.STRING_TYPE, tableSchema.getColumns().get(1).getDataType());
-        Assertions.assertEquals("a", result.getField(1));
+        Assertions.assertEquals("a", result.get(0).getField(1));
         result =
                 sqlTransform.transformRow(
                         new SeaTunnelRow(
@@ -278,6 +279,6 @@ public class SQLTransformTest {
         Assertions.assertEquals("apply", tableSchema.getFieldNames()[1]);
         Assertions.assertEquals(
                 BasicType.STRING_TYPE, tableSchema.getColumns().get(1).getDataType());
-        Assertions.assertEquals("a", result.getField(1));
+        Assertions.assertEquals("a", result.get(0).getField(1));
     }
 }

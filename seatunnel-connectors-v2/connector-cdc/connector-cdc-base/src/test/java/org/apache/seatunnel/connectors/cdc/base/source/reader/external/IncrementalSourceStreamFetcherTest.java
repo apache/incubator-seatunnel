@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.debezium.config.CommonConnectorConfig.TRANSACTION_TOPIC;
+import static io.debezium.connector.AbstractSourceInfo.DEBEZIUM_CONNECTOR_KEY;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -336,7 +337,22 @@ public class IncrementalSourceStreamFetcherTest {
 
     static SourceRecord createSchemaChangeEvent(String topic) {
         Schema keySchema =
-                SchemaBuilder.struct().name(SourceRecordUtils.SCHEMA_CHANGE_EVENT_KEY_NAME).build();
+                SchemaBuilder.struct().name("io.debezium.connector.mysql.SchemaChangeKey").build();
+        Schema valueKeySchema =
+                SchemaBuilder.struct()
+                        .name("io.debezium.connector.mysql.Source")
+                        .field(DEBEZIUM_CONNECTOR_KEY, Schema.STRING_SCHEMA)
+                        .build();
+        Struct valueValues = new Struct(valueKeySchema);
+        valueValues.put(DEBEZIUM_CONNECTOR_KEY, "mysql");
+
+        Schema valueSchema =
+                SchemaBuilder.struct()
+                        .field(Envelope.FieldName.SOURCE, valueKeySchema)
+                        .name("")
+                        .build();
+        Struct value = new Struct(valueSchema);
+        value.put(valueSchema.field(Envelope.FieldName.SOURCE), valueValues);
         SourceRecord record =
                 new SourceRecord(
                         Collections.emptyMap(),
@@ -344,8 +360,8 @@ public class IncrementalSourceStreamFetcherTest {
                         topic,
                         keySchema,
                         null,
-                        null,
-                        null);
+                        valueSchema,
+                        value);
         Assertions.assertTrue(SourceRecordUtils.isSchemaChangeEvent(record));
         return record;
     }

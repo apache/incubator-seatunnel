@@ -59,6 +59,35 @@ public class TestSQLIT extends TestSuiteBase {
         Assertions.assertEquals(0, sqlAllColumns.getExitCode());
         Container.ExecResult caseWhenSql = container.executeJob("/sql_transform/case_when.conf");
         Assertions.assertEquals(0, caseWhenSql.getExitCode());
+
+        Container.ExecResult execResultBySql =
+                container.executeJob("/sql_transform/explode_transform.conf");
+        Assertions.assertEquals(0, execResultBySql.getExitCode());
+
+        Container.ExecResult execResultBySqlWithoutOuter =
+                container.executeJob("/sql_transform/explode_transform_without_outer.conf");
+        Assertions.assertEquals(0, execResultBySqlWithoutOuter.getExitCode());
+
+        Container.ExecResult execResultBySqlWithOuter =
+                container.executeJob("/sql_transform/explode_transform_with_outer.conf");
+        Assertions.assertEquals(0, execResultBySqlWithOuter.getExitCode());
+
+        Container.ExecResult arraySql = container.executeJob("/sql_transform/func_array.conf");
+        Assertions.assertEquals(0, arraySql.getExitCode());
+
+        Container.ExecResult splitSql = container.executeJob("/sql_transform/func_split.conf");
+        Assertions.assertEquals(0, splitSql.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK},
+            disabledReason = "Currently SPARK do not multi table transform")
+    @TestTemplate
+    public void testSQLTransformMultiTable(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult sqlTransform = container.executeJob("/sql_transform.conf");
+        Assertions.assertEquals(0, sqlTransform.getExitCode());
     }
 
     @TestTemplate

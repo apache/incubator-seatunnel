@@ -302,6 +302,15 @@ REPEAT(NAME || ' ', 10)
 
 REPLACE(NAME, ' ')
 
+
+### SPLIT
+
+将字符串切分成数组。
+
+示例:
+
+select SPLIT(test,';') as arrays
+
 ### SOUNDEX
 
 ```SOUNDEX(string)```
@@ -964,3 +973,37 @@ from
 示例:
 
 case when c_string in ('c_string') then 1 else 0 end
+
+### UUID
+
+```UUID()```
+
+通过java函数生成uuid
+
+示例:
+
+select UUID() as seatunnel_uuid
+
+
+### ARRAY
+
+生成一个数组。
+
+示例:
+
+select ARRAY('test1','test2','test3') as arrays
+
+### LATERAL VIEW
+#### EXPLODE
+
+将 array 列展开成多行。
+OUTER EXPLODE 当 array 为NULL或者为空时，返回NULL
+EXPLODE(SPLIT(FIELD_NAME,separator))用来切分字符串类型，SPLIT 第一个参数是字段名，第二个参数是分隔符
+EXPLODE(ARRAY(value1,value2)) 用于自定义数组切分，在原有基础上生成一个新的字段。
+```
+SELECT * FROM fake 
+	LATERAL VIEW EXPLODE ( SPLIT ( NAME, ',' ) ) AS NAME 
+	LATERAL VIEW EXPLODE ( SPLIT ( pk_id, ';' ) ) AS pk_id 
+	LATERAL VIEW OUTER EXPLODE ( age ) AS age
+	LATERAL VIEW OUTER EXPLODE ( ARRAY(1,1) ) AS num
+```

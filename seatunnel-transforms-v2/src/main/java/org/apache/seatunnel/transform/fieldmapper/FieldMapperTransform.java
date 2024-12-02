@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.transform.fieldmapper;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
@@ -26,12 +28,11 @@ import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
-import org.apache.seatunnel.transform.common.AbstractCatalogSupportTransform;
+import org.apache.seatunnel.transform.common.AbstractCatalogSupportMapTransform;
 import org.apache.seatunnel.transform.exception.TransformCommonError;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +42,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class FieldMapperTransform extends AbstractCatalogSupportTransform {
+public class FieldMapperTransform extends AbstractCatalogSupportMapTransform {
     public static String PLUGIN_NAME = "FieldMapper";
     private final FieldMapperTransformConfig config;
     private List<Integer> needReaderColIndex;
@@ -84,6 +85,7 @@ public class FieldMapperTransform extends AbstractCatalogSupportTransform {
         SeaTunnelRow outputRow = new SeaTunnelRow(outputDataArray);
         outputRow.setRowKind(inputRow.getRowKind());
         outputRow.setTableId(inputRow.getTableId());
+        outputRow.setOptions(inputRow.getOptions());
         return outputRow;
     }
 
@@ -110,9 +112,13 @@ public class FieldMapperTransform extends AbstractCatalogSupportTransform {
                                     value,
                                     oldColumn.getDataType(),
                                     oldColumn.getColumnLength(),
+                                    oldColumn.getScale(),
                                     oldColumn.isNullable(),
                                     oldColumn.getDefaultValue(),
-                                    oldColumn.getComment());
+                                    oldColumn.getComment(),
+                                    oldColumn.getSourceType(),
+                                    oldColumn.getOptions());
+
                     outputColumns.add(outputColumn);
                     outputFieldNames.add(outputColumn.getName());
                     needReaderColIndex.add(fieldIndex);

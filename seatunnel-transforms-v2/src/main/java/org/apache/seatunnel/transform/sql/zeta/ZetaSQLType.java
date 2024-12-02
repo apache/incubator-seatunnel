@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.transform.sql.zeta;
 
+import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.DecimalType;
 import org.apache.seatunnel.api.table.type.LocalTimeType;
@@ -43,6 +44,7 @@ import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.SignedExpression;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.TimeKeyExpression;
+import net.sf.jsqlparser.expression.TrimFunction;
 import net.sf.jsqlparser.expression.WhenClause;
 import net.sf.jsqlparser.expression.operators.arithmetic.Concat;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -71,6 +73,7 @@ public class ZetaSQLType {
     public static final String LONG = "LONG";
     public static final String BYTE = "BYTE";
     public static final String BYTES = "BYTES";
+    public static final String BINARY = "BINARY";
     public static final String DOUBLE = "DOUBLE";
     public static final String FLOAT = "FLOAT";
     public static final String TIMESTAMP = "TIMESTAMP";
@@ -161,6 +164,9 @@ public class ZetaSQLType {
         if (expression instanceof Function) {
             return getFunctionType((Function) expression);
         }
+        if (expression instanceof TrimFunction) {
+            return BasicType.STRING_TYPE;
+        }
         if (expression instanceof TimeKeyExpression) {
             return getTimeKeyExprType((TimeKeyExpression) expression);
         }
@@ -191,6 +197,7 @@ public class ZetaSQLType {
         if (expression instanceof CastExpression) {
             return getCastType((CastExpression) expression);
         }
+
         if (expression instanceof BinaryExpression) {
             BinaryExpression binaryExpression = (BinaryExpression) expression;
             SeaTunnelDataType<?> leftType = getExpressionType(binaryExpression.getLeftExpression());
@@ -314,10 +321,10 @@ public class ZetaSQLType {
     }
 
     private SeaTunnelDataType<?> getCastType(CastExpression castExpression) {
-        String dataType = castExpression.getType().getDataType();
+        String dataType = castExpression.getColDataType().getDataType();
         switch (dataType.toUpperCase()) {
             case DECIMAL:
-                List<String> ps = castExpression.getType().getArgumentsStringList();
+                List<String> ps = castExpression.getColDataType().getArgumentsStringList();
                 return new DecimalType(Integer.parseInt(ps.get(0)), Integer.parseInt(ps.get(1)));
             case VARCHAR:
             case STRING:
@@ -331,6 +338,7 @@ public class ZetaSQLType {
             case BYTE:
                 return BasicType.BYTE_TYPE;
             case BYTES:
+            case BINARY:
                 return PrimitiveByteArrayType.INSTANCE;
             case DOUBLE:
                 return BasicType.DOUBLE_TYPE;
@@ -384,6 +392,7 @@ public class ZetaSQLType {
             case ZetaSQLFunction.MONTHNAME:
             case ZetaSQLFunction.FORMATDATETIME:
             case ZetaSQLFunction.FROM_UNIXTIME:
+            case ZetaSQLFunction.UUID:
                 return BasicType.STRING_TYPE;
             case ZetaSQLFunction.ASCII:
             case ZetaSQLFunction.LOCATE:
@@ -438,6 +447,9 @@ public class ZetaSQLType {
             case ZetaSQLFunction.TRUNC:
             case ZetaSQLFunction.TRUNCATE:
                 return BasicType.DOUBLE_TYPE;
+            case ZetaSQLFunction.ARRAY:
+            case ZetaSQLFunction.SPLIT:
+                return ArrayType.STRING_ARRAY_TYPE;
             case ZetaSQLFunction.NOW:
             case ZetaSQLFunction.DATE_TRUNC:
                 return LocalTimeType.LOCAL_DATE_TIME_TYPE;

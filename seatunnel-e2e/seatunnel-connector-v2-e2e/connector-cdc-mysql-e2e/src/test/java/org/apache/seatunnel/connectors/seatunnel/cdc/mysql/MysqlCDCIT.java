@@ -27,6 +27,7 @@ import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -49,8 +50,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.awaitility.Awaitility.await;
@@ -179,6 +178,45 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
                                     query(getSourceQuerySQL(MYSQL_DATABASE, SOURCE_TABLE_1)),
                                     query(getSinkQuerySQL(MYSQL_DATABASE, SINK_TABLE)));
                         });
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testMysqlCdcMetadataTrans(TestContainer container) throws InterruptedException {
+        // Clear related content to ensure that multiple operations are not affected
+        clearTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+        clearTable(MYSQL_DATABASE, SINK_TABLE);
+        Long jobId = JobIdGenerator.newJobId();
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        container.executeJob(
+                                "/mysqlcdc_to_metadata_trans.conf", String.valueOf(jobId));
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                });
+        TimeUnit.SECONDS.sleep(10);
+        // insert update delete
+        upsertDeleteSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+        TimeUnit.SECONDS.sleep(10);
+        await().atMost(2, TimeUnit.MINUTES)
+                .untilAsserted(
+                        () -> {
+                            String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                            Assertions.assertEquals("RUNNING", jobStatus);
+                        });
+        try {
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @TestTemplate
@@ -329,35 +367,58 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
         clearTable(MYSQL_DATABASE2, SOURCE_TABLE_1);
         clearTable(MYSQL_DATABASE2, SOURCE_TABLE_2);
 
+        // init
+        initSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+
+        Long jobId = JobIdGenerator.newJobId();
         CompletableFuture.supplyAsync(
                 () -> {
                     try {
                         return container.executeJob(
-                                "/mysqlcdc_to_mysql_with_multi_table_mode_one_table.conf");
+                                "/mysqlcdc_to_mysql_with_multi_table_mode_one_table.conf",
+                                String.valueOf(jobId));
                     } catch (Exception e) {
                         log.error("Commit task exception :" + e.getMessage());
                         throw new RuntimeException(e);
                     }
                 });
 
-        // insert update delete
-        upsertDeleteSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
-
-        // stream stage
+        // wait for data written to sink
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
-                                Assertions.assertAll(
-                                        () ->
-                                                Assertions.assertIterableEquals(
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE,
-                                                                        SOURCE_TABLE_1)),
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE2,
-                                                                        SOURCE_TABLE_1)))));
+                                Assertions.assertTrue(
+                                        query(getSourceQuerySQL(MYSQL_DATABASE2, SOURCE_TABLE_1))
+                                                        .size()
+                                                > 1));
+
+        // Restore job with snapshot read phase
+        Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
+        CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        container.restoreJob(
+                                "/mysqlcdc_to_mysql_with_multi_table_mode_one_table.conf",
+                                String.valueOf(jobId));
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                    return null;
+                });
+
+        // insert update delete
+        changeSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+
+        // stream stage
+        await().atMost(300000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
+                .untilAsserted(
+                        () ->
+                                Assertions.assertIterableEquals(
+                                        query(getSourceQuerySQL(MYSQL_DATABASE, SOURCE_TABLE_1)),
+                                        query(getSourceQuerySQL(MYSQL_DATABASE2, SOURCE_TABLE_1))));
         await().atMost(60000, TimeUnit.MILLISECONDS)
                 .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .until(() -> getConnectionStatus("st_user_source").size() == 1);
@@ -365,26 +426,15 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
                 .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .until(() -> getConnectionStatus("st_user_sink").size() == 1);
 
-        Pattern jobIdPattern =
-                Pattern.compile(
-                        ".*Init JobMaster for Job mysqlcdc_to_mysql_with_multi_table_mode_one_table.conf \\(([0-9]*)\\).*",
-                        Pattern.DOTALL);
-        Matcher matcher = jobIdPattern.matcher(container.getServerLogs());
-        String jobId;
-        if (matcher.matches()) {
-            jobId = matcher.group(1);
-        } else {
-            throw new RuntimeException("Can not find jobId");
-        }
-
-        Assertions.assertEquals(0, container.savepointJob(jobId).getExitCode());
+        Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
 
         // Restore job with add a new table
         CompletableFuture.supplyAsync(
                 () -> {
                     try {
                         container.restoreJob(
-                                "/mysqlcdc_to_mysql_with_multi_table_mode_two_table.conf", jobId);
+                                "/mysqlcdc_to_mysql_with_multi_table_mode_two_table.conf",
+                                String.valueOf(jobId));
                     } catch (Exception e) {
                         log.error("Commit task exception :" + e.getMessage());
                         throw new RuntimeException(e);
@@ -396,6 +446,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
         // stream stage
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
                                 Assertions.assertAll(
@@ -529,6 +580,62 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void initSourceTable(String database, String tableName) {
+        for (int i = 1; i < 100; i++) {
+            executeSql(
+                    "INSERT INTO "
+                            + database
+                            + "."
+                            + tableName
+                            + " ( id, f_binary, f_blob, f_long_varbinary, f_longblob, f_tinyblob, f_varbinary, f_smallint,\n"
+                            + "                                         f_smallint_unsigned, f_mediumint, f_mediumint_unsigned, f_int, f_int_unsigned, f_integer,\n"
+                            + "                                         f_integer_unsigned, f_bigint, f_bigint_unsigned, f_numeric, f_decimal, f_float, f_double,\n"
+                            + "                                         f_double_precision, f_longtext, f_mediumtext, f_text, f_tinytext, f_varchar, f_date, f_datetime,\n"
+                            + "                                         f_timestamp, f_bit1, f_bit64, f_char, f_enum, f_mediumblob, f_long_varchar, f_real, f_time,\n"
+                            + "                                         f_tinyint, f_tinyint_unsigned, f_json, f_year )\n"
+                            + "VALUES ( "
+                            + i
+                            + ", 0x61626374000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,\n"
+                            + "         0x68656C6C6F, 0x18000000789C0BC9C82C5600A244859CFCBC7485B2C4A2A4CCBCC4A24A00697308D4, NULL,\n"
+                            + "         0x74696E79626C6F62, 0x48656C6C6F20776F726C64, 12345, 54321, 123456, 654321, 1234567, 7654321, 1234567, 7654321,\n"
+                            + "         123456789, 987654321, 123, 789, 12.34, 56.78, 90.12, 'This is a long text field', 'This is a medium text field',\n"
+                            + "         'This is a text field', 'This is a tiny text field', 'This is a varchar field', '2022-04-27', '2022-04-27 14:30:00',\n"
+                            + "         '2023-04-27 11:08:40', 1, b'0101010101010101010101010101010101010101010101010101010101010101', 'C', 'enum2',\n"
+                            + "         0x1B000000789C0BC9C82C5600A24485DCD494CCD25C85A49CFC2485B4CCD49C140083FF099A, 'This is a long varchar field',\n"
+                            + "         12.345, '14:30:00', -128, 255, '{ \"key\": \"value\" }', 1992 )");
+        }
+    }
+
+    private void changeSourceTable(String database, String tableName) {
+        for (int i = 100; i < 110; i++) {
+            executeSql(
+                    "INSERT INTO "
+                            + database
+                            + "."
+                            + tableName
+                            + " ( id, f_binary, f_blob, f_long_varbinary, f_longblob, f_tinyblob, f_varbinary, f_smallint,\n"
+                            + "                                         f_smallint_unsigned, f_mediumint, f_mediumint_unsigned, f_int, f_int_unsigned, f_integer,\n"
+                            + "                                         f_integer_unsigned, f_bigint, f_bigint_unsigned, f_numeric, f_decimal, f_float, f_double,\n"
+                            + "                                         f_double_precision, f_longtext, f_mediumtext, f_text, f_tinytext, f_varchar, f_date, f_datetime,\n"
+                            + "                                         f_timestamp, f_bit1, f_bit64, f_char, f_enum, f_mediumblob, f_long_varchar, f_real, f_time,\n"
+                            + "                                         f_tinyint, f_tinyint_unsigned, f_json, f_year )\n"
+                            + "VALUES ( "
+                            + i
+                            + ", 0x61626374000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,\n"
+                            + "         0x68656C6C6F, 0x18000000789C0BC9C82C5600A244859CFCBC7485B2C4A2A4CCBCC4A24A00697308D4, NULL,\n"
+                            + "         0x74696E79626C6F62, 0x48656C6C6F20776F726C64, 12345, 54321, 123456, 654321, 1234567, 7654321, 1234567, 7654321,\n"
+                            + "         123456789, 987654321, 123, 789, 12.34, 56.78, 90.12, 'This is a long text field', 'This is a medium text field',\n"
+                            + "         'This is a text field', 'This is a tiny text field', 'This is a varchar field', '2022-04-27', '2022-04-27 14:30:00',\n"
+                            + "         '2023-04-27 11:08:40', 1, b'0101010101010101010101010101010101010101010101010101010101010101', 'C', 'enum2',\n"
+                            + "         0x1B000000789C0BC9C82C5600A24485DCD494CCD25C85A49CFC2485B4CCD49C140083FF099A, 'This is a long varchar field',\n"
+                            + "         12.345, '14:30:00', -128, 255, '{ \"key\": \"value\" }', 1992 )");
+        }
+
+        executeSql("DELETE FROM " + database + "." + tableName + " where id > 100");
+
+        executeSql("UPDATE " + database + "." + tableName + " SET f_bigint = 10000 where id < 10");
     }
 
     private void upsertDeleteSourceTable(String database, String tableName) {

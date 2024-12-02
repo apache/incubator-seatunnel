@@ -21,7 +21,7 @@
 CREATE DATABASE IF NOT EXISTS `shop`;
 use shop;
 
-alter table products drop column add_column4;
+alter table products drop column add_column4,drop column add_column6;
 insert into products
 values (137,"scooter","Small 2-wheel scooter",3.14,'xx',1,1.1),
        (138,"car battery","12V car battery",8.1,'xx',2,1.2),

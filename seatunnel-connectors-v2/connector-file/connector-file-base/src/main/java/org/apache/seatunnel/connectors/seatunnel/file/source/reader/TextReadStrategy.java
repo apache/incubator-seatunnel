@@ -21,6 +21,7 @@ import org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
 import org.apache.seatunnel.api.source.Collector;
+import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.CatalogTableUtil;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -156,10 +157,15 @@ public class TextReadStrategy extends AbstractReadStrategy {
                     "When reading json/text/csv files, if user has not specified schema information, "
                             + "SeaTunnel will not support column projection");
         }
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(pluginConfig);
         TextDeserializationSchema.Builder builder =
                 TextDeserializationSchema.builder()
                         .delimiter(TextFormatConstant.PLACEHOLDER)
-                        .textLineSplitor(textLineSplitor);
+                        .textLineSplitor(textLineSplitor)
+                        .nullFormat(
+                                readonlyConfig
+                                        .getOptional(BaseSourceConfigOptions.NULL_FORMAT)
+                                        .orElse(null));
         if (isMergePartition) {
             deserializationSchema =
                     builder.seaTunnelRowType(this.seaTunnelRowTypeWithPartition).build();
@@ -170,14 +176,15 @@ public class TextReadStrategy extends AbstractReadStrategy {
     }
 
     @Override
-    public void setSeaTunnelRowTypeInfo(SeaTunnelRowType seaTunnelRowType) {
+    public void setCatalogTable(CatalogTable catalogTable) {
+        SeaTunnelRowType rowType = catalogTable.getSeaTunnelRowType();
         SeaTunnelRowType userDefinedRowTypeWithPartition =
-                mergePartitionTypes(fileNames.get(0), seaTunnelRowType);
+                mergePartitionTypes(fileNames.get(0), rowType);
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(pluginConfig);
         Optional<String> fieldDelimiterOptional =
-                ReadonlyConfig.fromConfig(pluginConfig)
-                        .getOptional(BaseSourceConfigOptions.FIELD_DELIMITER);
+                readonlyConfig.getOptional(BaseSourceConfigOptions.FIELD_DELIMITER);
         encoding =
-                ReadonlyConfig.fromConfig(pluginConfig)
+                readonlyConfig
                         .getOptional(BaseSourceConfigOptions.ENCODING)
                         .orElse(StandardCharsets.UTF_8.name());
         if (fieldDelimiterOptional.isPresent()) {
@@ -196,12 +203,16 @@ public class TextReadStrategy extends AbstractReadStrategy {
         TextDeserializationSchema.Builder builder =
                 TextDeserializationSchema.builder()
                         .delimiter(fieldDelimiter)
-                        .textLineSplitor(textLineSplitor);
+                        .textLineSplitor(textLineSplitor)
+                        .nullFormat(
+                                readonlyConfig
+                                        .getOptional(BaseSourceConfigOptions.NULL_FORMAT)
+                                        .orElse(null));
         if (isMergePartition) {
             deserializationSchema =
                     builder.seaTunnelRowType(userDefinedRowTypeWithPartition).build();
         } else {
-            deserializationSchema = builder.seaTunnelRowType(seaTunnelRowType).build();
+            deserializationSchema = builder.seaTunnelRowType(rowType).build();
         }
         // column projection
         if (pluginConfig.hasPath(BaseSourceConfigOptions.READ_COLUMNS.key())) {
@@ -210,15 +221,15 @@ public class TextReadStrategy extends AbstractReadStrategy {
             String[] fields = new String[readColumns.size()];
             SeaTunnelDataType<?>[] types = new SeaTunnelDataType[readColumns.size()];
             for (int i = 0; i < indexes.length; i++) {
-                indexes[i] = seaTunnelRowType.indexOf(readColumns.get(i));
-                fields[i] = seaTunnelRowType.getFieldName(indexes[i]);
-                types[i] = seaTunnelRowType.getFieldType(indexes[i]);
+                indexes[i] = rowType.indexOf(readColumns.get(i));
+                fields[i] = rowType.getFieldName(indexes[i]);
+                types[i] = rowType.getFieldType(indexes[i]);
             }
             this.seaTunnelRowType = new SeaTunnelRowType(fields, types);
             this.seaTunnelRowTypeWithPartition =
                     mergePartitionTypes(fileNames.get(0), this.seaTunnelRowType);
         } else {
-            this.seaTunnelRowType = seaTunnelRowType;
+            this.seaTunnelRowType = rowType;
             this.seaTunnelRowTypeWithPartition = userDefinedRowTypeWithPartition;
         }
     }

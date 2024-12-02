@@ -17,14 +17,22 @@
 
 package org.apache.seatunnel.engine.core.classloader;
 
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+
+import org.apache.seatunnel.engine.common.exception.ClassLoaderErrorCode;
+import org.apache.seatunnel.engine.common.exception.ClassLoaderException;
 import org.apache.seatunnel.engine.common.loader.SeaTunnelChildFirstClassLoader;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.hazelcast.spi.impl.NodeEngine;
+import com.hazelcast.spi.impl.NodeEngineImpl;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,14 +42,17 @@ public class DefaultClassLoaderService implements ClassLoaderService {
     private final boolean cacheMode;
     private final Map<Long, Map<String, ClassLoader>> classLoaderCache;
     private final Map<Long, Map<String, AtomicInteger>> classLoaderReferenceCount;
+    private final NodeEngine nodeEngine;
 
-    public DefaultClassLoaderService(boolean cacheMode) {
+    public DefaultClassLoaderService(boolean cacheMode, NodeEngine nodeEngine) {
         this.cacheMode = cacheMode;
+        this.nodeEngine = nodeEngine;
         classLoaderCache = new ConcurrentHashMap<>();
         classLoaderReferenceCount = new ConcurrentHashMap<>();
         log.info("start classloader service" + (cacheMode ? " with cache mode" : ""));
     }
 
+    @SneakyThrows
     @Override
     public synchronized ClassLoader getClassLoader(long jobId, Collection<URL> jars) {
         log.debug("Get classloader for job {} with jars {}", jobId, jars);
@@ -59,6 +70,24 @@ public class DefaultClassLoaderService implements ClassLoaderService {
             classLoaderReferenceCount.get(jobId).get(key).incrementAndGet();
             return classLoaderMap.get(key);
         } else {
+            if (Objects.nonNull(nodeEngine)) {
+                for (URL jar : jars) {
+                    File file = new File(jar.toURI().getPath());
+                    if (!file.exists()) {
+                        String host =
+                                ((NodeEngineImpl) nodeEngine).getNode().getThisAddress().getHost();
+                        throw new ClassLoaderException(
+                                ClassLoaderErrorCode.NOT_FOUND_JAR,
+                                "The jar file "
+                                        + jar
+                                        + " can not be found in node "
+                                        + host
+                                        + ", please ensure that the deployment paths of SeaTunnel on different nodes are consistent.");
+                    }
+                }
+            } else {
+                log.debug("Run the test class without file checking");
+            }
             ClassLoader classLoader = new SeaTunnelChildFirstClassLoader(jars);
             log.info("Create classloader for job {} with jars {}", jobId, jars);
             classLoaderMap.put(key, classLoader);

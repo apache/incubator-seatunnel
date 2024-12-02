@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oceanbase;
 
+import org.apache.seatunnel.shade.com.google.common.base.Preconditions;
+
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
@@ -25,12 +27,12 @@ import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.DecimalType;
 import org.apache.seatunnel.api.table.type.LocalTimeType;
 import org.apache.seatunnel.api.table.type.PrimitiveByteArrayType;
+import org.apache.seatunnel.api.table.type.VectorType;
 import org.apache.seatunnel.common.exception.CommonError;
 import org.apache.seatunnel.connectors.seatunnel.common.source.TypeDefineUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -99,6 +101,11 @@ public class OceanBaseMySqlTypeConverter
     public static final long POWER_2_24 = (long) Math.pow(2, 24);
     public static final long POWER_2_32 = (long) Math.pow(2, 32);
     public static final long MAX_VARBINARY_LENGTH = POWER_2_16 - 4;
+
+    private static final String VECTOR_TYPE_NAME = "";
+    private static final String VECTOR_NAME = "VECTOR";
+
+    public static final OceanBaseMySqlTypeConverter INSTANCE = new OceanBaseMySqlTypeConverter();
 
     @Override
     public String identifier() {
@@ -288,6 +295,17 @@ public class OceanBaseMySqlTypeConverter
             case MYSQL_TIMESTAMP:
                 builder.dataType(LocalTimeType.LOCAL_DATE_TIME_TYPE);
                 builder.scale(typeDefine.getScale());
+                break;
+            case VECTOR_TYPE_NAME:
+                String columnType = typeDefine.getColumnType();
+                if (columnType.startsWith("vector(") && columnType.endsWith(")")) {
+                    Integer number =
+                            Integer.parseInt(
+                                    columnType.substring(
+                                            columnType.indexOf("(") + 1, columnType.indexOf(")")));
+                    builder.dataType(VectorType.VECTOR_FLOAT_TYPE);
+                    builder.scale(number);
+                }
                 break;
             default:
                 throw CommonError.convertToSeaTunnelTypeError(
@@ -500,6 +518,11 @@ public class OceanBaseMySqlTypeConverter
                 } else {
                     builder.columnType(MYSQL_DATETIME);
                 }
+                break;
+            case FLOAT_VECTOR:
+                builder.nativeType(VECTOR_NAME);
+                builder.columnType(String.format("%s(%s)", VECTOR_NAME, column.getScale()));
+                builder.dataType(VECTOR_NAME);
                 break;
             default:
                 throw CommonError.convertToConnectorTypeError(

@@ -44,7 +44,7 @@ env {
 
 source {
   FakeSource {
-    result_table_name = "fake"
+    plugin_output = "fake"
     schema = {
       fields {
         name = "string"
@@ -56,7 +56,7 @@ source {
 
 sink {
   Console {
-    source_table_name = "fake"
+    plugin_input = "fake"
   }
 }
 ```
@@ -73,7 +73,7 @@ env {
 
 source {
   FakeSource {
-    result_table_name = "fake1"
+    plugin_output = "fake1"
     schema = {
       fields {
         id = "int"
@@ -84,7 +84,7 @@ source {
     }
   }
    FakeSource {
-    result_table_name = "fake2"
+    plugin_output = "fake2"
     schema = {
       fields {
         name = "string"
@@ -96,10 +96,10 @@ source {
 
 sink {
   Console {
-    source_table_name = "fake1"
+    plugin_input = "fake1"
   }
   Console {
-    source_table_name = "fake2"
+    plugin_input = "fake2"
   }
 }
 ```

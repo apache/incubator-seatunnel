@@ -32,7 +32,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Locale;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 @Data
 public class BaseFileSinkConfig implements DelimiterConfig, Serializable {

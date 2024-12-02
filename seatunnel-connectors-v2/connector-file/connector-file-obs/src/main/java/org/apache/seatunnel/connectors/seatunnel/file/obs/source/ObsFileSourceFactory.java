@@ -60,6 +60,7 @@ public class ObsFileSourceFactory implements TableSourceFactory {
                 .optional(BaseSourceConfigOptions.DATE_FORMAT)
                 .optional(BaseSourceConfigOptions.DATETIME_FORMAT)
                 .optional(BaseSourceConfigOptions.TIME_FORMAT)
+                .optional(BaseSourceConfigOptions.NULL_FORMAT)
                 .build();
     }
 

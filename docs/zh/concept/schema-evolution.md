@@ -6,15 +6,19 @@
 
 ### 源
 [Mysql-CDC](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/source/MySQL-CDC.md)
+[Oracle-CDC](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/source/Oracle-CDC.md)
 
 ### 目标
 [Jdbc-Mysql](https://github.com/apache/seatunnel/blob/dev/docs/zh/connector-v2/sink/Jdbc.md)
+[Jdbc-Oracle](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/sink/Jdbc.md)
 
-注意: 目前模式演进不支持transform.
+注意: 目前模式演进不支持transform。不同类型数据库(Oracle-CDC -> Jdbc-Mysql)的模式演进目前不支持ddl中列的默认值。
 
+当你使用Oracle-CDC时，你不能使用用户名`SYS`或`SYSTEM`来修改表结构，否则ddl事件将被过滤，这可能导致模式演进不起作用；
+另外，如果你的表名以`ORA_TEMP_`开头，也会有相同的问题。
 
 ## 启用Schema evolution功能
-在CDC源连接器中模式演进默认是关闭的。你需要在CDC连接器中配置`debezium.include.schema.changes = true`来启用它。
+在CDC源连接器中模式演进默认是关闭的。你需要在CDC连接器中配置`debezium.include.schema.changes = true`来启用它。当你使用Oracle-CDC并且启用schema-evolution时，你必须将`debezium`属性中的`log.mining.strategy`指定为`redo_log_catalog`。
 
 ## 示例
 
@@ -54,6 +58,95 @@ sink {
     primary_keys = ["id"]
     is_exactly_once = true
     xa_data_source_class_name = "com.mysql.cj.jdbc.MysqlXADataSource"
+  }
+}
+```
+
+### Oracle-cdc -> Jdbc-Oracle
+```
+env {
+  # You can set engine configuration here
+  parallelism = 1
+  job.mode = "STREAMING"
+  checkpoint.interval = 5000
+}
+
+source {
+  # This is a example source plugin **only for test and demonstrate the feature source plugin**
+  Oracle-CDC {
+    plugin_output = "customers"
+    username = "dbzuser"
+    password = "dbz"
+    database-names = ["ORCLCDB"]
+    schema-names = ["DEBEZIUM"]
+    table-names = ["ORCLCDB.DEBEZIUM.FULL_TYPES"]
+    base-url = "jdbc:oracle:thin:@oracle-host:1521/ORCLCDB"
+    source.reader.close.timeout = 120000
+    connection.pool.size = 1
+    debezium {
+        include.schema.changes = true
+        log.mining.strategy = redo_log_catalog
+    }
+  }
+}
+
+sink {
+    Jdbc {
+      plugin_input = "customers"
+      driver = "oracle.jdbc.driver.OracleDriver"
+      url = "jdbc:oracle:thin:@oracle-host:1521/ORCLCDB"
+      user = "dbzuser"
+      password = "dbz"
+      generate_sink_sql = true
+      database = "ORCLCDB"
+      table = "DEBEZIUM.FULL_TYPES_SINK"
+      batch_size = 1
+      primary_keys = ["ID"]
+      connection.pool.size = 1
+    }
+}
+```
+
+### Oracle-cdc -> Jdbc-Mysql
+```
+env {
+  # You can set engine configuration here
+  parallelism = 1
+  job.mode = "STREAMING"
+  checkpoint.interval = 5000
+}
+
+source {
+  # This is a example source plugin **only for test and demonstrate the feature source plugin**
+  Oracle-CDC {
+    plugin_output = "customers"
+    username = "dbzuser"
+    password = "dbz"
+    database-names = ["ORCLCDB"]
+    schema-names = ["DEBEZIUM"]
+    table-names = ["ORCLCDB.DEBEZIUM.FULL_TYPES"]
+    base-url = "jdbc:oracle:thin:@oracle-host:1521/ORCLCDB"
+    source.reader.close.timeout = 120000
+    connection.pool.size = 1
+    debezium {
+        include.schema.changes = true
+        log.mining.strategy = redo_log_catalog
+    }
+  }
+}
+
+sink {
+  jdbc {
+    plugin_input = "customers"
+    url = "jdbc:mysql://oracle-host:3306/oracle_sink"
+    driver = "com.mysql.cj.jdbc.Driver"
+    user = "st_user_sink"
+    password = "mysqlpw"
+    generate_sink_sql = true
+    # You need to configure both database and table
+    database = oracle_sink
+    table = oracle_cdc_2_mysql_sink_table
+    primary_keys = ["ID"]
   }
 }
 ```

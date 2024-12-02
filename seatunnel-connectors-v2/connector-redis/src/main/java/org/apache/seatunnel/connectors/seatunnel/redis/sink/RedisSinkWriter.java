@@ -19,9 +19,11 @@ package org.apache.seatunnel.connectors.seatunnel.redis.sink;
 
 import org.apache.seatunnel.api.serialization.SerializationSchema;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
+import org.apache.seatunnel.api.table.type.RowKind;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCode;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.common.sink.AbstractSinkWriter;
 import org.apache.seatunnel.connectors.seatunnel.redis.client.RedisClient;
 import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisDataType;
@@ -29,13 +31,20 @@ import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisParameters;
 import org.apache.seatunnel.connectors.seatunnel.redis.exception.RedisConnectorException;
 import org.apache.seatunnel.format.json.JsonSerializationSchema;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         implements SupportMultiTableSinkWriter<Void> {
+    private static final String REDIS_GROUP_DELIMITER = ":";
+    private static final String LEFT_PLACEHOLDER_MARKER = "{";
+    private static final String RIGHT_PLACEHOLDER_MARKER = "}";
     private final SeaTunnelRowType seaTunnelRowType;
     private final RedisParameters redisParameters;
     private final SerializationSchema serializationSchema;
@@ -43,6 +52,7 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
 
     private final int batchSize;
 
+    private final List<RowKind> rowKinds;
     private final List<String> keyBuffer;
     private final List<String> valueBuffer;
 
@@ -54,30 +64,120 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         this.serializationSchema = new JsonSerializationSchema(seaTunnelRowType);
         this.redisClient = redisParameters.buildRedisClient();
         this.batchSize = redisParameters.getBatchSize();
+        this.rowKinds = new ArrayList<>(batchSize);
         this.keyBuffer = new ArrayList<>(batchSize);
         this.valueBuffer = new ArrayList<>(batchSize);
     }
 
     @Override
     public void write(SeaTunnelRow element) throws IOException {
-        String data = new String(serializationSchema.serialize(element));
-        String keyField = redisParameters.getKeyField();
+        rowKinds.add(element.getRowKind());
         List<String> fields = Arrays.asList(seaTunnelRowType.getFieldNames());
-        String key;
-        if (fields.contains(keyField)) {
-            key = element.getField(fields.indexOf(keyField)).toString();
-        } else {
-            key = keyField;
-        }
+        String key = getKey(element, fields);
         keyBuffer.add(key);
-        valueBuffer.add(data);
+        String value = getValue(element, fields);
+        valueBuffer.add(value);
         if (keyBuffer.size() >= batchSize) {
             doBatchWrite();
             clearBuffer();
         }
     }
 
+    private String getKey(SeaTunnelRow element, List<String> fields) {
+        String key = redisParameters.getKeyField();
+        Boolean supportCustomKey = redisParameters.getSupportCustomKey();
+        if (Boolean.TRUE.equals(supportCustomKey)) {
+            return getCustomKey(element, fields, key);
+        }
+        return getNormalKey(element, fields, key);
+    }
+
+    private static String getNormalKey(SeaTunnelRow element, List<String> fields, String keyField) {
+        if (fields.contains(keyField)) {
+            return element.getField(fields.indexOf(keyField)).toString();
+        } else {
+            return keyField;
+        }
+    }
+
+    private String getCustomKey(SeaTunnelRow element, List<String> fields, String keyField) {
+        String[] keyFieldSegments = keyField.split(REDIS_GROUP_DELIMITER);
+        StringBuilder key = new StringBuilder();
+        for (int i = 0; i < keyFieldSegments.length; i++) {
+            String keyFieldSegment = keyFieldSegments[i];
+            if (keyFieldSegment.startsWith(LEFT_PLACEHOLDER_MARKER)
+                    && keyFieldSegment.endsWith(RIGHT_PLACEHOLDER_MARKER)) {
+                String realKeyField = keyFieldSegment.substring(1, keyFieldSegment.length() - 1);
+                if (fields.contains(realKeyField)) {
+                    key.append(element.getField(fields.indexOf(realKeyField)).toString());
+                } else {
+                    key.append(keyFieldSegment);
+                }
+            } else {
+                key.append(keyFieldSegment);
+            }
+            if (i != keyFieldSegments.length - 1) {
+                key.append(REDIS_GROUP_DELIMITER);
+            }
+        }
+        return key.toString();
+    }
+
+    private String getValue(SeaTunnelRow element, List<String> fields) {
+        String value;
+        RedisDataType redisDataType = redisParameters.getRedisDataType();
+        if (RedisDataType.HASH.equals(redisDataType)) {
+            value = handleHashType(element, fields);
+        } else {
+            value = handleOtherTypes(element, fields);
+        }
+        if (value == null) {
+            byte[] serialize = serializationSchema.serialize(element);
+            value = new String(serialize);
+        }
+        return value;
+    }
+
+    private String handleHashType(SeaTunnelRow element, List<String> fields) {
+        String hashKeyField = redisParameters.getHashKeyField();
+        String hashValueField = redisParameters.getHashValueField();
+        if (StringUtils.isEmpty(hashKeyField)) {
+            return null;
+        }
+        String hashKey;
+        if (fields.contains(hashKeyField)) {
+            hashKey = element.getField(fields.indexOf(hashKeyField)).toString();
+        } else {
+            hashKey = hashKeyField;
+        }
+        String hashValue;
+        if (StringUtils.isEmpty(hashValueField)) {
+            hashValue = new String(serializationSchema.serialize(element));
+        } else {
+            if (fields.contains(hashValueField)) {
+                hashValue = element.getField(fields.indexOf(hashValueField)).toString();
+            } else {
+                hashValue = hashValueField;
+            }
+        }
+        Map<String, String> kvMap = new HashMap<>();
+        kvMap.put(hashKey, hashValue);
+        return JsonUtils.toJsonString(kvMap);
+    }
+
+    private String handleOtherTypes(SeaTunnelRow element, List<String> fields) {
+        String valueField = redisParameters.getValueField();
+        if (StringUtils.isEmpty(valueField)) {
+            return null;
+        }
+        if (fields.contains(valueField)) {
+            return element.getField(fields.indexOf(valueField)).toString();
+        }
+        return valueField;
+    }
+
     private void clearBuffer() {
+        rowKinds.clear();
         keyBuffer.clear();
         valueBuffer.clear();
     }
@@ -85,23 +185,28 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
     private void doBatchWrite() {
         RedisDataType redisDataType = redisParameters.getRedisDataType();
         if (RedisDataType.KEY.equals(redisDataType) || RedisDataType.STRING.equals(redisDataType)) {
-            redisClient.batchWriteString(keyBuffer, valueBuffer, redisParameters.getExpire());
+            redisClient.batchWriteString(
+                    rowKinds, keyBuffer, valueBuffer, redisParameters.getExpire());
             return;
         }
         if (RedisDataType.LIST.equals(redisDataType)) {
-            redisClient.batchWriteList(keyBuffer, valueBuffer, redisParameters.getExpire());
+            redisClient.batchWriteList(
+                    rowKinds, keyBuffer, valueBuffer, redisParameters.getExpire());
             return;
         }
         if (RedisDataType.SET.equals(redisDataType)) {
-            redisClient.batchWriteSet(keyBuffer, valueBuffer, redisParameters.getExpire());
+            redisClient.batchWriteSet(
+                    rowKinds, keyBuffer, valueBuffer, redisParameters.getExpire());
             return;
         }
         if (RedisDataType.HASH.equals(redisDataType)) {
-            redisClient.batchWriteHash(keyBuffer, valueBuffer, redisParameters.getExpire());
+            redisClient.batchWriteHash(
+                    rowKinds, keyBuffer, valueBuffer, redisParameters.getExpire());
             return;
         }
         if (RedisDataType.ZSET.equals(redisDataType)) {
-            redisClient.batchWriteZset(keyBuffer, valueBuffer, redisParameters.getExpire());
+            redisClient.batchWriteZset(
+                    rowKinds, keyBuffer, valueBuffer, redisParameters.getExpire());
             return;
         }
         throw new RedisConnectorException(
