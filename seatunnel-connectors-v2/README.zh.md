@@ -46,11 +46,11 @@ SeaTunnel为与计算引擎进行解耦，设计了新的连接器API，通过�
 
 5.将连接器添加到seatunnel-dist/pom.xml,这样连接器jar就可以在二进制包中找到.
 
-6.source端有几个必须实现的类，分别是{连接器名}Source、{连接器名}SourceFactory、{连接器名}SourceReader，具体可以参考其他连接器
+6.source端有几个必须实现的类，分别是{连接器名}Source、{连接器名}SourceFactory、{连接器名}SourceReader；sink端有几个必须实现的类，分别是{连接器名}Sink、{连接器名}SinkFactory、{连接器名}SinkWriter，具体可以参考其他连接器
 
-7.{连接器名}SourceFactory 里面需要在类名上标注 **@AutoService(Factory.class)** 注解，并且除了必须实现的方法外，需要额外再重写一个 createSource 方法
+7.{连接器名}SourceFactory 和 {连接器名}SinkFactory 里面需要在类名上标注 **@AutoService(Factory.class)** 注解，并且除了必须实现的方法外，source端需要额外再重写一个 **createSource** 方法，sink端需要额外再重写一个 **createSink** 方法
 
-8.{连接器名}Source 需要重写 getProducedCatalogTables 方法
+8.{连接器名}Source 需要重写 **getProducedCatalogTables** 方法；{连接器名}Sink 需要重写 **getWriteCatalogTable** 方法
 
 ### 启动类
 

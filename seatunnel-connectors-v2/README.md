@@ -56,11 +56,11 @@ own connectors, you need to follow the steps below.
 
 5.add connector dependency to seatunnel-dist/pom.xml, so the connector jar can be find in binary package.
 
-6.There are several classes that must be implemented on the source side, namely {connector name} Source, {connector name} SourceFactory, {connector name} SourceReader. Please refer to other connectors for details
+6.There are several classes that must be implemented on the source side, namely {ConnectorName}Source, {ConnectorName}SourceFactory, {ConnectorName}SourceReader; There are several classes that must be implemented on the sink side, namely {ConnectorName}Sink, {ConnectorName}SinkFactory, {ConnectorName}SinkWriter Please refer to other connectors for details
 
-7.{Connector Name} SourceFactory needs to be annotated with the **@AutoService (Factory.class)** annotation on the class name, and in addition to the required methods, an additional 'creatSource' method needs to be rewritten
+7.{ConnectorName}SourceFactory and {ConnectorName}SinkFactory needs to be annotated with the **@AutoService (Factory.class)** annotation on the class name, and in addition to the required methods, source side an additional **creatSource** method needs to be rewritten and sink side an additional **creatSink** method needs to be rewritten
 
-8.{Connector Name} Source needs to override the getProducedCatalogTables method
+8.{ConnectorName}Source needs to override the **getProducedCatalogTables** method; {ConnectorName}Sink needs to override the **getWriteCatalogTable** method
 
 ### **Startup Class**
 
