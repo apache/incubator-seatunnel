@@ -197,7 +197,7 @@ source {
 
 sink {
   Assert {
-    source_table_name = hive_source
+    plugin_input = hive_source
     rules {
       row_rules = [
         {
