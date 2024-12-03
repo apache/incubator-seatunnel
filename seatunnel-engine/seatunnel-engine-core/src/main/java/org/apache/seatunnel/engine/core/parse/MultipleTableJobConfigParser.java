@@ -205,15 +205,19 @@ public class MultipleTableJobConfigParser {
         List<URL> sinkConnectorJars = getConnectorJarList(sinkConfigs, PluginType.SINK);
         ClassLoader parentClassLoader = Thread.currentThread().getContextClassLoader();
 
-        ClassLoader sourceClassLoader =
-                getClassLoader(classLoaderService, parentClassLoader, sourceConnectorJars);
-        ClassLoader transformClassLoader =
-                getClassLoader(classLoaderService, parentClassLoader, transformConnectorJars);
+        // source and transform use the same classloader
+        List<URL> sourceJars =
+                Stream.of(sourceConnectorJars, transformConnectorJars)
+                        .flatMap(Collection::stream)
+                        .distinct()
+                        .collect(Collectors.toList());
+        ClassLoader sourceAndTransformClassLoader =
+                getClassLoader(classLoaderService, parentClassLoader, sourceJars);
         ClassLoader sinkClassLoader =
                 getClassLoader(classLoaderService, parentClassLoader, sinkConnectorJars);
 
         try {
-            Thread.currentThread().setContextClassLoader(sourceClassLoader);
+            Thread.currentThread().setContextClassLoader(sourceAndTransformClassLoader);
             ConfigParserUtil.checkGraph(sourceConfigs, transformConfigs, sinkConfigs);
             LinkedHashMap<String, List<Tuple2<CatalogTable, Action>>> tableWithActionMap =
                     new LinkedHashMap<>();
@@ -229,13 +233,12 @@ public class MultipleTableJobConfigParser {
             for (int configIndex = 0; configIndex < sourceConfigs.size(); configIndex++) {
                 Config sourceConfig = sourceConfigs.get(configIndex);
                 Tuple2<String, List<Tuple2<CatalogTable, Action>>> tuple2 =
-                        parseSource(configIndex, sourceConfig, sourceClassLoader);
+                        parseSource(configIndex, sourceConfig, sourceAndTransformClassLoader);
                 tableWithActionMap.put(tuple2._1(), tuple2._2());
             }
 
-            Thread.currentThread().setContextClassLoader(transformClassLoader);
             log.info("start generating all transforms.");
-            parseTransforms(transformConfigs, transformClassLoader, tableWithActionMap);
+            parseTransforms(transformConfigs, sourceAndTransformClassLoader, tableWithActionMap);
 
             Thread.currentThread().setContextClassLoader(sinkClassLoader);
             log.info("start generating all sinks.");
@@ -251,10 +254,7 @@ public class MultipleTableJobConfigParser {
             Thread.currentThread().setContextClassLoader(parentClassLoader);
             if (classLoaderService != null) {
                 classLoaderService.releaseClassLoader(
-                        Long.parseLong(jobConfig.getJobContext().getJobId()), sourceConnectorJars);
-                classLoaderService.releaseClassLoader(
-                        Long.parseLong(jobConfig.getJobContext().getJobId()),
-                        transformConnectorJars);
+                        Long.parseLong(jobConfig.getJobContext().getJobId()), sourceJars);
                 classLoaderService.releaseClassLoader(
                         Long.parseLong(jobConfig.getJobContext().getJobId()), sinkConnectorJars);
             }

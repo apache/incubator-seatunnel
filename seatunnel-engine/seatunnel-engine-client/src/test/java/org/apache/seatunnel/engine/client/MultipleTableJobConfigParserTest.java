@@ -212,9 +212,9 @@ public class MultipleTableJobConfigParserTest {
                     @Override
                     public void close() {}
                 });
-        Assertions.assertEquals(3, getClassLoaderTimes.get());
-        Assertions.assertEquals(3, releaseClassLoaderTimes.get());
-        Assertions.assertNotEquals(classLoaders[0], classLoaders[1]);
+        Assertions.assertEquals(2, getClassLoaderTimes.get());
+        Assertions.assertEquals(2, releaseClassLoaderTimes.get());
+        Assertions.assertEquals(classLoaders[0], classLoaders[1]);
         Assertions.assertNotEquals(classLoaders[0], classLoaders[2]);
         Assertions.assertNotEquals(classLoaders[1], classLoaders[2]);
     }
