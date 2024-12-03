@@ -249,23 +249,26 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                                 "Total Failed Count",
                                 jobMetricsSummary.getSourceReadCount()
                                         - jobMetricsSummary.getSinkWriteCount()));
-                String[] transformInfos = null;
-                if (MapUtils.isNotEmpty(jobMetricsSummary.getTransformCountMap())) {
-                    transformInfos =
-                            new String
-                                    [jobMetricsSummary.getTransformCountMap().entrySet().size() * 2
-                                            + 1];
-                    transformInfos[0] = "Transform Information";
-                    int index = 0;
-                    for (Map.Entry<String, Long> entry :
-                            jobMetricsSummary.getTransformCountMap().entrySet()) {
-                        transformInfos[++index] = entry.getKey();
-                        transformInfos[++index] = String.valueOf(entry.getValue());
-                    }
-                }
 
-                if (Objects.nonNull(transformInfos)) {
-                    logMessage.append(StringFormatUtils.formatTable(transformInfos));
+                if (MapUtils.isNotEmpty(jobMetricsSummary.getTransformMetricsMaps())) {
+                    jobMetricsSummary
+                            .getTransformMetricsMaps()
+                            .forEach(
+                                    (tableName, metrics) -> {
+                                        String[] transformInfos =
+                                                new String[metrics.entrySet().size() * 2 + 1];
+                                        transformInfos[0] = "Transform Information  " + tableName;
+                                        int index = 0;
+                                        for (Map.Entry<String, Object> entry : metrics.entrySet()) {
+                                            transformInfos[++index] = entry.getKey();
+                                            transformInfos[++index] =
+                                                    String.valueOf(entry.getValue());
+                                        }
+                                        if (Objects.nonNull(transformInfos)) {
+                                            logMessage.append(
+                                                    StringFormatUtils.formatTable(transformInfos));
+                                        }
+                                    });
                 }
                 log.info("{}", logMessage);
             }

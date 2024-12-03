@@ -132,7 +132,25 @@ public class MultiTableMetricsIT {
                                             equalTo(String.valueOf(dataSize * 10)))
                                     .body(
                                             "metrics.TableSinkWriteBytes.'fake.public.table2'",
-                                            equalTo(String.valueOf(dataSize * 5)));
+                                            equalTo(String.valueOf(dataSize * 5)))
+                                    .body(
+                                            "metrics.TransformCount.'fake.table1'.'fake1->fake3'",
+                                            equalTo("10"))
+                                    .body(
+                                            "metrics.TransformCount.'fake.table1'.'fake3->fake4'",
+                                            equalTo("10"))
+                                    .body(
+                                            "metrics.TransformCount.'fake.table1'.'fake4->fake5'",
+                                            equalTo("10"))
+                                    .body(
+                                            "metrics.TransformCount.'fake.public.table2'.'fake2->fake6'",
+                                            equalTo("5"))
+                                    .body(
+                                            "metrics.TransformCount.'fake.public.table2'.'fake6->fake7'",
+                                            equalTo("5"))
+                                    .body(
+                                            "metrics.TransformCount.'fake.public.table2'.'fake7->fake8'",
+                                            equalTo("5"));
                             Assertions.assertTrue(
                                     Double.parseDouble(response.path("metrics.SourceReceivedQPS"))
                                                     > 0
@@ -178,6 +196,30 @@ public class MultiTableMetricsIT {
                                             && Double.parseDouble(
                                                             response.path(
                                                                     "metrics.TableSinkWriteBytesPerSeconds.'fake.public.table2'"))
+                                                    > 0
+                                            && Double.parseDouble(
+                                                            response.path(
+                                                                    "metrics.TransformCount.'fake.table1'.'fake1->fake3'"))
+                                                    > 0
+                                            && Double.parseDouble(
+                                                            response.path(
+                                                                    "metrics.TransformCount.'fake.table1'.'fake3->fake4'"))
+                                                    > 0
+                                            && Double.parseDouble(
+                                                            response.path(
+                                                                    "metrics.TransformCount.'fake.table1'.'fake4->fake5'"))
+                                                    > 0
+                                            && Double.parseDouble(
+                                                            response.path(
+                                                                    "metrics.TransformCount.'fake.public.table2'.'fake2->fake6'"))
+                                                    > 0
+                                            && Double.parseDouble(
+                                                            response.path(
+                                                                    "metrics.TransformCount.'fake.public.table2'.'fake6->fake7'"))
+                                                    > 0
+                                            && Double.parseDouble(
+                                                            response.path(
+                                                                    "metrics.TransformCount.'fake.public.table2'.'fake7->fake8'"))
                                                     > 0);
                         });
     }

@@ -77,30 +77,31 @@ public class JobMetricsRunner implements Runnable {
                             DateTimeUtils.toString(
                                     now, DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS)));
 
-            String[] transformInfos = null;
-            if (MapUtils.isNotEmpty(jobMetricsSummary.getTransformCountMap())) {
-                transformInfos =
-                        new String
-                                [jobMetricsSummary.getTransformCountMap().entrySet().size() * 2
-                                        + 1];
-                transformInfos[0] = "Transform Information";
-                int index = 0;
-                for (Map.Entry<String, Long> entry :
-                        jobMetricsSummary.getTransformCountMap().entrySet()) {
-                    transformInfos[++index] = entry.getKey();
-                    transformInfos[++index] = String.valueOf(entry.getValue());
-                }
-            }
-
-            if (Objects.nonNull(transformInfos)) {
-                logMessage.append(StringFormatUtils.formatTable(transformInfos));
+            if (MapUtils.isNotEmpty(jobMetricsSummary.getTransformMetricsMaps())) {
+                jobMetricsSummary
+                        .getTransformMetricsMaps()
+                        .forEach(
+                                (tableName, metrics) -> {
+                                    String[] transformInfos =
+                                            new String[metrics.entrySet().size() * 2 + 1];
+                                    transformInfos[0] = "Transform Information  " + tableName;
+                                    int index = 0;
+                                    for (Map.Entry<String, Object> entry : metrics.entrySet()) {
+                                        transformInfos[++index] = entry.getKey();
+                                        transformInfos[++index] = String.valueOf(entry.getValue());
+                                    }
+                                    if (Objects.nonNull(transformInfos)) {
+                                        logMessage.append(
+                                                StringFormatUtils.formatTable(transformInfos));
+                                    }
+                                });
             }
 
             log.info("{}", logMessage);
             lastRunTime = now;
             lastReadCount = jobMetricsSummary.getSourceReadCount();
             lastWriteCount = jobMetricsSummary.getSinkWriteCount();
-            transformCountMap = jobMetricsSummary.getTransformCountMap();
+            // transformCountMap = jobMetricsSummary.getTransformCountMap();
         } catch (Exception e) {
             log.warn("Failed to get job metrics summary, it maybe first-run");
         }
@@ -111,6 +112,6 @@ public class JobMetricsRunner implements Runnable {
     public static class JobMetricsSummary {
         private long sourceReadCount;
         private long sinkWriteCount;
-        private Map<String, Long> transformCountMap;
+        private Map<String, Map<String, Object>> transformMetricsMaps;
     }
 }

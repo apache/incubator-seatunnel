@@ -32,15 +32,15 @@ public class StringFormatUtils {
         int kvNum = (objects.length - 1) / 2;
         String template =
                 "\n"
-                        + "*************************************************************"
+                        + "***********************************************"
                         + "\n"
                         + String.join("", Collections.nCopies(blankNum, " "))
                         + "%s"
                         + "\n"
-                        + "*************************************************************"
+                        + "***********************************************"
                         + "\n"
-                        + String.join("", Collections.nCopies(kvNum, "%-40s: %19s\n"))
-                        + "*************************************************************\n";
+                        + String.join("", Collections.nCopies(kvNum, "%-26s: %19s\n"))
+                        + "***********************************************\n";
         return String.format(template, objects);
     }
 }
