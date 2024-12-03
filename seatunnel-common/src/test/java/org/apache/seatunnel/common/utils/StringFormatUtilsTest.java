@@ -41,15 +41,15 @@ public class StringFormatUtilsTest {
         Assertions.assertEquals(
                 s,
                 "\n"
-                        + "*************************************************************\n"
+                        + "***********************************************\n"
                         + "           Job Statistic Information\n"
-                        + "*************************************************************\n"
-                        + "Start Time                              : 2023-01-11 00:00:00\n"
-                        + "End Time                                : 2023-01-11 00:00:00\n"
-                        + "Total Time(s)                           :                   0\n"
-                        + "Total Read Count                        :                   0\n"
-                        + "Total Write Count                       :                   0\n"
-                        + "Total Failed Count                      :                   0\n"
-                        + "*************************************************************\n");
+                        + "***********************************************\n"
+                        + "Start Time                : 2023-01-11 00:00:00\n"
+                        + "End Time                  : 2023-01-11 00:00:00\n"
+                        + "Total Time(s)             :                   0\n"
+                        + "Total Read Count          :                   0\n"
+                        + "Total Write Count         :                   0\n"
+                        + "Total Failed Count        :                   0\n"
+                        + "***********************************************\n");
     }
 }
