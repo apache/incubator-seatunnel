@@ -8,7 +8,7 @@ Read data from Hive.
 
 :::tip
 
-In order to use this connector, You must ensure your spark/flink cluster already integrated hive. The tested hive version is 2.3.9.
+In order to use this connector, You must ensure your spark/flink cluster already integrated hive. The tested hive version is 2.3.9 and 3.1.3 .
 
 If you use SeaTunnel Engine, You need put seatunnel-hadoop3-3.1.4-uber.jar and hive-exec-3.1.3.jar and libfb303-0.9.3.jar in $SEATUNNEL_HOME/lib/ dir.
 :::
@@ -164,7 +164,7 @@ source {
     table_name = "default.test_hive_sink_on_hdfs_with_kerberos"
     metastore_uri = "thrift://metastore:9083"
     hive.hadoop.conf-path = "/tmp/hadoop"
-    result_table_name = hive_source
+    plugin_output = hive_source
     hive_site_path = "/tmp/hive-site.xml"
     kerberos_principal = "hive/metastore.seatunnel@EXAMPLE.COM"
     kerberos_keytab_path = "/tmp/hive.keytab"
@@ -179,6 +179,71 @@ Description:
 - `kerberos_principal`: The principal for Kerberos authentication.
 - `kerberos_keytab_path`: The keytab file path for Kerberos authentication.
 - `krb5_path`: The path to the `krb5.conf` file used for Kerberos authentication.
+
+Run the case:
+
+```bash
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Hive {
+    table_name = "default.test_hive_sink_on_hdfs_with_kerberos"
+    metastore_uri = "thrift://metastore:9083"
+    hive.hadoop.conf-path = "/tmp/hadoop"
+    result_table_name = hive_source
+    hive_site_path = "/tmp/hive-site.xml"
+    kerberos_principal = "hive/metastore.seatunnel@EXAMPLE.COM"
+    kerberos_keytab_path = "/tmp/hive.keytab"
+    krb5_path = "/tmp/krb5.conf"
+  }
+}
+
+sink {
+  Assert {
+    source_table_name = hive_source
+    rules {
+      row_rules = [
+        {
+          rule_type = MAX_ROW
+          rule_value = 3
+        }
+      ],
+      field_rules = [
+        {
+          field_name = pk_id
+          field_type = bigint
+          field_value = [
+            {
+              rule_type = NOT_NULL
+            }
+          ]
+        },
+        {
+          field_name = name
+          field_type = string
+          field_value = [
+            {
+              rule_type = NOT_NULL
+            }
+          ]
+        },
+        {
+          field_name = score
+          field_type = int
+          field_value = [
+            {
+              rule_type = NOT_NULL
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
 
 ## Hive on s3
 
@@ -307,15 +372,3 @@ sink {
   }
 }
 ```
-
-## Changelog
-
-### 2.2.0-beta 2022-09-26
-
-- Add Hive Source Connector
-
-### Next version
-
-- [Improve] Support kerberos authentication ([3840](https://github.com/apache/seatunnel/pull/3840))
-- Support user-defined partitions ([3842](https://github.com/apache/seatunnel/pull/3842))
-

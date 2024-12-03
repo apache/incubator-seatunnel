@@ -17,12 +17,13 @@
 
 package org.apache.seatunnel.connectors.seatunnel.iotdb.source;
 
+import org.apache.seatunnel.shade.com.google.common.base.Strings;
+
 import org.apache.seatunnel.api.source.SourceSplitEnumerator;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.iotdb.exception.IotdbConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.iotdb.state.IoTDBSourceState;
 
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

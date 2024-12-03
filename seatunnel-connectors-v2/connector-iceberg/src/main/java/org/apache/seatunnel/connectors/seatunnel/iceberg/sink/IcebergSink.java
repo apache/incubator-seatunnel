@@ -135,7 +135,7 @@ public class IcebergSink
                         config.getDataSaveMode(),
                         catalog,
                         catalogTable,
-                        null));
+                        config.getDataSaveModeSQL()));
     }
 
     @Override

@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.transform.metadata;
 
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -28,7 +30,6 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRowAccessor;
 import org.apache.seatunnel.transform.common.MultipleFieldOutputTransform;
 import org.apache.seatunnel.transform.exception.TransformCommonError;
 
-import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 
 import java.util.ArrayList;

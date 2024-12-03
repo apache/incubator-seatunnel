@@ -20,11 +20,9 @@ package org.apache.seatunnel.engine.server.task.flow;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.serialization.Serializer;
-import org.apache.seatunnel.api.sink.MultiTableResourceManager;
 import org.apache.seatunnel.api.sink.SinkCommitter;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SinkWriter.Context;
-import org.apache.seatunnel.api.sink.SupportResourceShare;
 import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSinkWriter;
 import org.apache.seatunnel.api.sink.event.WriterCloseEvent;
 import org.apache.seatunnel.api.sink.multitablesink.MultiTableSink;
@@ -98,8 +96,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
     private TaskMetricsCalcContext taskMetricsCalcContext;
 
     private final boolean containAggCommitter;
-
-    private MultiTableResourceManager resourceManager;
 
     private EventListener eventListener;
 
@@ -177,13 +173,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
         super.close();
         writer.close();
         writerContext.getEventListener().onEvent(new WriterCloseEvent());
-        try {
-            if (resourceManager != null) {
-                resourceManager.close();
-            }
-        } catch (Throwable e) {
-            log.error("close resourceManager error", e);
-        }
     }
 
     private void registerCommitter() {
@@ -353,11 +342,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
             this.writer = sinkAction.getSink().createWriter(writerContext);
         } else {
             this.writer = sinkAction.getSink().restoreWriter(writerContext, states);
-        }
-        if (this.writer instanceof SupportResourceShare) {
-            resourceManager =
-                    ((SupportResourceShare) this.writer).initMultiTableResourceManager(1, 1);
-            ((SupportResourceShare) this.writer).setMultiTableResourceManager(resourceManager, 0);
         }
     }
 }

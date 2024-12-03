@@ -501,5 +501,81 @@ public abstract class RedisTestCaseTemplateIT extends TestSuiteBase implements T
         jedis.del("zset_check");
     }
 
+    @TestTemplate
+    public void testFakeToRedisNormalKeyIsNullTest(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob("/fake-to-redis-test-normal-key-is-null.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+        int count = 0;
+        String data = jedis.get("");
+        if (data != null) {
+            count++;
+            jedis.del("");
+        }
+        for (int i = 2; i <= 3; i++) {
+            data = jedis.get("NEW" + i);
+            if (data != null) {
+                count++;
+                jedis.del("NEW" + i);
+            }
+        }
+        Assertions.assertEquals(2, count);
+    }
+
+    @TestTemplate
+    public void testFakeToRedisCustomKeyIsNullTest(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob("/fake-to-redis-test-custom-key-is-null.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+        int count = 0;
+        String data = jedis.get("key_check:");
+        if (data != null) {
+            count++;
+            jedis.del("key_check:");
+        }
+        for (int i = 2; i <= 3; i++) {
+            data = jedis.get("key_check:NEW" + i);
+            if (data != null) {
+                count++;
+                jedis.del("key_check:NEW" + i);
+            }
+        }
+        Assertions.assertEquals(2, count);
+    }
+
+    @TestTemplate
+    public void testFakeToRedisOtherTypeValueIsNullTest(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob(
+                        "/fake-to-redis-test-custom-value-when-other-type-is-null.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+        Assertions.assertEquals(2, jedis.llen("list_check"));
+        jedis.del("list_check");
+    }
+
+    @TestTemplate
+    public void testFakeToRedisHashTypeKeyIsNullTest(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob("/fake-to-redis-test-custom-value-when-hash-key-is-null.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+        Assertions.assertEquals(2, jedis.hlen("hash_check"));
+        jedis.del("hash_check");
+    }
+
+    @TestTemplate
+    public void testFakeToRedisHashTypeValueIsNullTest(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob(
+                        "/fake-to-redis-test-custom-value-when-hash-value-is-null.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+        Assertions.assertEquals(2, jedis.hlen("hash_check"));
+        jedis.del("hash_check");
+    }
+
     public abstract RedisContainerInfo getRedisContainerInfo();
 }

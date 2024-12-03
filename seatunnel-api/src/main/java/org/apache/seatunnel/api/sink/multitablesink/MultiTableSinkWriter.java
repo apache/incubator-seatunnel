@@ -134,7 +134,10 @@ public class MultiTableSinkWriter
     private void subSinkErrorCheck() {
         for (MultiTableWriterRunnable writerRunnable : runnable) {
             if (writerRunnable.getThrowable() != null) {
-                throw new RuntimeException(writerRunnable.getThrowable());
+                throw new RuntimeException(
+                        String.format(
+                                "table %s sink throw error", writerRunnable.getCurrentTableId()),
+                        writerRunnable.getThrowable());
             }
         }
     }

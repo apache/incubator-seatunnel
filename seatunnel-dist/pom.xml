@@ -32,7 +32,17 @@
     <properties>
         <!-- disable mvn deploy to central maven repo by default -->
         <maven.deploy.skip>true</maven.deploy.skip>
+        <javaparser.version>3.26.1</javaparser.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-core</artifactId>
+            <version>${javaparser.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <finalName>apache-seatunnel-${project.version}</finalName>

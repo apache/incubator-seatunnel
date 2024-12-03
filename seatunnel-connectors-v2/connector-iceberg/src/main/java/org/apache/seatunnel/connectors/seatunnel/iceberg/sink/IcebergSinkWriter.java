@@ -19,6 +19,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.iceberg.sink;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
 import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSinkWriter;
@@ -40,7 +42,6 @@ import org.apache.seatunnel.connectors.seatunnel.iceberg.sink.writer.WriteResult
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
