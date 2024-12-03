@@ -61,8 +61,6 @@ public class RedisParameters implements Serializable {
     private String valueField;
     private String hashKeyField;
     private String hashValueField;
-    private int flushInterval;
-    private int scheduleInterval;
 
     private int redisVersion;
 
@@ -119,10 +117,6 @@ public class RedisParameters implements Serializable {
         if (config.getOptional(RedisConfig.HASH_VALUE_FIELD).isPresent()) {
             this.hashValueField = config.get(RedisConfig.HASH_VALUE_FIELD);
         }
-        // set flush interval
-        this.flushInterval = config.get(RedisConfig.FLUSH_INTERVAL);
-        // set schedule interval
-        this.scheduleInterval = config.get(RedisConfig.SCHEDULE_INTERVAL);
     }
 
     public RedisClient buildRedisClient() {

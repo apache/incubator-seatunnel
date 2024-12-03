@@ -153,20 +153,6 @@ public class RedisConfig {
                     .noDefaultValue()
                     .withDescription("The field of hash value you want to write to redis");
 
-    public static final Option<Integer> FLUSH_INTERVAL =
-            Options.key("flush_interval")
-                    .intType()
-                    .defaultValue(2000)
-                    .withDescription(
-                            "The interval of flushing data to redis, unit is millisecond, default 2000");
-
-    public static final Option<Integer> SCHEDULE_INTERVAL =
-            Options.key("schedule_interval")
-                    .intType()
-                    .defaultValue(10000)
-                    .withDescription(
-                            "The interval of scheduling the task to write data to redis, unit is second, default 10000");
-
     public enum Format {
         JSON,
         // TEXT will be supported later

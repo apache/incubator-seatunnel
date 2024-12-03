@@ -31,13 +31,7 @@ import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisParameters;
 import org.apache.seatunnel.connectors.seatunnel.redis.exception.RedisConnectorException;
 import org.apache.seatunnel.format.json.JsonSerializationSchema;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,13 +39,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         implements SupportMultiTableSinkWriter<Void> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisSinkWriter.class);
     private static final String REDIS_GROUP_DELIMITER = ":";
     private static final String LEFT_PLACEHOLDER_MARKER = "{";
     private static final String RIGHT_PLACEHOLDER_MARKER = "}";
@@ -66,10 +57,6 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
     private final List<String> keyBuffer;
     private final List<String> valueBuffer;
 
-    private final Object lock = new Object();
-    private Long preWriteTimestamp;
-    private final ScheduledExecutorService scheduler;
-
     public RedisSinkWriter(SeaTunnelRowType seaTunnelRowType, RedisParameters redisParameters) {
         this.seaTunnelRowType = seaTunnelRowType;
         this.redisParameters = redisParameters;
@@ -81,46 +68,18 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         this.rowKinds = new ArrayList<>(batchSize);
         this.keyBuffer = new ArrayList<>(batchSize);
         this.valueBuffer = new ArrayList<>(batchSize);
-        this.preWriteTimestamp = System.currentTimeMillis();
-        int flushInterval = redisParameters.getFlushInterval();
-        int scheduleInterval = redisParameters.getScheduleInterval();
-        this.scheduler =
-                new ScheduledThreadPoolExecutor(
-                        1, new ThreadFactoryBuilder().setNameFormat("redis-sink-flush").build());
-        scheduler.scheduleAtFixedRate(
-                () -> {
-                    try {
-                        synchronized (lock) {
-                            if (CollectionUtils.isNotEmpty(rowKinds)
-                                    && System.currentTimeMillis() - preWriteTimestamp
-                                            > flushInterval) {
-                                doBatchWrite();
-                                clearBuffer();
-                            }
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error("Error in scheduled job", e);
-                    }
-                },
-                0,
-                scheduleInterval,
-                TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void write(SeaTunnelRow element) throws IOException {
-        synchronized (lock) {
-            rowKinds.add(element.getRowKind());
-            List<String> fields = Arrays.asList(seaTunnelRowType.getFieldNames());
-            String key = getKey(element, fields);
-            keyBuffer.add(key);
-            String value = getValue(element, fields);
-            valueBuffer.add(value);
-            if (keyBuffer.size() >= batchSize) {
-                doBatchWrite();
-                clearBuffer();
-                preWriteTimestamp = System.currentTimeMillis();
-            }
+        rowKinds.add(element.getRowKind());
+        List<String> fields = Arrays.asList(seaTunnelRowType.getFieldNames());
+        String key = getKey(element, fields);
+        keyBuffer.add(key);
+        String value = getValue(element, fields);
+        valueBuffer.add(value);
+        if (keyBuffer.size() >= batchSize) {
+            flush();
         }
     }
 
@@ -257,14 +216,19 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
 
     @Override
     public void close() throws IOException {
-        synchronized (lock) {
-            if (!keyBuffer.isEmpty()) {
-                doBatchWrite();
-                clearBuffer();
-            }
-        }
-        if (null != scheduler) {
-            scheduler.shutdownNow();
+        flush();
+    }
+
+    @Override
+    public Optional<Void> prepareCommit() {
+        flush();
+        return Optional.empty();
+    }
+
+    private synchronized void flush() {
+        if (!keyBuffer.isEmpty()) {
+            doBatchWrite();
+            clearBuffer();
         }
     }
 }
