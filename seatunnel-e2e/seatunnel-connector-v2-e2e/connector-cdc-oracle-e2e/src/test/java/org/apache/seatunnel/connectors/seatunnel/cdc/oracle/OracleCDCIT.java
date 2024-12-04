@@ -103,6 +103,11 @@ public class OracleCDCIT extends AbstractOracleCDCIT implements TestResource {
     }
 
     @TestTemplate
+    public void testOracleCdcUniqueIndexE2e(TestContainer container) throws Exception {
+        checkDataForTheJob(container, "/oraclecdc_to_oracle_condition_unique_index.conf", false);
+    }
+
+    @TestTemplate
     public void testOracleCdcCheckDataE2eForSkipAnalysis(TestContainer container) throws Exception {
         checkDataForTheJob(container, "/oraclecdc_to_oracle_skip_analysis.conf", true);
     }
