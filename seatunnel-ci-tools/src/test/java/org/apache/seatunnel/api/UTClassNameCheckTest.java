@@ -11,6 +11,7 @@ import com.github.javaparser.ast.NodeList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,10 +29,9 @@ public class UTClassNameCheckTest {
 
     @Test
     public void checkUTClassName() {
-        Path directoryPath = Paths.get(System.getProperty("user.dir")).getParent();
         String testPathFragment = isWindows ? "src\\test\\java" : "src/test/java";
 
-        try (Stream<Path> paths = Files.walk(directoryPath)) {
+        try (Stream<Path> paths = Files.walk(Paths.get(".."), FileVisitOption.FOLLOW_LINKS)) {
             List<String> collect =
                     paths.filter(
                                     path -> {
