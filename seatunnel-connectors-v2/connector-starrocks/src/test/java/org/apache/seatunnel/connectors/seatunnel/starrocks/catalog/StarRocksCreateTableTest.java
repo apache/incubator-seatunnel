@@ -65,7 +65,7 @@ public class StarRocksCreateTableTest {
                 PhysicalColumn.of("create_time", BasicType.LONG_TYPE, (Long) null, true, null, ""));
 
         String result =
-                StarRocksSaveModeUtil.getCreateTableSql(
+                StarRocksSaveModeUtil.INSTANCE.getCreateTableSql(
                         "CREATE TABLE IF NOT EXISTS `${database}`.`${table}` (                                                                                                                                                   \n"
                                 + "${rowtype_primary_key}  ,       \n"
                                 + "${rowtype_unique_key} , \n"
@@ -110,7 +110,8 @@ public class StarRocksCreateTableTest {
                                                                                         .ColumnSortType
                                                                                         .ASC)))))
                                 .columns(columns)
-                                .build());
+                                .build(),
+                        StarRocksSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key());
         Assertions.assertEquals(
                 "CREATE TABLE IF NOT EXISTS `test1`.`test2` (                                                                                                                                                   \n"
                         + "`id` BIGINT NULL ,`age` INT NULL   ,       \n"
@@ -149,11 +150,12 @@ public class StarRocksCreateTableTest {
                 Assertions.assertThrows(
                         RuntimeException.class,
                         () ->
-                                StarRocksSaveModeUtil.getCreateTableSql(
+                                StarRocksSaveModeUtil.INSTANCE.getCreateTableSql(
                                         createTemplate,
                                         tablePath.getDatabaseName(),
                                         tablePath.getTableName(),
-                                        catalogTable.getTableSchema()));
+                                        catalogTable.getTableSchema(),
+                                        StarRocksSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key()));
         String primaryKeyHolder = SaveModePlaceHolder.ROWTYPE_PRIMARY_KEY.getPlaceHolder();
         SeaTunnelRuntimeException exceptSeaTunnelRuntimeException =
                 CommonError.sqlTemplateHandledError(
@@ -233,7 +235,7 @@ public class StarRocksCreateTableTest {
                         "L_COMMENT", BasicType.STRING_TYPE, (Long) null, false, null, ""));
 
         String result =
-                StarRocksSaveModeUtil.getCreateTableSql(
+                StarRocksSaveModeUtil.INSTANCE.getCreateTableSql(
                         "CREATE TABLE IF NOT EXISTS `${database}`.`${table}` (\n"
                                 + "`L_COMMITDATE`,\n"
                                 + "${rowtype_primary_key},\n"
@@ -252,7 +254,8 @@ public class StarRocksCreateTableTest {
                                         PrimaryKey.of(
                                                 "", Arrays.asList("L_ORDERKEY", "L_LINENUMBER")))
                                 .columns(columns)
-                                .build());
+                                .build(),
+                        StarRocksSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key());
         String expected =
                 "CREATE TABLE IF NOT EXISTS `tpch`.`lineitem` (\n"
                         + "`L_COMMITDATE` DATE NOT NULL ,\n"
@@ -290,7 +293,7 @@ public class StarRocksCreateTableTest {
         columns.add(PhysicalColumn.of("description", BasicType.STRING_TYPE, 70000, true, null, ""));
 
         String result =
-                StarRocksSaveModeUtil.getCreateTableSql(
+                StarRocksSaveModeUtil.INSTANCE.getCreateTableSql(
                         "CREATE TABLE IF NOT EXISTS `${database}`.`${table}` (                                                                                                                                                   \n"
                                 + "${rowtype_primary_key}  ,       \n"
                                 + "`create_time` DATETIME NOT NULL ,  \n"
@@ -312,7 +315,8 @@ public class StarRocksCreateTableTest {
                         TableSchema.builder()
                                 .primaryKey(PrimaryKey.of("", Arrays.asList("id", "age")))
                                 .columns(columns)
-                                .build());
+                                .build(),
+                        StarRocksSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key());
 
         Assertions.assertEquals(
                 "CREATE TABLE IF NOT EXISTS `test1`.`test2` (                                                                                                                                                   \n"
@@ -347,7 +351,7 @@ public class StarRocksCreateTableTest {
         columns.add(PhysicalColumn.of("description", BasicType.STRING_TYPE, 70000, true, null, ""));
 
         String result =
-                StarRocksSaveModeUtil.getCreateTableSql(
+                StarRocksSaveModeUtil.INSTANCE.getCreateTableSql(
                         "create table '${database}'.'${table}'(\n"
                                 + "     ${rowtype_fields}\n"
                                 + " )\n"
@@ -358,7 +362,8 @@ public class StarRocksCreateTableTest {
                                 .primaryKey(
                                         PrimaryKey.of("test", Arrays.asList("id", "age", "name")))
                                 .columns(columns)
-                                .build());
+                                .build(),
+                        StarRocksSinkOptions.SAVE_MODE_CREATE_TEMPLATE.key());
 
         Assertions.assertEquals(
                 "create table 'test1'.'test2'(\n"

@@ -17,12 +17,15 @@
 
 package org.apache.seatunnel.connectors.seatunnel.starrocks.client;
 
+import org.apache.seatunnel.api.table.catalog.Column;
+import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.config.SinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.exception.StarRocksConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.exception.StarRocksConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.serialize.StarRocksDelimiterParser;
+import org.apache.seatunnel.connectors.seatunnel.starrocks.serialize.StarRocksSinkOP;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -56,11 +59,11 @@ public class StarRocksStreamLoadVisitor {
     private static final String RESULT_LABEL_ABORTED = "ABORTED";
     private static final String RESULT_LABEL_UNKNOWN = "UNKNOWN";
 
-    private List<String> fieldNames;
+    private final TableSchema tableSchema;
 
-    public StarRocksStreamLoadVisitor(SinkConfig sinkConfig, List<String> fieldNames) {
+    public StarRocksStreamLoadVisitor(SinkConfig sinkConfig, TableSchema tableSchema) {
         this.sinkConfig = sinkConfig;
-        this.fieldNames = fieldNames;
+        this.tableSchema = tableSchema;
         this.httpHelper = new HttpHelper(sinkConfig);
     }
 
@@ -260,16 +263,19 @@ public class StarRocksStreamLoadVisitor {
 
     private Map<String, String> getStreamLoadHttpHeader(String label) {
         Map<String, String> headerMap = new HashMap<>();
-        if (null != fieldNames
-                && !fieldNames.isEmpty()
+        List<Column> columns = tableSchema.getColumns();
+        List<String> fieldNames =
+                columns.stream().map(Column::getName).collect(Collectors.toList());
+        if (sinkConfig.isEnableUpsertDelete()) {
+            fieldNames.add(StarRocksSinkOP.COLUMN_KEY);
+        }
+        if (!fieldNames.isEmpty()
                 && SinkConfig.StreamLoadFormat.CSV.equals(sinkConfig.getLoadFormat())) {
             headerMap.put(
                     "columns",
-                    String.join(
-                            ",",
-                            fieldNames.stream()
-                                    .map(f -> String.format("`%s`", f))
-                                    .collect(Collectors.toList())));
+                    fieldNames.stream()
+                            .map(f -> String.format("`%s`", f))
+                            .collect(Collectors.joining(",")));
         }
         if (null != sinkConfig.getStreamLoadProps()) {
             for (Map.Entry<String, Object> entry : sinkConfig.getStreamLoadProps().entrySet()) {

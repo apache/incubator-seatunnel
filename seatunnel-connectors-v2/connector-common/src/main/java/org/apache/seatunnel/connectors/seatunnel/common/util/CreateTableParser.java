@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.starrocks.util;
+package org.apache.seatunnel.connectors.seatunnel.common.util;
 
 import lombok.Getter;
 

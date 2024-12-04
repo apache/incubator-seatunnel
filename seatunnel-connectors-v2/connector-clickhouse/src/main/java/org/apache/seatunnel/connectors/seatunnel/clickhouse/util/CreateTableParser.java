@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.doris.util;
+package org.apache.seatunnel.connectors.seatunnel.clickhouse.util;
 
 import lombok.Getter;
 
