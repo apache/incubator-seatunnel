@@ -167,12 +167,6 @@
             <version>${easyexcel.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.dhatim</groupId>
-            <artifactId>fastexcel-reader</artifactId>
-            <version>${fastexcel-reader.version}</version>
-        </dependency>
-
     </dependencies>
 
     <build>

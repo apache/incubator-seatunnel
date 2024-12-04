@@ -136,7 +136,7 @@ public class BaseSourceConfigOptions {
 
     public static final Option<ExcelEngine> EXCEL_ENGINE =
             Options.key("excel_engine")
-                    .objectType(ExcelEngine.class)
+                    .enumType(ExcelEngine.class)
                     .defaultValue(ExcelEngine.POI)
                     .withDescription("To switch excel read engine,  e.g. POI , EasyExcel");
 
