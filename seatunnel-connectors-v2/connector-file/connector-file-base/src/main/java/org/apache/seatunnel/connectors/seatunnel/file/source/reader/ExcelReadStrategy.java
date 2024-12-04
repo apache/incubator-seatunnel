@@ -17,15 +17,11 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
-import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
-import org.apache.seatunnel.api.table.type.SqlType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.common.utils.DateTimeUtils;
 import org.apache.seatunnel.common.utils.DateUtils;
@@ -33,6 +29,7 @@ import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.ExcelEngine;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
+import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelCellUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.excel.ExcelReaderListener;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 
@@ -51,31 +48,24 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-import static org.apache.seatunnel.common.utils.DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS;
-
 @Slf4j
 public class ExcelReadStrategy extends AbstractReadStrategy {
 
-    private final DateUtils.Formatter dateFormat = DateUtils.Formatter.YYYY_MM_DD;
-
-    private final DateTimeUtils.Formatter datetimeFormat = YYYY_MM_DD_HH_MM_SS;
-    private final TimeUtils.Formatter timeFormat = TimeUtils.Formatter.HH_MM_SS;
+    private DateTimeFormatter dateFormatter =
+            DateTimeFormatter.ofPattern(DateUtils.Formatter.YYYY_MM_DD.getValue());
+    private DateTimeFormatter dateTimeFormatter =
+            DateTimeFormatter.ofPattern(DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS.getValue());
+    private DateTimeFormatter timeFormatter =
+            DateTimeFormatter.ofPattern(TimeUtils.Formatter.HH_MM_SS.getValue());;
 
     private int[] indexes;
 
     private int cellCount;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @SneakyThrows
     @Override
@@ -100,6 +90,25 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     "Skip the number of rows exceeds the maximum or minimum limit of Sheet");
         }
 
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
+            String dateFormatString =
+                    pluginConfig.getString(BaseSourceConfigOptions.DATE_FORMAT.key());
+            dateFormatter = DateTimeFormatter.ofPattern(dateFormatString);
+        }
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
+            String datetimeFormatString =
+                    pluginConfig.getString(BaseSourceConfigOptions.DATETIME_FORMAT.key());
+            dateTimeFormatter = DateTimeFormatter.ofPattern(datetimeFormatString);
+        }
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
+            String timeFormatString =
+                    pluginConfig.getString(BaseSourceConfigOptions.TIME_FORMAT.key());
+            timeFormatter = DateTimeFormatter.ofPattern(timeFormatString);
+        }
+
+        ExcelCellUtils excelCellUtils =
+                new ExcelCellUtils(pluginConfig, dateFormatter, dateTimeFormatter, timeFormatter);
+
         if (pluginConfig.hasPath(BaseSourceConfigOptions.EXCEL_ENGINE.key())
                 && pluginConfig
                         .getString(BaseSourceConfigOptions.EXCEL_ENGINE.key())
@@ -110,7 +119,7 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                     EasyExcel.read(
                             inputStream,
                             new ExcelReaderListener(
-                                    tableId, output, pluginConfig, seaTunnelRowType));
+                                    tableId, output, excelCellUtils, seaTunnelRowType));
             if (pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())) {
                 read.sheet(pluginConfig.getString(BaseSourceConfigOptions.SHEET_NAME.key()))
                         .headRowNumber((int) skipHeaderNumber)
@@ -163,9 +172,10 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                                             z++,
                                             cell == null
                                                     ? null
-                                                    : convert(
+                                                    : excelCellUtils.convert(
                                                             getCellValue(cell.getCellType(), cell),
-                                                            fieldTypes[z - 1]));
+                                                            fieldTypes[z - 1],
+                                                            null));
                                 }
                                 if (isMergePartition) {
                                     int index = seaTunnelRowType.getTotalFields();
@@ -237,86 +247,6 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                         String.format("[%s] type not support ", cellType));
         }
         return null;
-    }
-
-    @SneakyThrows
-    private Object convert(Object field, SeaTunnelDataType<?> fieldType) {
-        if (field == null) {
-            return null;
-        }
-
-        SqlType sqlType = fieldType.getSqlType();
-        if (!(SqlType.STRING.equals(sqlType)) && "".equals(field)) {
-            return null;
-        }
-        switch (sqlType) {
-            case MAP:
-            case ARRAY:
-                return objectMapper.readValue((String) field, fieldType.getTypeClass());
-            case STRING:
-                if (field instanceof Double) {
-                    String stringValue = field.toString();
-                    if (stringValue.endsWith(".0")) {
-                        return stringValue.substring(0, stringValue.length() - 2);
-                    }
-                    return stringValue;
-                }
-                return String.valueOf(field);
-            case DOUBLE:
-                return Double.parseDouble(field.toString());
-            case BOOLEAN:
-                return Boolean.parseBoolean(field.toString());
-            case FLOAT:
-                return (float) Double.parseDouble(field.toString());
-            case BIGINT:
-                return (long) Double.parseDouble(field.toString());
-            case INT:
-                return (int) Double.parseDouble(field.toString());
-            case TINYINT:
-                return (byte) Double.parseDouble(field.toString());
-            case SMALLINT:
-                return (short) Double.parseDouble(field.toString());
-            case DECIMAL:
-                return BigDecimal.valueOf(Double.parseDouble(field.toString()));
-            case DATE:
-                if (field instanceof LocalDateTime) {
-                    return ((LocalDateTime) field).toLocalDate();
-                }
-                return LocalDate.parse(
-                        (String) field, DateTimeFormatter.ofPattern(dateFormat.getValue()));
-            case TIME:
-                if (field instanceof LocalDateTime) {
-                    return ((LocalDateTime) field).toLocalTime();
-                }
-                return LocalTime.parse(
-                        (String) field, DateTimeFormatter.ofPattern(timeFormat.getValue()));
-            case TIMESTAMP:
-                if (field instanceof LocalDateTime) {
-                    return field;
-                }
-                return LocalDateTime.parse(
-                        (String) field, DateTimeFormatter.ofPattern(datetimeFormat.getValue()));
-            case NULL:
-                return null;
-            case BYTES:
-                return field.toString().getBytes(StandardCharsets.UTF_8);
-            case ROW:
-                String delimiter =
-                        ReadonlyConfig.fromConfig(pluginConfig)
-                                .get(BaseSourceConfigOptions.FIELD_DELIMITER);
-                String[] context = field.toString().split(delimiter);
-                SeaTunnelRowType ft = (SeaTunnelRowType) fieldType;
-                int length = context.length;
-                SeaTunnelRow seaTunnelRow = new SeaTunnelRow(length);
-                for (int j = 0; j < length; j++) {
-                    seaTunnelRow.setField(j, convert(context[j], ft.getFieldType(j)));
-                }
-                return seaTunnelRow;
-            default:
-                throw new FileConnectorException(
-                        CommonErrorCodeDeprecated.UNSUPPORTED_DATA_TYPE,
-                        "User defined schema validation failed");
-        }
     }
 
     private <T> boolean isNullOrEmpty(T[] arr) {
