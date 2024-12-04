@@ -105,11 +105,11 @@ public class ExcelReaderListener extends AnalysisEventListener<Map<Integer, Obje
 
     @Override
     public void onException(Exception exception, AnalysisContext context) {
-        log.error("cell parsing exception :{}", exception.getMessage());
+        log.debug("cell parsing exception :{}", exception.getMessage());
         if (exception instanceof ExcelDataConvertException) {
             ExcelDataConvertException excelDataConvertException =
                     (ExcelDataConvertException) exception;
-            log.error(
+            log.debug(
                     "row:{},cell:{},data:{}",
                     excelDataConvertException.getRowIndex(),
                     excelDataConvertException.getColumnIndex(),
