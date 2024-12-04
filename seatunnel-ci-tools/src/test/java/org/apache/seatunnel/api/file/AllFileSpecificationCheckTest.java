@@ -118,7 +118,7 @@ public class AllFileSpecificationCheckTest {
 
         fileContents.forEach(
                 (path, lines) -> {
-                    if (whiteList.contains(path)) {
+                    if (whiteList.contains(path.trim())) {
                         return;
                     }
                     for (int i = 0; i < lines.size(); i++) {
