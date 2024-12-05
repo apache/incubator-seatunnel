@@ -28,7 +28,7 @@ import java.io.IOException;
 
 import static org.apache.seatunnel.e2e.common.util.ContainerUtil.PROJECT_ROOT_PATH;
 
-public class JobClientJobProxyIT extends SeaTunnelContainer {
+public class JobClientJobProxyIT extends SeaTunnelEngineContainer {
 
     @Override
     @BeforeAll
