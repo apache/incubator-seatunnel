@@ -236,7 +236,7 @@ public class SchemaUtils {
         String selectColumnSQL =
                 String.format(
                         "SELECT %s FROM %s WHERE 1 != 1",
-                        quoteIdentifier(column), tablePath.getTableName());
+                        quoteIdentifier(column), tablePath.getFullName());
         try (Statement statement = connection.createStatement()) {
             return statement.execute(selectColumnSQL);
         } catch (SQLException e) {
