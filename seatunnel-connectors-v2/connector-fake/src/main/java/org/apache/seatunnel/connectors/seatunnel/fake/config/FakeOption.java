@@ -27,12 +27,6 @@ import java.util.Map;
 
 public class FakeOption {
 
-    public static final Option<List<Map<String, Object>>> TABLES_CONFIGS =
-            Options.key("tables_configs")
-                    .type(new TypeReference<List<Map<String, Object>>>() {})
-                    .noDefaultValue()
-                    .withDescription("The multiple table config list of fake source");
-
     public static final Option<List<Map<String, Object>>> ROWS =
             Options.key("rows")
                     .type(new TypeReference<List<Map<String, Object>>>() {})

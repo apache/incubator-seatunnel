@@ -33,5 +33,10 @@ seatunnel:
         plugin-config:
           namespace: /tmp/seatunnel/checkpoint_snapshot/
     http:
-        enable-http: false
+        enable-http: true
         port: 8080
+    telemetry:
+      metric:
+         enabled: false
+      logs:
+         scheduled-deletion-enable: false

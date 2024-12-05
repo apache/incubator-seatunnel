@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.postgres;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
@@ -26,6 +28,7 @@ import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
 import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,7 +39,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -194,6 +196,47 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
                             });
         } finally {
             // Clear related content to ensure that multiple operations are not affected
+            clearTable(OPENGAUSS_SCHEMA, SOURCE_TABLE_1);
+            clearTable(OPENGAUSS_SCHEMA, SINK_TABLE_1);
+        }
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testOpengaussCdcMeatadataTrans(TestContainer container)
+            throws InterruptedException, IOException {
+        try {
+            Long jobId = JobIdGenerator.newJobId();
+            CompletableFuture.supplyAsync(
+                    () -> {
+                        try {
+                            container.executeJob(
+                                    "/opengausscdc_to_meatadata_trans.conf", String.valueOf(jobId));
+                        } catch (Exception e) {
+                            log.error("Commit task exception :" + e.getMessage());
+                            throw new RuntimeException(e);
+                        }
+                        return null;
+                    });
+            TimeUnit.SECONDS.sleep(10);
+            // insert update delete
+            upsertDeleteSourceTable(OPENGAUSS_SCHEMA, SOURCE_TABLE_1);
+
+            TimeUnit.SECONDS.sleep(20);
+            Awaitility.await()
+                    .atMost(2, TimeUnit.MINUTES)
+                    .untilAsserted(
+                            () -> {
+                                String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                                Assertions.assertEquals("RUNNING", jobStatus);
+                            });
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } finally {
             clearTable(OPENGAUSS_SCHEMA, SOURCE_TABLE_1);
             clearTable(OPENGAUSS_SCHEMA, SINK_TABLE_1);
         }

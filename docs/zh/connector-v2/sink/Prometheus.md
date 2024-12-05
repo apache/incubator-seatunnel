@@ -67,7 +67,7 @@ source {
         c_timestamp = timestamp
       }
     }
-    result_table_name = "fake"
+    plugin_output = "fake"
     rows = [
        {
          kind = INSERT

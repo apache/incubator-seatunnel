@@ -58,7 +58,12 @@ Paimon表的changelog产生模式有[四种](https://paimon.apache.org/docs/mast
 * [`lookup`](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/#lookup)
 * [`full-compaction`](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/#full-compaction)
 > 注意：
- > 当你使用流模式去读paimon表的数据时，不同模式将会产生[不同的结果](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/source/Paimon.md#changelog)。
+> 当你使用流模式去读paimon表的数据时，不同模式将会产生[不同的结果](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/source/Paimon.md#changelog)。
+
+## 文件系统
+Paimon连接器支持向多文件系统写入数据。目前支持的文件系统有hdfs和s3。
+如果您使用s3文件系统。您可以配置`fs.s3a.access-key `， `fs.s3a.secret-key`， `fs.s3a.endpoint`， `fs.s3a.path.style.access`， `fs.s3a.aws.credentials`。在`paimon.hadoop.conf`选项中设置提供程序的属性。
+除此之外，warehouse应该以`s3a://`开头。
 
 ## 示例
 
@@ -89,6 +94,53 @@ sink {
     warehouse="file:///tmp/seatunnel/paimon/hadoop-sink/"
     database="seatunnel"
     table="role"
+  }
+}
+```
+
+### 单表(基于S3文件系统)
+
+```hocon
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  FakeSource {
+    schema = {
+      fields {
+        c_map = "map<string, string>"
+        c_array = "array<int>"
+        c_string = string
+        c_boolean = boolean
+        c_tinyint = tinyint
+        c_smallint = smallint
+        c_int = int
+        c_bigint = bigint
+        c_float = float
+        c_double = double
+        c_bytes = bytes
+        c_date = date
+        c_decimal = "decimal(38, 18)"
+        c_timestamp = timestamp
+      }
+    }
+  }
+}
+
+sink {
+  Paimon {
+    warehouse = "s3a://test/"
+    database = "seatunnel_namespace11"
+    table = "st_test"
+    paimon.hadoop.conf = {
+        fs.s3a.access-key=G52pnxg67819khOZ9ezX
+        fs.s3a.secret-key=SHJuAQqHsLrgZWikvMa3lJf5T0NfM5LMFliJh9HF
+        fs.s3a.endpoint="http://minio4:9000"
+        fs.s3a.path.style.access=true
+        fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider
+    }
   }
 }
 ```

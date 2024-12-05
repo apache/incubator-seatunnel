@@ -261,7 +261,7 @@ source{
         partition_column= "id"
         
         # The name of the table returned
-        result_table_name = "jdbc"
+        plugin_output = "jdbc"
         partition_lower_bound = 1
         partition_upper_bound = 50
         partition_num = 5

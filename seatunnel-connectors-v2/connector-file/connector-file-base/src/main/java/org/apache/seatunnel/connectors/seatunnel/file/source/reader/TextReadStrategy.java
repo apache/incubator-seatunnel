@@ -157,10 +157,15 @@ public class TextReadStrategy extends AbstractReadStrategy {
                     "When reading json/text/csv files, if user has not specified schema information, "
                             + "SeaTunnel will not support column projection");
         }
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(pluginConfig);
         TextDeserializationSchema.Builder builder =
                 TextDeserializationSchema.builder()
                         .delimiter(TextFormatConstant.PLACEHOLDER)
-                        .textLineSplitor(textLineSplitor);
+                        .textLineSplitor(textLineSplitor)
+                        .nullFormat(
+                                readonlyConfig
+                                        .getOptional(BaseSourceConfigOptions.NULL_FORMAT)
+                                        .orElse(null));
         if (isMergePartition) {
             deserializationSchema =
                     builder.seaTunnelRowType(this.seaTunnelRowTypeWithPartition).build();
@@ -175,11 +180,11 @@ public class TextReadStrategy extends AbstractReadStrategy {
         SeaTunnelRowType rowType = catalogTable.getSeaTunnelRowType();
         SeaTunnelRowType userDefinedRowTypeWithPartition =
                 mergePartitionTypes(fileNames.get(0), rowType);
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(pluginConfig);
         Optional<String> fieldDelimiterOptional =
-                ReadonlyConfig.fromConfig(pluginConfig)
-                        .getOptional(BaseSourceConfigOptions.FIELD_DELIMITER);
+                readonlyConfig.getOptional(BaseSourceConfigOptions.FIELD_DELIMITER);
         encoding =
-                ReadonlyConfig.fromConfig(pluginConfig)
+                readonlyConfig
                         .getOptional(BaseSourceConfigOptions.ENCODING)
                         .orElse(StandardCharsets.UTF_8.name());
         if (fieldDelimiterOptional.isPresent()) {
@@ -198,7 +203,11 @@ public class TextReadStrategy extends AbstractReadStrategy {
         TextDeserializationSchema.Builder builder =
                 TextDeserializationSchema.builder()
                         .delimiter(fieldDelimiter)
-                        .textLineSplitor(textLineSplitor);
+                        .textLineSplitor(textLineSplitor)
+                        .nullFormat(
+                                readonlyConfig
+                                        .getOptional(BaseSourceConfigOptions.NULL_FORMAT)
+                                        .orElse(null));
         if (isMergePartition) {
             deserializationSchema =
                     builder.seaTunnelRowType(userDefinedRowTypeWithPartition).build();

@@ -38,6 +38,8 @@ seatunnel:
     telemetry:
       metric:
         enabled: false
+      log:
+        scheduled-deletion-enable: true
     http:
       enable-http: true
       port: 8080

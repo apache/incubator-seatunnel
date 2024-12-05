@@ -93,7 +93,7 @@ source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   FakeSource {
     parallelism = 1
-    result_table_name = "fake"
+    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

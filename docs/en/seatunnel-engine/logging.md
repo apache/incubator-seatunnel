@@ -92,6 +92,24 @@ SeaTunnel provides an API for querying logs.
 
 For more details, please refer to the [REST-API](rest-api-v2.md).
 
+## SeaTunnel Log Configuration
+
+### Scheduled deletion of old logs
+
+SeaTunnel supports scheduled deletion of old log files to prevent disk space exhaustion. You can add the following configuration in the `seatunnel.yml` file:
+
+```yaml
+seatunnel:
+  engine:
+    history-job-expire-minutes: 1440
+    telemetry:
+      logs:
+        scheduled-deletion-enable: true
+```
+
+- `history-job-expire-minutes`: Sets the retention time for historical job data and logs (in minutes). The system will automatically clear expired job information and log files after the specified period.
+- `scheduled-deletion-enable`: Enable scheduled cleanup, with default value of `true`. The system will automatically delete relevant log files when job expiration time, as defined by `history-job-expire-minutes`, is reached. If this feature is disabled, logs will remain permanently on disk, requiring manual management, which may affect disk space usage. It is recommended to configure this setting based on specific needs.
+
 ## Best practices for developers
 
 You can create an SLF4J logger by calling `org.slf4j.LoggerFactory#LoggerFactory.getLogger` with the Class of your class as an argument.

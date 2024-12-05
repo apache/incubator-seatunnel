@@ -25,7 +25,40 @@
     <artifactId>connector-paimon-e2e</artifactId>
     <name>SeaTunnel : E2E : Connector V2 : Paimon</name>
 
+    <properties>
+        <testcontainer.version>1.19.1</testcontainer.version>
+        <minio.version>8.5.6</minio.version>
+    </properties>
+
     <dependencies>
+        <!-- minio containers -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>minio</artifactId>
+            <version>${testcontainer.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>${minio.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>connector-seatunnel-e2e-base</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-hadoop3-3.1.4-uber</artifactId>
+            <classifier>optional</classifier>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
             <artifactId>connector-fake</artifactId>
@@ -36,12 +69,6 @@
             <groupId>org.apache.seatunnel</groupId>
             <artifactId>connector-paimon</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.seatunnel</groupId>
-            <artifactId>seatunnel-hadoop3-3.1.4-uber</artifactId>
-            <classifier>optional</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -181,6 +181,65 @@ source {
 
 > 根据不同的 Kafka 主题和格式解析数据，并基于 ID 执行 upsert 操作。
 
+> 注意: Kafka是一个非结构化数据源，应该使用`tables_configs`，将来会删除`table_list`
+
+```hocon
+
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Kafka {
+    bootstrap.servers = "kafka_e2e:9092"
+    tables_configs = [
+      {
+        topic = "^test-ogg-sou.*"
+        pattern = "true"
+        consumer.group = "ogg_multi_group"
+        start_mode = earliest
+        schema = {
+          fields {
+            id = "int"
+            name = "string"
+            description = "string"
+            weight = "string"
+          }
+        },
+        format = ogg_json
+      },
+      {
+        topic = "test-cdc_mds"
+        start_mode = earliest
+        schema = {
+          fields {
+            id = "int"
+            name = "string"
+            description = "string"
+            weight = "string"
+          }
+        },
+        format = canal_json
+      }
+    ]
+  }
+}
+
+sink {
+  Jdbc {
+    driver = org.postgresql.Driver
+    url = "jdbc:postgresql://postgresql:5432/test?loggerLevel=OFF"
+    user = test
+    password = test
+    generate_sink_sql = true
+    database = test
+    table = public.sink
+    primary_keys = ["id"]
+  }
+}
+```
+
 ```hocon
 env {
   execution.parallelism = 1
@@ -283,7 +342,7 @@ source {
               """
     bootstrap.servers = "kafkaCluster:9092"
     start_mode = "earliest"
-    result_table_name = "kafka_table"
+    plugin_output = "kafka_table"
   }
 }
 ```

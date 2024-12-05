@@ -67,7 +67,7 @@ env {
 }
     source {
       FakeSource {
-       result_table_name = "kudu"
+       plugin_output = "kudu"
         schema = {
           fields {
                     id = int
@@ -114,7 +114,7 @@ env {
 
 sink {
    kudu{
-    source_table_name = "kudu"
+    plugin_input = "kudu"
     kudu_masters = "kudu-master-cdc:7051"
     table_name = "kudu_sink_table"
     enable_kerberos = true

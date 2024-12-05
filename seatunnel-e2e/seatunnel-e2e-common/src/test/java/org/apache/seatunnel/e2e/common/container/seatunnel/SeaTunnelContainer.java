@@ -17,7 +17,12 @@
 
 package org.apache.seatunnel.e2e.common.container.seatunnel;
 
+import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.apache.seatunnel.common.utils.FileUtils;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.e2e.common.container.AbstractTestContainer;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
@@ -25,6 +30,7 @@ import org.apache.seatunnel.e2e.common.container.TestContainerId;
 import org.apache.seatunnel.e2e.common.util.ContainerUtil;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -35,13 +41,12 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerLoggerFactory;
 import org.testcontainers.utility.MountableFile;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
 import groovy.lang.Tuple2;
 import lombok.NoArgsConstructor;
@@ -82,7 +87,21 @@ public class SeaTunnelContainer extends AbstractTestContainer {
         server = createSeaTunnelServer();
     }
 
+    /**
+     * Start up the seatunnel server with the given network.
+     *
+     * @param NETWORK the network to use
+     */
+    public void startUp(Network NETWORK) throws Exception {
+        server = createSeaTunnelServer(NETWORK);
+    }
+
     private GenericContainer<?> createSeaTunnelServer() throws IOException, InterruptedException {
+        return createSeaTunnelServer(NETWORK);
+    }
+
+    private GenericContainer<?> createSeaTunnelServer(Network NETWORK)
+            throws IOException, InterruptedException {
         GenericContainer<?> server =
                 new GenericContainer<>(getDockerImage())
                         .withNetwork(NETWORK)
@@ -90,13 +109,14 @@ public class SeaTunnelContainer extends AbstractTestContainer {
                         .withCommand(buildStartCommand())
                         .withNetworkAliases("server")
                         .withExposedPorts()
+                        .withFileSystemBind("/tmp", "/opt/hive")
                         .withLogConsumer(
                                 new Slf4jLogConsumer(
                                         DockerLoggerFactory.getLogger(
                                                 "seatunnel-engine:" + JDK_DOCKER_IMAGE)))
                         .waitingFor(Wait.forLogMessage(".*received new worker register:.*", 1));
         copySeaTunnelStarterToContainer(server);
-        server.setPortBindings(Collections.singletonList("5801:5801"));
+        server.setPortBindings(Arrays.asList("5801:5801", "8080:8080"));
         server.withCopyFileToContainer(
                 MountableFile.forHostPath(
                         PROJECT_ROOT_PATH
@@ -434,7 +454,7 @@ public class SeaTunnelContainer extends AbstractTestContainer {
     }
 
     /** The thread should be recycled but not, we should fix it in the future. */
-    private boolean isIssueWeAlreadyKnow(String threadName) {
+    protected boolean isIssueWeAlreadyKnow(String threadName) {
         // ClickHouse com.clickhouse.client.ClickHouseClientBuilder
         return threadName.startsWith("ClickHouseClientWorker")
                 // InfluxDB okio.AsyncTimeout$Watchdog
@@ -491,6 +511,24 @@ public class SeaTunnelContainer extends AbstractTestContainer {
     }
 
     @Override
+    public String getJobStatus(String jobId) {
+        HttpGet get = new HttpGet("http://" + server.getHost() + ":8080/job-info/" + jobId);
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            CloseableHttpResponse response = client.execute(get);
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                String jobStatus = EntityUtils.toString(response.getEntity());
+                ObjectNode jsonNodes = JsonUtils.parseObject(jobStatus);
+                if (jsonNodes.has("jobStatus")) {
+                    return jsonNodes.get("jobStatus").asText();
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    @Override
     public String getServerLogs() {
         return server.getLogs();
     }
@@ -499,5 +537,10 @@ public class SeaTunnelContainer extends AbstractTestContainer {
     public void copyFileToContainer(String path, String targetPath) {
         ContainerUtil.copyFileIntoContainers(
                 ContainerUtil.getResourcesFile(path).toPath(), targetPath, server);
+    }
+
+    @Override
+    public void copyAbsolutePathToContainer(String path, String targetPath) {
+        ContainerUtil.copyFileIntoContainers(Paths.get(path), targetPath, server);
     }
 }

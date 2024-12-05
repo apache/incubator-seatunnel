@@ -302,6 +302,14 @@ Example:
 
 REPLACE(NAME, ' ')
 
+### SPLIT
+
+Split a string into an array.
+
+Example:
+
+select SPLIT(test,';') as arrays
+
 ### SOUNDEX
 
 ```SOUNDEX(string)```
@@ -984,3 +992,26 @@ Example:
 
 select UUID() as seatunnel_uuid
 
+### ARRAY
+
+Generate an array.
+
+Example:
+
+select ARRAY('test1','test2','test3') as arrays
+
+
+### LATERAL VIEW 
+#### EXPLODE
+
+explode array column to rows.
+OUTER EXPLODE will return NULL, while array is NULL or empty
+EXPLODE(SPLIT(FIELD_NAME,separator))Used to split string type. The first parameter of SPLIT function  is the field name, the second parameter is the separator
+EXPLODE(ARRAY(value1,value2)) Used to custom array type.
+```
+SELECT * FROM fake 
+	LATERAL VIEW EXPLODE ( SPLIT ( NAME, ',' ) ) AS NAME 
+	LATERAL VIEW EXPLODE ( SPLIT ( pk_id, ';' ) ) AS pk_id 
+	LATERAL VIEW OUTER EXPLODE ( age ) AS age
+	LATERAL VIEW OUTER EXPLODE ( ARRAY(1,1) ) AS num
+```

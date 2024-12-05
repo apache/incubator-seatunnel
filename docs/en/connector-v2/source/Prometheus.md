@@ -101,7 +101,7 @@ Source plugin common parameters, please refer to [Source Common Options](../sour
 ```hocon
 source {
   Prometheus {
-    result_table_name = "http"
+    plugin_output = "http"
     url = "http://mockserver:1080"
     query = "up"
     query_type = "Instant"
@@ -123,7 +123,7 @@ source {
 ```hocon
 source {
   Prometheus {
-    result_table_name = "http"
+    plugin_output = "http"
     url = "http://mockserver:1080"
     query = "up"
     query_type = "Range"

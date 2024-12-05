@@ -336,7 +336,9 @@ public class FieldNamedPreparedStatement implements PreparedStatement {
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
-        throw new UnsupportedOperationException();
+        for (int index : indexMapping[parameterIndex - 1]) {
+            statement.setBinaryStream(index, x);
+        }
     }
 
     @Override

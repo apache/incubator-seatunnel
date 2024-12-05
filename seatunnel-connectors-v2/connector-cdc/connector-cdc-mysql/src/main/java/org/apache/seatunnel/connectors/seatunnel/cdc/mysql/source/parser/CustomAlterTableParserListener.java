@@ -18,11 +18,12 @@
 package org.apache.seatunnel.connectors.seatunnel.cdc.mysql.source.parser;
 
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
-import org.apache.seatunnel.api.table.event.AlterTableAddColumnEvent;
-import org.apache.seatunnel.api.table.event.AlterTableChangeColumnEvent;
-import org.apache.seatunnel.api.table.event.AlterTableColumnEvent;
-import org.apache.seatunnel.api.table.event.AlterTableDropColumnEvent;
-import org.apache.seatunnel.api.table.event.AlterTableModifyColumnEvent;
+import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
+import org.apache.seatunnel.api.table.schema.event.AlterTableChangeColumnEvent;
+import org.apache.seatunnel.api.table.schema.event.AlterTableColumnEvent;
+import org.apache.seatunnel.api.table.schema.event.AlterTableDropColumnEvent;
+import org.apache.seatunnel.api.table.schema.event.AlterTableModifyColumnEvent;
+import org.apache.seatunnel.connectors.cdc.base.source.parser.SeatunnelDDLParser;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.utils.MySqlTypeUtils;
 
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +41,8 @@ import io.debezium.relational.TableId;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CustomAlterTableParserListener extends MySqlParserBaseListener {
+public class CustomAlterTableParserListener extends MySqlParserBaseListener
+        implements SeatunnelDDLParser {
     private static final int STARTING_INDEX = 1;
     private final MySqlAntlrDdlParser parser;
     private final List<ParseTreeListener> listeners;
@@ -95,9 +97,7 @@ public class CustomAlterTableParserListener extends MySqlParserBaseListener {
                 () -> {
                     Column column = columnDefinitionListener.getColumn();
                     org.apache.seatunnel.api.table.catalog.Column seatunnelColumn =
-                            toSeatunnelColumn(column);
-                    String sourceColumnType = getSourceColumnType(column);
-                    seatunnelColumn = seatunnelColumn.reSourceType(sourceColumnType);
+                            toSeatunnelColumnWithFullTypeInfo(column);
                     if (ctx.FIRST() != null) {
                         AlterTableAddColumnEvent alterTableAddColumnEvent =
                                 AlterTableAddColumnEvent.addFirst(tableIdentifier, seatunnelColumn);
@@ -153,9 +153,7 @@ public class CustomAlterTableParserListener extends MySqlParserBaseListener {
                 () -> {
                     Column column = columnDefinitionListener.getColumn();
                     org.apache.seatunnel.api.table.catalog.Column seatunnelColumn =
-                            toSeatunnelColumn(column);
-                    String sourceColumnType = getSourceColumnType(column);
-                    seatunnelColumn = seatunnelColumn.reSourceType(sourceColumnType);
+                            toSeatunnelColumnWithFullTypeInfo(column);
                     if (ctx.FIRST() != null) {
                         AlterTableModifyColumnEvent alterTableModifyColumnEvent =
                                 AlterTableModifyColumnEvent.modifyFirst(
@@ -197,9 +195,7 @@ public class CustomAlterTableParserListener extends MySqlParserBaseListener {
                 () -> {
                     Column column = columnDefinitionListener.getColumn();
                     org.apache.seatunnel.api.table.catalog.Column seatunnelColumn =
-                            toSeatunnelColumn(column);
-                    String sourceColumnType = getSourceColumnType(column);
-                    seatunnelColumn = seatunnelColumn.reSourceType(sourceColumnType);
+                            toSeatunnelColumnWithFullTypeInfo(column);
                     String oldColumnName = column.name();
                     String newColumnName = parser.parseName(ctx.newColumn);
                     seatunnelColumn = seatunnelColumn.rename(newColumnName);
@@ -223,24 +219,8 @@ public class CustomAlterTableParserListener extends MySqlParserBaseListener {
         super.enterAlterByDropColumn(ctx);
     }
 
-    private org.apache.seatunnel.api.table.catalog.Column toSeatunnelColumn(Column column) {
+    @Override
+    public org.apache.seatunnel.api.table.catalog.Column toSeatunnelColumn(Column column) {
         return MySqlTypeUtils.convertToSeaTunnelColumn(column, dbzConnectorConfig);
-    }
-
-    private TableIdentifier toTableIdentifier(TableId tableId) {
-        return new TableIdentifier("", tableId.catalog(), tableId.schema(), tableId.table());
-    }
-
-    private String getSourceColumnType(Column column) {
-        StringBuilder sb = new StringBuilder(column.typeName());
-        if (column.length() >= 0) {
-            sb.append('(').append(column.length());
-            if (column.scale().isPresent()) {
-                sb.append(", ").append(column.scale().get());
-            }
-
-            sb.append(')');
-        }
-        return sb.toString();
     }
 }

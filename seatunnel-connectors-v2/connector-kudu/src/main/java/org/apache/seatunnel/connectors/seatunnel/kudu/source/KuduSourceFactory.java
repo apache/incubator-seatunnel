@@ -33,8 +33,8 @@ import com.google.auto.service.AutoService;
 
 import java.io.Serializable;
 
+import static org.apache.seatunnel.api.table.catalog.CatalogOptions.TABLE_LIST;
 import static org.apache.seatunnel.connectors.seatunnel.kudu.config.KuduSourceConfig.MASTER;
-import static org.apache.seatunnel.connectors.seatunnel.kudu.config.KuduSourceConfig.TABLE_LIST;
 import static org.apache.seatunnel.connectors.seatunnel.kudu.config.KuduSourceConfig.TABLE_NAME;
 
 @AutoService(Factory.class)
