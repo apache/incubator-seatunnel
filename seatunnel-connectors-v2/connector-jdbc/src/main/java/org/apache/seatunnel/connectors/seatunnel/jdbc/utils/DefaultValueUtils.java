@@ -19,8 +19,8 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc.utils;
 
 import java.util.Objects;
 
-public class MysqlDefaultValueUtils {
-    public static boolean isSpecialDefaultValue(Object defaultValue) {
+public class DefaultValueUtils {
+    public static boolean isMysqlSpecialDefaultValue(Object defaultValue) {
         if (Objects.isNull(defaultValue)) {
             return false;
         }

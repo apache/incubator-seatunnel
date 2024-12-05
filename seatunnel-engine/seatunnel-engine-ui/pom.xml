@@ -71,7 +71,6 @@
                 <configuration>
                     <nodeVersion>${build.node.version}</nodeVersion>
                     <npmVersion>${build.npm.version}</npmVersion>
-                    <skip>${skip.ui}</skip>
                 </configuration>
                 <executions>
                     <execution>

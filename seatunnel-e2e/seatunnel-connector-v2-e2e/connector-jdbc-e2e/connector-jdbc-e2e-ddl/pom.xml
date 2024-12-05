@@ -18,25 +18,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.seatunnel</groupId>
-        <artifactId>seatunnel-connector-v2-e2e</artifactId>
+        <artifactId>connector-jdbc-e2e</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>connector-jdbc-e2e</artifactId>
-    <packaging>pom</packaging>
-    <name>SeaTunnel : E2E : Connector V2 : Jdbc</name>
-
-    <modules>
-        <module>connector-jdbc-e2e-common</module>
-        <module>connector-jdbc-e2e-part-1</module>
-        <module>connector-jdbc-e2e-part-2</module>
-        <module>connector-jdbc-e2e-part-3</module>
-        <module>connector-jdbc-e2e-part-4</module>
-        <module>connector-jdbc-e2e-part-5</module>
-        <module>connector-jdbc-e2e-part-6</module>
-        <module>connector-jdbc-e2e-part-7</module>
-        <module>connector-jdbc-e2e-ddl</module>
-    </modules>
+    <artifactId>connector-jdbc-e2e-ddl</artifactId>
+    <name>SeaTunnel : Connectors V2 : JDBC Sink : Schema Evolution</name>
 
     <dependencyManagement>
         <dependencies>
@@ -54,7 +41,22 @@
         <!-- SeaTunnel connectors -->
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
-            <artifactId>connector-jdbc</artifactId>
+            <artifactId>connector-cdc-mysql</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>connector-cdc-mysql</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-transforms-v2</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -67,9 +69,29 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.seatunnel</groupId>
-            <artifactId>connector-console</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <version>${testcontainer.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <!-- fix CVE-2022-26520 https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-26520  -->
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- jdbc sink container image-->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testcontainer.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
