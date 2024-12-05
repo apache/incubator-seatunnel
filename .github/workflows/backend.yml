@@ -54,6 +54,10 @@ jobs:
           submodules: true
       - name: Check code style
         run: ./mvnw --batch-mode --quiet --no-snapshot-updates clean spotless:check
+      - name: Check code specification
+        run: ./mvnw -B -T 1 clean test -D"license.skipAddThirdParty"=true -pl seatunnel-ci-tools -am --no-snapshot-updates
+        env:
+          MAVEN_OPTS: -Xmx512m
 
   dead-link:
     name: Dead links
