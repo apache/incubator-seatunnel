@@ -21,8 +21,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 public class MDCTracerTest {
 
@@ -123,6 +125,83 @@ public class MDCTracerTest {
         Assertions.assertNull(MDC.get(MDCContext.JOB_ID));
         Assertions.assertNull(MDC.get(MDCContext.PIPELINE_ID));
         Assertions.assertNull(MDC.get(MDCContext.TASK_ID));
+    }
+
+    @Test
+    public void testMDCTracedStream() throws Exception {
+        MDCContext mdcContext = MDCContext.of(1, 2, 3);
+
+        Stream<Integer> tracedStream =
+                MDCTracer.tracing(mdcContext, Arrays.asList(1, 2, 3).parallelStream());
+
+        Assertions.assertNull(MDC.get(MDCContext.JOB_ID));
+        Assertions.assertNull(MDC.get(MDCContext.PIPELINE_ID));
+        Assertions.assertNull(MDC.get(MDCContext.TASK_ID));
+        tracedStream
+                .filter(
+                        integer -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                            return true;
+                        })
+                .map(
+                        integer -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                            return integer;
+                        })
+                .sorted(
+                        (o1, o2) -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                            return Integer.compare(o1, o2);
+                        })
+                .forEach(
+                        integer -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                        });
+        Assertions.assertNull(MDC.get(MDCContext.JOB_ID));
+        Assertions.assertNull(MDC.get(MDCContext.PIPELINE_ID));
+        Assertions.assertNull(MDC.get(MDCContext.TASK_ID));
+
+        tracedStream = MDCTracer.tracing(mdcContext, Arrays.asList(1, 2, 3).stream());
+
+        Assertions.assertNull(MDC.get(MDCContext.JOB_ID));
+        Assertions.assertNull(MDC.get(MDCContext.PIPELINE_ID));
+        Assertions.assertNull(MDC.get(MDCContext.TASK_ID));
+        tracedStream
+                .filter(
+                        integer -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                            return true;
+                        })
+                .map(
+                        integer -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                            return integer;
+                        })
+                .sorted(
+                        (o1, o2) -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                            return Integer.compare(o1, o2);
+                        })
+                .forEach(
+                        integer -> {
+                            Assertions.assertEquals("1", MDC.get(MDCContext.JOB_ID));
+                            Assertions.assertEquals("2", MDC.get(MDCContext.PIPELINE_ID));
+                            Assertions.assertEquals("3", MDC.get(MDCContext.TASK_ID));
+                        });
     }
 
     @Test
