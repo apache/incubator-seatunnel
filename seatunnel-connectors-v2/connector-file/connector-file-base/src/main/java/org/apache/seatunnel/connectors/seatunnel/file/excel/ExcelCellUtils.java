@@ -36,6 +36,7 @@ import lombok.SneakyThrows;
 
 import javax.annotation.Nullable;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -43,7 +44,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-public class ExcelCellUtils {
+public class ExcelCellUtils implements Serializable {
+
+    static final long serialVersionUID = 42L;
 
     private DateTimeFormatter dateFormatter;
     private DateTimeFormatter dateTimeFormatter;
