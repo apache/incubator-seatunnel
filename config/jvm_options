@@ -19,9 +19,6 @@
 # -Xms2g
 # -Xmx2g
 
-# Fix LOG4J2-2052
--DAsyncLogger.ThreadNameStrategy=UNCACHED
-
 # JVM Dump
 -XX:+HeapDumpOnOutOfMemoryError
 -XX:HeapDumpPath=/tmp/seatunnel/dump/zeta-server

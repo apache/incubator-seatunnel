@@ -19,9 +19,6 @@
 -Xms256m
 -Xmx512m
 
-# Fix LOG4J2-2052
--DAsyncLogger.ThreadNameStrategy=UNCACHED
-
 # JVM Dump
 -XX:+HeapDumpOnOutOfMemoryError
 -XX:HeapDumpPath=/tmp/seatunnel/dump/zeta-client
