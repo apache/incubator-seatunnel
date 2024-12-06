@@ -615,7 +615,7 @@ public class RowBatch {
         addValueToRowForAllRows(
                 col,
                 rowIndex -> {
-                    if (listVector.isNull(rowIndex)) {
+                    if (listVector.isEmpty(rowIndex)) {
                         return null;
                     }
                     List<?> listVectorObject = listVector.getObject(rowIndex);
