@@ -21,16 +21,16 @@
 CREATE DATABASE IF NOT EXISTS `shop`;
 use shop;
 
-
-alter table products drop column add_column1,drop column add_column3;
+alter table products drop column add_column4,drop column add_column6;
 insert into products
-values (146,"scooter","Small 2-wheel scooter",3.14,1),
-       (147,"car battery","12V car battery",8.1,2),
-       (148,"12-pack drill bits","12-pack of drill bits with sizes ranging from #40 to #3",0.8,3),
-       (149,"hammer","12oz carpenter's hammer",0.75,4),
-       (150,"hammer","14oz carpenter's hammer",0.875,5),
-       (151,"hammer","16oz carpenter's hammer",1.0,6),
-       (152,"rocks","box of assorted rocks",5.3,7),
-       (153,"jacket","water resistent black wind breaker",0.1,8),
-       (154,"spare tire","24 inch spare tire",22.2,9);
-update products set name = 'dailai' where id > 143;
+values (137,"scooter","Small 2-wheel scooter",3.14,'xx',1,1.1),
+       (138,"car battery","12V car battery",8.1,'xx',2,1.2),
+       (139,"12-pack drill bits","12-pack of drill bits with sizes ranging from #40 to #3",0.8,'xx',3,1.3),
+       (140,"hammer","12oz carpenter's hammer",0.75,'xx',4,1.4),
+       (141,"hammer","14oz carpenter's hammer",0.875,'xx',5,1.5),
+       (142,"hammer","16oz carpenter's hammer",1.0,'xx',6,1.6),
+       (143,"rocks","box of assorted rocks",5.3,'xx',7,1.7),
+       (144,"jacket","water resistent black wind breaker",0.1,'xx',8,1.8),
+       (145,"spare tire","24 inch spare tire",22.2,'xx',9,1.9);
+update products set name = 'dailai' where id in (140,141,142);
+delete from products where id < 137;
