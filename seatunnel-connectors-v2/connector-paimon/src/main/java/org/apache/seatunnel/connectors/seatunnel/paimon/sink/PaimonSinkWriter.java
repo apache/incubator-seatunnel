@@ -23,15 +23,7 @@ import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
 import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSinkWriter;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
-import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.TablePath;
-import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
-import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableChangeColumnEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableColumnEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableColumnsEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableDropColumnEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableModifyColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.api.table.schema.handler.TableSchemaChangeEventDispatcher;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -40,22 +32,19 @@ import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.paimon.catalog.PaimonCatalog;
 import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonHadoopConfiguration;
 import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonSinkConfig;
-import org.apache.seatunnel.connectors.seatunnel.paimon.data.PaimonTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.paimon.security.PaimonSecurityContext;
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.bucket.PaimonBucketAssigner;
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.commit.PaimonCommitInfo;
+import org.apache.seatunnel.connectors.seatunnel.paimon.sink.schema.handler.AlterPaimonTableSchemaEventHandler;
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.state.PaimonSinkState;
 import org.apache.seatunnel.connectors.seatunnel.paimon.utils.JobContextUtil;
 import org.apache.seatunnel.connectors.seatunnel.paimon.utils.RowConverter;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.paimon.CoreOptions;
-import org.apache.paimon.catalog.Identifier;
 import org.apache.paimon.data.InternalRow;
 import org.apache.paimon.disk.IOManager;
-import org.apache.paimon.schema.SchemaChange;
 import org.apache.paimon.schema.TableSchema;
 import org.apache.paimon.table.BucketMode;
 import org.apache.paimon.table.FileStoreTable;
@@ -68,9 +57,6 @@ import org.apache.paimon.table.sink.StreamTableWrite;
 import org.apache.paimon.table.sink.TableCommit;
 import org.apache.paimon.table.sink.TableWrite;
 import org.apache.paimon.table.sink.WriteBuilder;
-import org.apache.paimon.types.DataField;
-import org.apache.paimon.types.DataType;
-import org.apache.paimon.utils.Preconditions;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,7 +70,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.apache.paimon.disk.IOManagerImpl.splitPaths;
-import static org.apache.seatunnel.connectors.seatunnel.paimon.sink.schema.UpdatedDataFields.canConvert;
 
 @Slf4j
 public class PaimonSinkWriter
@@ -235,20 +220,17 @@ public class PaimonSinkWriter
 
     @Override
     public void applySchemaChange(SchemaChangeEvent event) throws IOException {
-        if (event instanceof AlterTableColumnsEvent) {
-            for (AlterTableColumnEvent columnEvent : ((AlterTableColumnsEvent) event).getEvents()) {
-                applySingleSchemaChangeEvent(columnEvent);
-            }
-        } else if (event instanceof AlterTableColumnEvent) {
-            applySingleSchemaChangeEvent(event);
-        } else {
-            throw new UnsupportedOperationException("Unsupported alter table event: " + event);
-        }
-        reOpenTableWrite(event);
+        this.sourceTableSchema =
+                new AlterPaimonTableSchemaEventHandler(
+                                sourceTableSchema,
+                                paimonCatalog,
+                                sinkPaimonTableSchema,
+                                paimonTablePath)
+                        .apply(event);
+        reOpenTableWrite();
     }
 
-    private void reOpenTableWrite(SchemaChangeEvent event) {
-        this.sourceTableSchema = TABLE_SCHEMACHANGER.reset(sourceTableSchema).apply(event);
+    private void reOpenTableWrite() {
         this.seaTunnelRowType = this.sourceTableSchema.toPhysicalRowDataType();
         this.paimonFileStoretable = (FileStoreTable) paimonCatalog.getPaimonTable(paimonTablePath);
         this.sinkPaimonTableSchema = this.paimonFileStoretable.schema();
@@ -268,96 +250,6 @@ public class PaimonSinkWriter
                                 IOManager.create(
                                         splitPaths(paimonSinkConfig.getChangelogTmpPath())));
         tableWriteClose(oldTableWrite);
-    }
-
-    private void applySingleSchemaChangeEvent(SchemaChangeEvent event) {
-        Identifier identifier =
-                Identifier.create(
-                        paimonTablePath.getDatabaseName(), paimonTablePath.getTableName());
-        if (event instanceof AlterTableAddColumnEvent) {
-            AlterTableAddColumnEvent alterTableAddColumnEvent = (AlterTableAddColumnEvent) event;
-            Column column = alterTableAddColumnEvent.getColumn();
-            String afterColumnName = alterTableAddColumnEvent.getAfterColumn();
-            SchemaChange.Move move =
-                    StringUtils.isBlank(afterColumnName)
-                            ? null
-                            : SchemaChange.Move.after(column.getName(), afterColumnName);
-            BasicTypeDefine<DataType> reconvertColumn = PaimonTypeMapper.INSTANCE.reconvert(column);
-            SchemaChange schemaChange =
-                    SchemaChange.addColumn(
-                            column.getName(),
-                            reconvertColumn.getNativeType(),
-                            column.getComment(),
-                            move);
-            paimonCatalog.alterTable(identifier, schemaChange, false);
-        } else if (event instanceof AlterTableDropColumnEvent) {
-            String columnName = ((AlterTableDropColumnEvent) event).getColumn();
-            paimonCatalog.alterTable(identifier, SchemaChange.dropColumn(columnName), true);
-        } else if (event instanceof AlterTableModifyColumnEvent) {
-            Column column = ((AlterTableModifyColumnEvent) event).getColumn();
-            String afterColumn = ((AlterTableModifyColumnEvent) event).getAfterColumn();
-            updateColumn(column, column.getName(), identifier, afterColumn);
-        } else if (event instanceof AlterTableChangeColumnEvent) {
-            Column column = ((AlterTableChangeColumnEvent) event).getColumn();
-            String afterColumn = ((AlterTableChangeColumnEvent) event).getAfterColumn();
-            String oldColumn = ((AlterTableChangeColumnEvent) event).getOldColumn();
-            updateColumn(column, oldColumn, identifier, afterColumn);
-            if (!column.getName().equals(oldColumn)) {
-                paimonCatalog.alterTable(
-                        identifier, SchemaChange.renameColumn(oldColumn, column.getName()), false);
-            }
-        } else {
-            throw new UnsupportedOperationException("Unsupported alter table event: " + event);
-        }
-    }
-
-    private void updateColumn(
-            Column newColumn, String oldColumnName, Identifier identifier, String afterTheColumn) {
-        BasicTypeDefine<DataType> reconvertColumn = PaimonTypeMapper.INSTANCE.reconvert(newColumn);
-        int idx = sinkPaimonTableSchema.fieldNames().indexOf(oldColumnName);
-        Preconditions.checkState(
-                idx >= 0,
-                "Field name " + oldColumnName + " does not exist in table. This is unexpected.");
-        DataType newDataType = reconvertColumn.getNativeType();
-        DataField dataField = sinkPaimonTableSchema.fields().get(idx);
-        DataType oldDataType = dataField.type();
-        switch (canConvert(oldDataType, newDataType)) {
-            case CONVERT:
-                paimonCatalog.alterTable(
-                        identifier,
-                        SchemaChange.updateColumnType(oldColumnName, newDataType),
-                        false);
-                break;
-            case IGNORE:
-                log.warn(
-                        "old: {{}-{}} and new: {{}-{}} belongs to the same type family, but old type has higher precision than new type. Ignore this convert request.",
-                        dataField.name(),
-                        oldDataType,
-                        reconvertColumn.getName(),
-                        newDataType);
-                break;
-            case EXCEPTION:
-                throw new UnsupportedOperationException(
-                        String.format(
-                                "Cannot convert field %s from type %s to %s of Paimon table %s.",
-                                oldColumnName, oldDataType, newDataType, identifier.getFullName()));
-        }
-        if (StringUtils.isNotBlank(afterTheColumn)) {
-            paimonCatalog.alterTable(
-                    identifier,
-                    SchemaChange.updateColumnPosition(
-                            SchemaChange.Move.after(oldColumnName, afterTheColumn)),
-                    false);
-        }
-        String comment = newColumn.getComment();
-        if (StringUtils.isNotBlank(comment)) {
-            paimonCatalog.alterTable(
-                    identifier, SchemaChange.updateColumnComment(oldColumnName, comment), false);
-        }
-        paimonCatalog.alterTable(
-                identifier,
-                SchemaChange.updateColumnNullability(oldColumnName, newColumn.isNullable()),
-                false);
     }
 
     @Override
