@@ -230,7 +230,8 @@ public class FieldRenameTransformTest {
                             {
                                 put(
                                         "replacements_with_regex",
-                                        "[{\"replace_from\" = \"f1\", \"replace_to\" = \"t1\"},{\"replace_from\" = \"f1\", \"replace_to\" = \"t2\"}]");
+                                        "[{\"replace_from\" : \"f1\", \"replace_to\" : \"t1\"},{\"replace_from\" : "
+                                                + "\"f1\", \"replace_to\" : \"t2\"}]");
                             }
                         });
         transform = new FieldRenameTransform(config, DEFAULT_TABLE);

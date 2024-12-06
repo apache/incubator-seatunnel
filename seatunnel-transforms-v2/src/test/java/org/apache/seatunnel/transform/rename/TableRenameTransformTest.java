@@ -158,7 +158,7 @@ public class TableRenameTransformTest {
                             {
                                 put(
                                         "replacements_with_regex",
-                                        "[{\"replace_from\" = \"Table\", \"replace_to\" = \"t1\"},{\"replace_from\" = \"Table\", \"replace_to\" = \"t2\"}]");
+                                        "[{\"replace_from\" : \"Table\", \"replace_to\" : \"t1\"},{\"replace_from\" : \"Table\", \"replace_to\" : \"t2\"}]");
                             }
                         });
         transform = new TableRenameTransform(config, DEFAULT_TABLE);
