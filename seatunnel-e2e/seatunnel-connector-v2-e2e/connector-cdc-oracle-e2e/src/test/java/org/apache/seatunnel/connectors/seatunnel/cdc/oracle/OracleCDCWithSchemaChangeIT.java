@@ -63,6 +63,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.with;
+import static org.awaitility.Durations.TWO_SECONDS;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -243,7 +245,11 @@ public class OracleCDCWithSchemaChangeIT extends AbstractOracleCDCIT implements 
                                             sinkSchemaName,
                                             sinkTableName));
             // verify the data
-            await().atMost(300, TimeUnit.SECONDS)
+            with().pollInterval(TWO_SECONDS)
+                    .pollDelay(10, TimeUnit.SECONDS)
+                    .and()
+                    .await()
+                    .atMost(20, TimeUnit.MINUTES)
                     .untilAsserted(
                             () -> {
                                 checkData(

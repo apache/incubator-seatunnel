@@ -52,7 +52,7 @@ public class IcebergRecordWriter implements RecordWriter {
     private final Table table;
     private final SinkConfig config;
     private final List<WriteResult> writerResults;
-    private TaskWriter<Record> writer;
+    private volatile TaskWriter<Record> writer;
     private RowConverter recordConverter;
     private final IcebergWriterFactory writerFactory;
 
@@ -62,7 +62,6 @@ public class IcebergRecordWriter implements RecordWriter {
         this.writerResults = Lists.newArrayList();
         this.recordConverter = new RowConverter(table, config);
         this.writerFactory = writerFactory;
-        this.writer = createTaskWriter();
     }
 
     private TaskWriter<Record> createTaskWriter() {
@@ -71,6 +70,9 @@ public class IcebergRecordWriter implements RecordWriter {
 
     @Override
     public void write(SeaTunnelRow seaTunnelRow, SeaTunnelRowType rowType) {
+        if (writer == null) {
+            resetWriter();
+        }
         SchemaChangeWrapper updates = new SchemaChangeWrapper();
         Record record = recordConverter.convert(seaTunnelRow, rowType, updates);
         if (!updates.empty()) {
@@ -139,7 +141,6 @@ public class IcebergRecordWriter implements RecordWriter {
         flush();
         List<WriteResult> result = Lists.newArrayList(writerResults);
         writerResults.clear();
-        resetWriter();
         return result;
     }
 

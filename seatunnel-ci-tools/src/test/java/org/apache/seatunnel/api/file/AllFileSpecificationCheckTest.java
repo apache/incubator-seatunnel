@@ -114,11 +114,12 @@ public class AllFileSpecificationCheckTest {
                         "docs/en/concept/config.md",
                         "seatunnel-api/src/main/java/org/apache/seatunnel/api/common/CommonOptions.java",
                         "seatunnel-e2e/seatunnel-connector-v2-e2e/connector-fake-e2e/src/test/resources/fake_to_assert_with_compatible_source_and_result_table_name.conf",
-                        "seatunnel-e2e/seatunnel-connector-v2-e2e/connector-fake-e2e/src/test/java/org/apache/seatunnel/e2e/connector/fake/FakeIT.java");
+                        "seatunnel-e2e/seatunnel-connector-v2-e2e/connector-fake-e2e/src/test/java/org/apache/seatunnel/e2e/connector/fake/FakeIT.java",
+                        "seatunnel-ci-tools/src/test/java/org/apache/seatunnel/api/file/AllFileSpecificationCheckTest.java");
 
         fileContents.forEach(
                 (path, lines) -> {
-                    if (whiteList.contains(path)) {
+                    if (whiteList.contains(path.trim())) {
                         return;
                     }
                     for (int i = 0; i < lines.size(); i++) {
