@@ -33,6 +33,7 @@ import com.hazelcast.logging.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -230,7 +231,10 @@ public class ResourceRequestHandler {
                     workerProfiles.stream()
                             .filter(WorkerProfile::isDynamicSlot)
                             .filter(worker -> worker.getUnassignedResource().enoughThan(r))
-                            .findAny();
+                            .min(Comparator
+                                    .comparing((WorkerProfile profile)
+                                            -> profile.getUnassignedResource().getHeapMemory().getBytes())
+                                    .thenComparing(profile -> profile.getUnassignedResource().getCpu().getCore()));
         }
 
         return workerProfile;
