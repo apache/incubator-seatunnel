@@ -30,6 +30,7 @@ public class IndexInfo {
     private String type;
     private String[] primaryKeys;
     private String keyDelimiter;
+    private String parentField;
 
     public IndexInfo(String index, ReadonlyConfig config) {
         this.index = index;
@@ -38,5 +39,8 @@ public class IndexInfo {
             primaryKeys = config.get(SinkConfig.PRIMARY_KEYS).toArray(new String[0]);
         }
         keyDelimiter = config.get(SinkConfig.KEY_DELIMITER);
+        if (config.getOptional(SinkConfig.PARENT_FIELD).isPresent()) {
+            parentField = config.get(SinkConfig.PARENT_FIELD);
+        }
     }
 }
