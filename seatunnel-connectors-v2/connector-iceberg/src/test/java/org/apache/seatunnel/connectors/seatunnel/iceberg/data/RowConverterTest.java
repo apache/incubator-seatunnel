@@ -43,9 +43,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -164,22 +166,46 @@ public class RowConverterTest {
     }
 
     @Test
-    public void testConvertOffsetDateTime() {
+    public void testOffsetDateTimeWithZone() {
+        // Create a schema with timestamp with timezone
+        Schema timestampSchema =
+                new Schema(
+                        Types.NestedField.required(
+                                1, "timestamp_field", Types.TimestampType.withZone()));
+
+        when(table.schema()).thenReturn(timestampSchema);
+        converter = new RowConverter(table, config);
+
+        // Create rowType that matches schema
         SeaTunnelRowType rowType =
                 new SeaTunnelRowType(
                         new String[] {"timestamp_field"},
                         new SeaTunnelDataType[] {LocalTimeType.LOCAL_DATE_TIME_TYPE});
 
-        ZoneId zoneId = ZoneId.of("UTC");
-        LocalDateTime now = LocalDateTime.now(zoneId);
-        OffsetDateTime offsetNow = now.atZone(zoneId).toOffsetDateTime();
+        // Create a LocalDateTime
+        LocalDateTime localDateTime = LocalDateTime.of(2024, 12, 7, 11, 42, 52);
+        SeaTunnelRow row = new SeaTunnelRow(new Object[] {localDateTime});
 
-        SeaTunnelRow row = new SeaTunnelRow(new Object[] {offsetNow});
-
+        // Convert using converter
         org.apache.iceberg.data.Record result = converter.convert(row, rowType);
-        assertNotNull(result);
-        assertEquals(
-                offsetNow.toLocalDateTime(), ((LocalDateTime) result.getField("timestamp_field")));
+        OffsetDateTime converted = (OffsetDateTime) result.getField("timestamp_field");
+
+        System.out.println("Input LocalDateTime: " + localDateTime);
+        System.out.println("Converted Result: " + converted);
+
+        // Convert the same time using both methods for comparison
+        OffsetDateTime utcTime = localDateTime.atOffset(ZoneOffset.UTC);
+        OffsetDateTime systemTime = localDateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime();
+
+        System.out.println("UTC Offset: " + utcTime);
+        System.out.println("System TZ Offset: " + systemTime);
+
+        // Verify that our conversion matches the system timezone conversion
+        assertEquals(systemTime, converted, "Conversion should use system timezone");
+
+        // Verify that the UTC instant is different (due to timezone offset)
+        assertNotEquals(
+                utcTime, converted, "UTC and system timezone should represent different offsets");
     }
 
     @Test
