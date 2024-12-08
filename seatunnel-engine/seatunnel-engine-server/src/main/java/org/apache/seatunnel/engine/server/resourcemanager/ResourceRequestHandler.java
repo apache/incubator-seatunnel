@@ -231,10 +231,17 @@ public class ResourceRequestHandler {
                     workerProfiles.stream()
                             .filter(WorkerProfile::isDynamicSlot)
                             .filter(worker -> worker.getUnassignedResource().enoughThan(r))
-                            .min(Comparator
-                                    .comparing((WorkerProfile profile)
-                                            -> profile.getUnassignedResource().getHeapMemory().getBytes())
-                                    .thenComparing(profile -> profile.getUnassignedResource().getCpu().getCore()));
+                            .min(
+                                    Comparator.comparing(
+                                                    (WorkerProfile profile) ->
+                                                            profile.getUnassignedResource()
+                                                                    .getHeapMemory()
+                                                                    .getBytes())
+                                            .thenComparing(
+                                                    profile ->
+                                                            profile.getUnassignedResource()
+                                                                    .getCpu()
+                                                                    .getCore()));
         }
 
         return workerProfile;
