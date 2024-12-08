@@ -52,7 +52,6 @@ public class ElasticsearchRowSerializer implements SeaTunnelRowSerializer {
     private final Function<SeaTunnelRow, String> keyExtractor;
 
     private final Function<SeaTunnelRow, String> parentExtractor;
-
     private final IndexInfo indexInfo;
 
     public ElasticsearchRowSerializer(
