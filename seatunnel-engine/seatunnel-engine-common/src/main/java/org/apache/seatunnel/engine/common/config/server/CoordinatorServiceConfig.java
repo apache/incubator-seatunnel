@@ -21,10 +21,22 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+import static com.hazelcast.internal.util.Preconditions.checkPositive;
+
 @Data
 public class CoordinatorServiceConfig implements Serializable {
 
     private int coreThreadNum = ServerConfigOptions.CORE_THREAD_NUM.defaultValue();
 
     private int maxThreadNum = ServerConfigOptions.MAX_THREAD_NUM.defaultValue();
+
+    public void setCoreThreadNum(int coreThreadNum) {
+        checkPositive(coreThreadNum, ServerConfigOptions.CORE_THREAD_NUM + " must be >= 0");
+        this.coreThreadNum = coreThreadNum;
+    }
+
+    public void setMaxThreadNum(int maxThreadNum) {
+        checkPositive(maxThreadNum, ServerConfigOptions.MAX_THREAD_NUM + " must be > 0");
+        this.maxThreadNum = maxThreadNum;
+    }
 }
