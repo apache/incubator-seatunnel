@@ -202,8 +202,8 @@ public class CoordinatorService {
         this.logger = nodeEngine.getLogger(getClass());
         this.executorService =
                 new ThreadPoolExecutor(
-                        0,
-                        Integer.MAX_VALUE,
+                        engineConfig.getCoordinatorServiceConfig().getCoreThreadNum(),
+                        engineConfig.getCoordinatorServiceConfig().getMaxThreadNum(),
                         60L,
                         TimeUnit.SECONDS,
                         new SynchronousQueue<>(),

@@ -127,6 +127,12 @@ public class ServerConfigOptions {
                     .defaultValue(new CheckpointConfig())
                     .withDescription("The checkpoint configuration.");
 
+    public static final Option<CoordinatorServiceConfig> COORDINATOR_SERVICE =
+            Options.key("coordinator-service")
+                    .type(new TypeReference<CoordinatorServiceConfig>() {})
+                    .defaultValue(new CoordinatorServiceConfig())
+                    .withDescription("The coordinator service configuration.");
+
     public static final Option<Map<String, String>> CHECKPOINT_STORAGE_PLUGIN_CONFIG =
             Options.key("plugin-config")
                     .type(new TypeReference<Map<String, String>>() {})
@@ -280,6 +286,18 @@ public class ServerConfigOptions {
                     .type(new TypeReference<HttpConfig>() {})
                     .defaultValue(new HttpConfig())
                     .withDescription("The http configuration.");
+
+    public static final Option<Integer> CORE_THREAD_NUM =
+            Options.key("core-thread-num")
+                    .intType()
+                    .defaultValue(10)
+                    .withDescription("The interval (in seconds) of job metrics backups");
+
+    public static final Option<Integer> MAX_THREAD_NUM =
+            Options.key("max-thread-num")
+                    .intType()
+                    .defaultValue(Integer.MAX_VALUE)
+                    .withDescription("The interval (in seconds) of job metrics backups");
 
     public static final String EVENT_REPORT_HTTP = "event-report-http";
     public static final String EVENT_REPORT_HTTP_URL = "url";
