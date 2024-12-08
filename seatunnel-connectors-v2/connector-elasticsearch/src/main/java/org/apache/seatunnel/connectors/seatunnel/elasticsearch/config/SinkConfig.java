@@ -88,5 +88,6 @@ public class SinkConfig {
             Options.key("parent_field")
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("Which field does the parent document index field value from, and the value of _routing will depend on this value to generate");
+                    .withDescription(
+                            "Which field does the parent document index field value from, and the value of _routing will depend on this value to generate");
 }
