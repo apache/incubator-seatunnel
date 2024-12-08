@@ -291,13 +291,13 @@ public class ServerConfigOptions {
             Options.key("core-thread-num")
                     .intType()
                     .defaultValue(10)
-                    .withDescription("The interval (in seconds) of job metrics backups");
+                    .withDescription("The core thread num of coordinator service");
 
     public static final Option<Integer> MAX_THREAD_NUM =
             Options.key("max-thread-num")
                     .intType()
                     .defaultValue(Integer.MAX_VALUE)
-                    .withDescription("The interval (in seconds) of job metrics backups");
+                    .withDescription("The max thread num of coordinator service");
 
     public static final String EVENT_REPORT_HTTP = "event-report-http";
     public static final String EVENT_REPORT_HTTP_URL = "url";

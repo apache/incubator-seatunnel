@@ -138,6 +138,8 @@ public class CoordinatorServiceTest {
         // because runningJobMasterMap is empty and we have no JobHistoryServer, so return
         // UNKNOWABLE.
         Assertions.assertTrue(JobStatus.UNKNOWABLE.equals(coordinatorService.getJobStatus(jobId)));
+        Assertions.assertEquals(30, coordinatorService.getThreadPoolStatusMetrics().getCorePoolSize());
+        Assertions.assertEquals(1000, coordinatorService.getThreadPoolStatusMetrics().getMaximumPoolSize());
         coordinatorServiceTest.shutdown();
     }
 
