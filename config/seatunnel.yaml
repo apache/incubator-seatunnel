@@ -25,6 +25,9 @@ seatunnel:
     print-job-metrics-info-interval: 60
     slot-service:
       dynamic-slot: true
+    coordinator-service:
+      core-thread-num: 30
+      max-thread-num: 1000
     checkpoint:
       interval: 10000
       timeout: 60000
