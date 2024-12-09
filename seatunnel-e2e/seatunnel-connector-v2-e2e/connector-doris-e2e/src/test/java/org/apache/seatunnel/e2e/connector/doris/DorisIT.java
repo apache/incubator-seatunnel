@@ -22,7 +22,9 @@ import org.apache.seatunnel.common.utils.ExceptionUtils;
 import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.doris.util.DorisCatalogUtil;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
+import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
+import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
 
 import org.junit.jupiter.api.AfterAll;
@@ -779,6 +781,36 @@ public class DorisIT extends AbstractDorisIT {
             }
         } catch (Exception e) {
             log.error(ExceptionUtils.getMessage(e));
+        }
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "not need to use flink/spark")
+    public void testDorisFieldArray(TestContainer container) throws IOException, InterruptedException {
+        initializeJdbcTable();
+        insertDuplicateTableData();
+        Container.ExecResult execResult =
+                container.executeJob("/doris_source_field_array_and_sink_console.conf");
+        Assertions.assertTrue(execResult.getStderr().contains("Index: 0, Size: 0"));
+    }
+
+    private void insertDuplicateTableData() {
+        try {
+            PreparedStatement pstmt = conn.prepareStatement("INSERT INTO " + sourceDB + "." + DUPLICATE_TABLE + " (" +
+                        "F_ID, F_INT, F_BIGINT, F_TINYINT, F_SMALLINT, F_DECIMAL, F_DECIMAL_V3, F_LARGEINT, F_BOOLEAN, F_DOUBLE, F_FLOAT, F_CHAR, F_VARCHAR_11, F_STRING, F_DATETIME_P, F_DATETIME_V2, F_DATETIME, F_DATE, F_DATE_V2, F_JSON, F_JSONB, F_ARRAY_BOOLEAN, F_ARRAY_BYTE, F_ARRAY_SHOT, F_ARRAY_INT, F_ARRAY_BIGINT, F_ARRAY_FLOAT, F_ARRAY_DOUBLE, F_ARRAY_STRING_CHAR, F_ARRAY_STRING_VARCHAR, F_ARRAY_STRING_LARGEINT, F_ARRAY_STRING_STRING, F_ARRAY_DECIMAL, F_ARRAY_DATE, F_ARRAY_DATETIME" +
+                        ") VALUES " +
+                        "('1', 123, 4567890123456789, 1, 12345, 123.45, 678.90, 1234567890123456789, TRUE, 123.456, 78.90, 'A', 'varchar11', 'random_string', '2023-01-01 12:00:00', '2023-01-01 12:00:00', '2023-01-01 12:00:00', '2023-01-01', '2023-01-01', '{\"key\": \"value\"}', '{\"key\": \"value\"}', '{true, false}', '{1, 2, 3}', '{1, 2, 3}', '{1, 2, 3}', '{1234567890123456789}', '{1.23, 4.56}', '{7.89, 0.12}', '{char1, char2}', '[]', '{largeint1, largeint2}', '{string1, string2}', '{123.45, 678.90}', '{2023-01-01}', '{2023-01-01 12:00:00}'), " +
+                        "('2', 234, 5678901234567890, 2, 23456, 234.56, 789.01, 2345678901234567890, FALSE, 234.567, 89.01, 'B', 'varchar12', 'random_string', '2023-02-02 13:00:00', '2023-02-02 13:00:00', '2023-02-02 13:00:00', '2023-02-02', '2023-02-02', '{\"key\": \"value\"}', '{\"key\": \"value\"}', '{false, true}', '{4, 5, 6}', '{4, 5, 6}', '{4, 5, 6}', '{2345678901234567890}', '{2.34, 5.67}', '{8.90, 1.23}', '{char3, char4}', '[]', '{largeint3, largeint4}', '{string3, string4}', '{234.56, 789.01}', '{2023-02-02}', '{2023-02-02 13:00:00}'), " +
+                        "('3', 345, 6789012345678901, 3, 34567, 345.67, 890.12, 3456789012345678901, TRUE, 345.678, 90.12, 'C', 'varchar13', 'random_string', '2023-03-03 14:00:00', '2023-03-03 14:00:00', '2023-03-03 14:00:00', '2023-03-03', '2023-03-03', '{\"key\": \"value\"}', '{\"key\": \"value\"}', '{true, true}', '{7, 8, 9}', '{7, 8, 9}', '{7, 8, 9}', '{3456789012345678901}', '{3.45, 6.78}', '{9.01, 2.34}', '{char5, char6}', '[]', '{largeint5, largeint6}', '{string5, string6}', '{345.67, 890.12}', '{2023-03-03}', '{2023-03-03 14:00:00}'), " +
+                        "('4', 456, 7890123456789012, 4, 45678, 456.78, 901.23, 4567890123456789012, FALSE, 456.789, 12.34, 'D', 'varchar14', 'random_string', '2023-04-04 15:00:00', '2023-04-04 15:00:00', '2023-04-04 15:00:00', '2023-04-04', '2023-04-04', '{\"key\": \"value\"}', '{\"key\": \"value\"}', '{false, false}', '{10, 11, 12}', '{10, 11, 12}', '{10, 11, 12}', '{4567890123456789012}', '{4.56, 7.89}', '{0.12, 3.45}', '{char7, char8}', '[]', '{largeint7, largeint8}', '{string7, string8}', '{456.78, 901.23}', '{2023-04-04}', '{2023-04-04 15:00:00}'), " +
+                        "('5', 567, 8901234567890123, 5, 56789, 567.89, 12.34, 5678901234567890123, TRUE, 567.890, 23.45, 'E', 'varchar15', 'random_string', '2023-05-05 16:00:00', '2023-05-05 16:00:00', '2023-05-05 16:00:00', '2023-05-05', '2023-05-05', '{\"key\": \"value\"}', '{\"key\": \"value\"}', '{true, false}', '{13, 14, 15}', '{13, 14, 15}', '{13, 14, 15}', '{5678901234567890123}', '{5.67, 8.90}', '{1.23, 4.56}', '{char9, char10}', '[]', '{largeint9, largeint10}', '{string9, string10}', '{567.89, 12.34}', '{2023-05-05}', '{2023-05-05 16:00:00}')");
+            int affectedRows = pstmt.executeUpdate();
+            System.out.println(affectedRows);
+        } catch (Exception e) {
+            throw new RuntimeException("Create rows failed!", e);
         }
     }
 }
