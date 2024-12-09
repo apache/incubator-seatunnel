@@ -432,7 +432,7 @@ env {
 
 source {
   FakeSource {
-    result_table_name = "fake"
+    plugin_output = "fake"
     row.num = 100
     schema = {
       fields {
@@ -449,7 +449,7 @@ transform {
 
 sink {
   Console {
-    source_table_name = "fake"
+    plugin_input = "fake"
   }
 }
 

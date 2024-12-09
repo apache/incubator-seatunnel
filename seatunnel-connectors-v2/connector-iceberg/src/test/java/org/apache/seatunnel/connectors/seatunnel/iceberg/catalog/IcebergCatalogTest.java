@@ -145,6 +145,17 @@ class IcebergCatalogTest {
 
     @Test
     @Order(8)
+    void executeDeleteSQL() {
+        CatalogTable table = icebergCatalog.getTable(tablePath);
+        icebergCatalog.executeSql(
+                tablePath,
+                "DELETE FROM "
+                        + tablePath.getFullName()
+                        + " WHERE id > 1 and timestamp_col = '2024-01-01 01:01:01.999'");
+    }
+
+    @Test
+    @Order(9)
     void dropTable() {
         icebergCatalog.dropTable(tablePath, false);
         Assertions.assertFalse(icebergCatalog.tableExists(tablePath));

@@ -71,7 +71,7 @@ The File does not have a specific type list, and we can indicate which SeaTunnel
 
 ## Source Options
 
-|           Name            |  Type   | Required |    default value    | Description                                                                                                                                                                                                                                                                                                                                                                     |
+| Name                      | Type    | Required | default value       | Description                                                                                                                                                                                                                                                                                                                                                                     |
 |---------------------------|---------|----------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | host                      | String  | Yes      | -                   | The target sftp host is required                                                                                                                                                                                                                                                                                                                                                |
 | port                      | Int     | Yes      | -                   | The target sftp port is required                                                                                                                                                                                                                                                                                                                                                |
@@ -94,6 +94,7 @@ The File does not have a specific type list, and we can indicate which SeaTunnel
 | compress_codec            | String  | No       | None                | The compress codec of files and the details that supported as the following shown: <br/> - txt: `lzo` `None` <br/> - json: `lzo` `None` <br/> - csv: `lzo` `None` <br/> - orc: `lzo` `snappy` `lz4` `zlib` `None` <br/> - parquet: `lzo` `snappy` `lz4` `gzip` `brotli` `zstd` `None` <br/> Tips: excel type does Not support any compression format                            |
 | archive_compress_codec    | string  | no       | none                |
 | encoding                  | string  | no       | UTF-8               |
+| null_format               | string  | no       | -                   | Only used when file_format_type is text. null_format to define which strings can be represented as null. e.g: `\N`                                                                                                                                                                                                                                                              |
 | common-options            |         | No       | -                   | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details.                                                                                                                                                                                                                                                              |
 
 ### file_filter_pattern [string]
@@ -239,8 +240,10 @@ The compress codec of archive files and the details that supported as the follow
 | ZIP                | txt,json,excel,xml | .zip                |
 | TAR                | txt,json,excel,xml | .tar                |
 | TAR_GZ             | txt,json,excel,xml | .tar.gz             |
-| GZ                 | txt,json,xml       | .gz                 |
-| NONE               | all                | .*                  |
+| GZ                     | txt,json,excel,xml | .gz                     |
+| NONE                   | all                | .*                      |
+
+Note: gz compressed excel file needs to compress the original file or specify the file suffix, such as e2e.xls ->e2e_test.xls.gz
 
 ### encoding [string]
 

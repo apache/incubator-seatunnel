@@ -48,6 +48,12 @@ public class BaseSourceConfigOptions {
                     .withDescription(
                             "The separator between columns in a row of data. Only needed by `text` file format");
 
+    public static final Option<String> NULL_FORMAT =
+            Options.key("null_format")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("The string that represents a null value");
+
     public static final Option<String> ENCODING =
             Options.key("encoding")
                     .stringType()

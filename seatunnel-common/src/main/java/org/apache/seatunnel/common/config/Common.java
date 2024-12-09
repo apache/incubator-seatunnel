@@ -17,9 +17,9 @@
 
 package org.apache.seatunnel.common.config;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;

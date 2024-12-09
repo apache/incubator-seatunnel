@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.oracle;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.TablePath;
@@ -49,7 +51,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerLoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.mysql.cj.MysqlType;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +63,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.with;
+import static org.awaitility.Durations.TWO_SECONDS;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -242,7 +245,11 @@ public class OracleCDCWithSchemaChangeIT extends AbstractOracleCDCIT implements 
                                             sinkSchemaName,
                                             sinkTableName));
             // verify the data
-            await().atMost(300, TimeUnit.SECONDS)
+            with().pollInterval(TWO_SECONDS)
+                    .pollDelay(10, TimeUnit.SECONDS)
+                    .and()
+                    .await()
+                    .atMost(20, TimeUnit.MINUTES)
                     .untilAsserted(
                             () -> {
                                 checkData(

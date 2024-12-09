@@ -1469,7 +1469,7 @@ public class ClusterSeaTunnelContainer extends SeaTunnelContainer {
                                 + "}\n\n"
                                 + "source {\n"
                                 + "  FakeSource {\n"
-                                + "    result_table_name = \"fake\"\n"
+                                + "    plugin_output = \"fake\"\n"
                                 + "    schema = {\n"
                                 + "      fields {\n"
                                 + "        name = \"string\"\n"
@@ -1483,7 +1483,7 @@ public class ClusterSeaTunnelContainer extends SeaTunnelContainer {
                                 + "}\n\n"
                                 + "sink {\n"
                                 + "  Console {\n"
-                                + "    source_table_name = \"fake\"\n"
+                                + "    plugin_input = \"fake\"\n"
                                 + "  }\n"
                                 + "}\n",
                         jobName, jobMode);

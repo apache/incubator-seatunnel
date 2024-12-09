@@ -49,13 +49,18 @@ own connectors, you need to follow the steps below.
 
 3.Create two packages corresponding to source and sink
 
-​    package org.apache.seatunnel.connectors.seatunnel.{connector name}}.source
-
-​    package org.apache.seatunnel.connectors.seatunnel.{connector name}}.sink
+    package org.apache.seatunnel.connectors.seatunnel.{connector name}}.source
+    package org.apache.seatunnel.connectors.seatunnel.{connector name}}.sink
 
 4.add connector info to plugin-mapping.properties file in seatunnel root path.
 
 5.add connector dependency to seatunnel-dist/pom.xml, so the connector jar can be find in binary package.
+
+6.There are several classes that must be implemented on the source side, namely {ConnectorName}Source, {ConnectorName}SourceFactory, {ConnectorName}SourceReader; There are several classes that must be implemented on the sink side, namely {ConnectorName}Sink, {ConnectorName}SinkFactory, {ConnectorName}SinkWriter Please refer to other connectors for details
+
+7.{ConnectorName}SourceFactory and {ConnectorName}SinkFactory needs to be annotated with the **@AutoService (Factory.class)** annotation on the class name, and in addition to the required methods, source side an additional **creatSource** method needs to be rewritten and sink side an additional **creatSink** method needs to be rewritten
+
+8.{ConnectorName}Source needs to override the **getProducedCatalogTables** method; {ConnectorName}Sink needs to override the **getWriteCatalogTable** method
 
 ### **Startup Class**
 
@@ -205,26 +210,25 @@ In order to automatically create the Source Connector and Sink Connector and Tra
 supported by the current connector and the required parameters. We define TableSourceFactory and TableSinkFactory,
 It is recommended to put it in the same directory as the implementation class of SeaTunnelSource or SeaTunnelSink for easy searching.
 
-- `factoryIdentifier` is used to indicate the name of the current Factory. This value should be the same as the 
-    value returned by `getPluginName`, so that if Factory is used to create Source/Sink in the future,
-    A seamless switch can be achieved.
-- `createSink` and `createSource` are the methods for creating Source and Sink respectively, 
-    and do not need to be implemented at present.
+- `factoryIdentifier` is used to indicate the name of the current Factory. This value should be the same as the
+  value returned by `getPluginName`, so that if Factory is used to create Source/Sink in the future,
+  A seamless switch can be achieved.
+- `createSink` and `createSource` are the methods for creating Source and Sink respectively.
 - `optionRule` returns the parameter logic, which is used to indicate which parameters of our connector are supported,
-    which parameters are required, which parameters are optional, and which parameters are exclusive, which parameters are bundledRequired.
-    This method will be used when we visually create the connector logic, and it will also be used to generate a complete parameter 
-    object according to the parameters configured by the user, and then the connector developer does not need to judge whether the parameters
-    exist one by one in the Config, and use it directly That's it.
-    You can refer to existing implementations, such as `org.apache.seatunnel.connectors.seatunnel.elasticsearch.source.ElasticsearchSourceFactory`.
-    There is support for configuring Schema for many Sources, so a common Option is used.
-    If you need a schema, you can refer to `org.apache.seatunnel.api.table.catalog.CatalogTableUtil.SCHEMA`.
+  which parameters are required, which parameters are optional, and which parameters are exclusive, which parameters are bundledRequired.
+  This method will be used when we visually create the connector logic, and it will also be used to generate a complete parameter
+  object according to the parameters configured by the user, and then the connector developer does not need to judge whether the parameters
+  exist one by one in the Config, and use it directly That's it.
+  You can refer to existing implementations, such as `org.apache.seatunnel.connectors.seatunnel.elasticsearch.source.ElasticsearchSourceFactory`.
+  There is support for configuring Schema for many Sources, so a common Option is used.
+  If you need a schema, you can refer to `org.apache.seatunnel.api.table.catalog.CatalogTableUtil.SCHEMA`.
 
 Don't forget to add `@AutoService(Factory.class)` to the class. This Factory is the parent class of TableSourceFactory and TableSinkFactory.
 
 ### **Options**
 
 When we implement TableSourceFactory and TableSinkFactory, the corresponding Option will be created.
-Each Option corresponds to a configuration, but different configurations will have different types. 
+Each Option corresponds to a configuration, but different configurations will have different types.
 Common types can be created by directly calling the corresponding method.
 But if our parameter type is an object, we can use POJO to represent parameters of object type,
 and need to use `org.apache.seatunnel.api.configuration.util.OptionMark` on each parameter to indicate that this is A child Option.
@@ -238,5 +242,3 @@ please refer to `org.apache.seatunnel.connectors.seatunnel.assertion.sink.Assert
 
 All Connector implementations should be under the ``seatunnel-connectors-v2``, and the examples that can be referred to
 at this stage are under this module.
-
-
