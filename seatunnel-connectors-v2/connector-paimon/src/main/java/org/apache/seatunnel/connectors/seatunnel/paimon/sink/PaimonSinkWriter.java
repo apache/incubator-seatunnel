@@ -76,6 +76,8 @@ public class PaimonSinkWriter
 
     private final TableWrite tableWrite;
 
+    private final IOManager ioManager;
+
     private List<CommitMessage> committables = new ArrayList<>();
 
     private final SeaTunnelRowType seaTunnelRowType;
@@ -110,10 +112,8 @@ public class PaimonSinkWriter
                 JobContextUtil.isBatchJob(jobContext)
                         ? this.table.newBatchWriteBuilder()
                         : this.table.newStreamWriteBuilder();
-        this.tableWrite =
-                tableWriteBuilder
-                        .newWrite()
-                        .withIOManager(IOManager.create(splitPaths(changelogTmpPath)));
+        this.ioManager = IOManager.create(splitPaths(changelogTmpPath));
+        this.tableWrite = tableWriteBuilder.newWrite().withIOManager(ioManager);
         this.seaTunnelRowType = seaTunnelRowType;
         this.context = context;
         this.jobContext = jobContext;
@@ -242,6 +242,14 @@ public class PaimonSinkWriter
                     tableWrite.close();
                 } catch (Exception e) {
                     log.error("Failed to close table writer in paimon sink writer.", e);
+                    throw new SeaTunnelException(e);
+                }
+            }
+            if (Objects.nonNull(ioManager)) {
+                try {
+                    ioManager.close();
+                } catch (Exception e) {
+                    log.error("Failed to close ioManager in paimon sink writer.", e);
                     throw new SeaTunnelException(e);
                 }
             }
