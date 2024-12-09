@@ -109,8 +109,8 @@ public class ExampleUDF implements ZetaUDF {
 ```
 transform {
   Sql {
-    source_table_name = "fake"
-    result_table_name = "fake1"
+    plugin_input = "fake"
+    plugin_output = "fake1"
     query = "select id, example(name) as name, age from fake"
   }
 }

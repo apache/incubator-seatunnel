@@ -2,13 +2,16 @@
 sidebar_position: 12
 ---
 
-# RESTful API
+# RESTful API V2
 
 SeaTunnel有一个用于监控的API，可用于查询运行作业的状态和统计信息，以及最近完成的作业。监控API是RESTful风格的，它接受HTTP请求并使用JSON数据格式进行响应。
 
 ## 概述
 
-v2版本的api使用jetty支持，与v1版本的接口规范相同 ,可以通过修改`seatunnel.yaml`中的配置项来指定端口和context-path
+v2版本的api使用jetty支持，与v1版本的接口规范相同 ,可以通过修改`seatunnel.yaml`中的配置项来指定端口和context-path，
+同时可以配置 `enable-dynamic-port` 开启动态端口(默认从 `port` 开始累加)，默认为关闭，
+如果`enable-dynamic-port`为`true`，我们将使用`port`和`port`+`port-range`范围内未使用的端口，默认范围是100。
+
 ```yaml
 
 seatunnel:
@@ -16,6 +19,8 @@ seatunnel:
     http:
       enable-http: true
       port: 8080
+      enable-dynamic-port: false
+      port-range: 100
 ```
 
 同时也可以配置context-path,配置如下：
@@ -375,14 +380,17 @@ seatunnel:
 
 #### 参数
 
-> |         参数名称         |   是否必传   |  参数类型  |               参数描述                |
-> |----------------------|----------|--------|-----------------------------------|
+> |         参数名称         |   是否必传   |  参数类型  | 参数描述                              |
+> |----------------------|----------|-----------------------------------|-----------------------------------|
 > | jobId                | optional | string | job id                            |
 > | jobName              | optional | string | job name                          |
 > | isStartWithSavePoint | optional | string | if job is started with save point |
+> | format               | optional | string    | 配置风格,支持json和hocon,默认 json         |
 
 #### 请求体
 
+你可以选择用json或者hocon的方式来传递请求体。
+Json请求示例：
 ```json
 {
     "env": {
@@ -391,7 +399,7 @@ seatunnel:
     "source": [
         {
             "plugin_name": "FakeSource",
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -407,12 +415,42 @@ seatunnel:
     "sink": [
         {
             "plugin_name": "Console",
-            "source_table_name": ["fake"]
+            "plugin_input": ["fake"]
         }
     ]
 }
 ```
 
+Hocon请求示例：
+```hocon
+env {
+  job.mode = "batch"
+}
+
+source {
+  FakeSource {
+    plugin_output = "fake"
+    row.num = 100
+    schema = {
+      fields {
+        name = "string"
+        age = "int"
+        card = "int"
+      }
+    }
+  }
+}
+
+transform {
+}
+
+sink {
+  Console {
+    plugin_input = "fake"
+  }
+}
+
+```
 #### 响应
 
 ```json
@@ -457,7 +495,7 @@ seatunnel:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -473,7 +511,7 @@ seatunnel:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   },
@@ -488,7 +526,7 @@ seatunnel:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -504,7 +542,7 @@ seatunnel:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   }
@@ -616,7 +654,7 @@ seatunnel:
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -656,7 +694,7 @@ seatunnel:
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",

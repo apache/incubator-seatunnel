@@ -17,7 +17,8 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import com.hazelcast.internal.json.JsonArray;
+import org.apache.seatunnel.engine.server.rest.service.SystemMonitoringService;
+
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,15 +30,17 @@ import java.io.IOException;
 
 @Slf4j
 public class SystemMonitoringServlet extends BaseServlet {
+    private final SystemMonitoringService systemMonitoringService;
+
     public SystemMonitoringServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.systemMonitoringService = new SystemMonitoringService(nodeEngine);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        JsonArray jsonValues = getSystemMonitoringInformationJsonValues();
-        writeJson(resp, jsonValues);
+        writeJson(resp, systemMonitoringService.getSystemMonitoringInformationJsonValues());
     }
 }

@@ -673,7 +673,7 @@ public class SubPlan {
             case CANCELED:
                 if (checkNeedRestore(state) && prepareRestorePipeline()) {
                     jobMaster.releasePipelineResource(this);
-                    jobMaster.preApplyResources();
+                    jobMaster.preApplyResources(this);
                     restorePipeline();
                     return;
                 }

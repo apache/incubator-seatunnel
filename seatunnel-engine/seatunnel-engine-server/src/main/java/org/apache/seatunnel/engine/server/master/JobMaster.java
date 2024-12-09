@@ -44,6 +44,7 @@ import org.apache.seatunnel.engine.core.dag.actions.SinkAction;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalDag;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalVertex;
 import org.apache.seatunnel.engine.core.job.ConnectorJarIdentifier;
+import org.apache.seatunnel.engine.core.job.ExecutionAddress;
 import org.apache.seatunnel.engine.core.job.JobDAGInfo;
 import org.apache.seatunnel.engine.core.job.JobImmutableInformation;
 import org.apache.seatunnel.engine.core.job.JobInfo;
@@ -89,9 +90,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -155,6 +159,8 @@ public class JobMaster {
     private final Map<Integer, List<SlotProfile>> releasedSlotWhenTaskGroupFinished;
 
     private final IMap<Long, JobInfo> runningJobInfoIMap;
+
+    @Getter private final Set<ExecutionAddress> historyExecutionAddress = new HashSet<>();
 
     private final IMap<Long, HashMap<TaskLocation, SeaTunnelMetricsContext>> metricsImap;
 
@@ -351,37 +357,30 @@ public class JobMaster {
     }
 
     /**
-     * Apply for resources
+     * Apply for all resources
      *
      * @return true if apply resources successfully, otherwise false
      */
     public boolean preApplyResources() {
+        return preApplyResources(null);
+    }
+
+    /**
+     * Apply for resources
+     *
+     * @return true if apply resources successfully, otherwise false
+     */
+    public boolean preApplyResources(SubPlan subPlan) {
+
         Map<TaskGroupLocation, CompletableFuture<SlotProfile>> preApplyResourceFutures =
                 new HashMap<>();
-        for (SubPlan subPlan : physicalPlan.getPipelineList()) {
-            Map<TaskGroupLocation, CompletableFuture<SlotProfile>> coordinatorFutures =
-                    new HashMap<>();
-            subPlan.getCoordinatorVertexList()
-                    .forEach(
-                            coordinator ->
-                                    coordinatorFutures.put(
-                                            coordinator.getTaskGroupLocation(),
-                                            ResourceUtils.applyResourceForTask(
-                                                    resourceManager,
-                                                    coordinator,
-                                                    subPlan.getTags())));
 
-            Map<TaskGroupLocation, CompletableFuture<SlotProfile>> taskFutures = new HashMap<>();
-            subPlan.getPhysicalVertexList()
-                    .forEach(
-                            task ->
-                                    taskFutures.put(
-                                            task.getTaskGroupLocation(),
-                                            ResourceUtils.applyResourceForTask(
-                                                    resourceManager, task, subPlan.getTags())));
+        boolean isSubPlan = Objects.nonNull(subPlan);
 
-            preApplyResourceFutures.putAll(coordinatorFutures);
-            preApplyResourceFutures.putAll(taskFutures);
+        if (isSubPlan) {
+            preApplyResourcesForSubPlan(subPlan, preApplyResourceFutures);
+        } else {
+            preApplyResourcesForAll(preApplyResourceFutures);
         }
 
         boolean enoughResource =
@@ -400,8 +399,25 @@ public class JobMaster {
                         == preApplyResourceFutures.size();
 
         if (enoughResource) {
-            // Adequate resources, pass on resources to the plan
-            physicalPlan.setPreApplyResourceFutures(preApplyResourceFutures);
+            for (Map.Entry<TaskGroupLocation, CompletableFuture<SlotProfile>> entry :
+                    preApplyResourceFutures.entrySet()) {
+                try {
+                    Address worker = entry.getValue().get().getWorker();
+                    historyExecutionAddress.add(
+                            new ExecutionAddress(worker.getHost(), worker.getPort()));
+
+                } catch (Exception e) {
+                    LOGGER.warning("history execution plan add worker failed", e);
+                }
+            }
+            if (isSubPlan) {
+                // SubPlan applies for resources separately and needs to be merged into the entire
+                // job's resources
+                physicalPlan.getPreApplyResourceFutures().putAll(preApplyResourceFutures);
+            } else {
+                // Adequate resources, pass on resources to the plan
+                physicalPlan.setPreApplyResourceFutures(preApplyResourceFutures);
+            }
         } else {
             // Release the resource that has been applied
             try {
@@ -440,6 +456,39 @@ public class JobMaster {
             }
         }
         return enoughResource;
+    }
+
+    private Map<TaskGroupLocation, CompletableFuture<SlotProfile>> preApplyResourcesForAll(
+            Map<TaskGroupLocation, CompletableFuture<SlotProfile>> preApplyResourceFutures) {
+        for (SubPlan subPlan : physicalPlan.getPipelineList()) {
+            preApplyResourcesForSubPlan(subPlan, preApplyResourceFutures);
+        }
+        return preApplyResourceFutures;
+    }
+
+    private void preApplyResourcesForSubPlan(
+            SubPlan subPlan,
+            Map<TaskGroupLocation, CompletableFuture<SlotProfile>> preApplyResourceFutures) {
+        Map<TaskGroupLocation, CompletableFuture<SlotProfile>> coordinatorFutures = new HashMap<>();
+        subPlan.getCoordinatorVertexList()
+                .forEach(
+                        coordinator ->
+                                coordinatorFutures.put(
+                                        coordinator.getTaskGroupLocation(),
+                                        ResourceUtils.applyResourceForTask(
+                                                resourceManager, coordinator, subPlan.getTags())));
+
+        Map<TaskGroupLocation, CompletableFuture<SlotProfile>> taskFutures = new HashMap<>();
+        subPlan.getPhysicalVertexList()
+                .forEach(
+                        task ->
+                                taskFutures.put(
+                                        task.getTaskGroupLocation(),
+                                        ResourceUtils.applyResourceForTask(
+                                                resourceManager, task, subPlan.getTags())));
+
+        preApplyResourceFutures.putAll(coordinatorFutures);
+        preApplyResourceFutures.putAll(taskFutures);
     }
 
     public void run() {
@@ -536,7 +585,14 @@ public class JobMaster {
         if (jobDAGInfo == null) {
             jobDAGInfo =
                     DAGUtils.getJobDAGInfo(
-                            logicalDag, jobImmutableInformation, engineConfig, isPhysicalDAGIInfo);
+                            logicalDag,
+                            jobImmutableInformation,
+                            engineConfig,
+                            isPhysicalDAGIInfo,
+                            new ExecutionAddress(
+                                    this.nodeEngine.getThisAddress().getHost(),
+                                    this.nodeEngine.getThisAddress().getPort()),
+                            historyExecutionAddress);
         }
         return jobDAGInfo;
     }

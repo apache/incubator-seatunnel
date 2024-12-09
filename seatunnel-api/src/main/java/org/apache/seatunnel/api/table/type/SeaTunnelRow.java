@@ -34,9 +34,9 @@ public final class SeaTunnelRow implements Serializable {
     /** The array to store the actual internal format values. */
     private final Object[] fields;
 
-    private volatile int size;
+    private Map<String, Object> options;
 
-    private Map<String, Object> options = new HashMap<>();
+    private volatile int size;
 
     public SeaTunnelRow(int arity) {
         this.fields = new Object[arity];
@@ -75,6 +75,9 @@ public final class SeaTunnelRow implements Serializable {
     }
 
     public Map<String, Object> getOptions() {
+        if (options == null) {
+            options = new HashMap<>();
+        }
         return options;
     }
 

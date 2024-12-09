@@ -127,6 +127,32 @@ public class RedisConfig {
                             "batch_size is used to control the size of a batch of data during read and write operations"
                                     + ",default 10");
 
+    public static final Option<Boolean> SUPPORT_CUSTOM_KEY =
+            Options.key("support_custom_key")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription(
+                            "if true, the key can be customized by the field value in the upstream data.");
+
+    public static final Option<String> VALUE_FIELD =
+            Options.key("value_field")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "The field of value you want to write to redis, support string list set zset");
+
+    public static final Option<String> HASH_KEY_FIELD =
+            Options.key("hash_key_field")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("The field of hash key you want to write to redis");
+
+    public static final Option<String> HASH_VALUE_FIELD =
+            Options.key("hash_value_field")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("The field of hash value you want to write to redis");
+
     public enum Format {
         JSON,
         // TEXT will be supported later

@@ -17,7 +17,7 @@ env {
 
 source {
   MySQL-CDC {
-    result_table_name = "table1"
+    plugin_output = "table1"
 
     base-url="jdbc:mysql://localhost:3306/test"
     "startup.mode"=INITIAL
@@ -43,9 +43,10 @@ source {
 
 sink {
   Kafka {
-    source_table_name = "table1"
+    plugin_input = "table1"
 
     bootstrap.servers = "localhost:9092"
+    topic = "${topic}"
 
     # compatible_debezium_json options
     format = compatible_debezium_json

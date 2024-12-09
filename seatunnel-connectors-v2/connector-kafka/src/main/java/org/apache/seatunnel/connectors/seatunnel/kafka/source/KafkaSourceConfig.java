@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.kafka.source;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
+import org.apache.seatunnel.api.table.catalog.CatalogOptions;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
@@ -31,7 +32,6 @@ import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
-import org.apache.seatunnel.connectors.seatunnel.kafka.config.Config;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormat;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormatErrorHandleWay;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.StartMode;
@@ -114,11 +114,17 @@ public class KafkaSourceConfig implements Serializable {
     private Map<TablePath, ConsumerMetadata> createMapConsumerMetadata(
             ReadonlyConfig readonlyConfig) {
         List<ConsumerMetadata> consumerMetadataList;
-        if (readonlyConfig.getOptional(Config.TABLE_LIST).isPresent()) {
+        if (readonlyConfig.getOptional(TableSchemaOptions.TABLE_CONFIGS).isPresent()) {
             consumerMetadataList =
-                    readonlyConfig.get(Config.TABLE_LIST).stream()
+                    readonlyConfig.get(TableSchemaOptions.TABLE_CONFIGS).stream()
                             .map(ReadonlyConfig::fromMap)
-                            .map(config -> createConsumerMetadata(config))
+                            .map(this::createConsumerMetadata)
+                            .collect(Collectors.toList());
+        } else if (readonlyConfig.getOptional(CatalogOptions.TABLE_LIST).isPresent()) {
+            consumerMetadataList =
+                    readonlyConfig.get(CatalogOptions.TABLE_LIST).stream()
+                            .map(ReadonlyConfig::fromMap)
+                            .map(this::createConsumerMetadata)
                             .collect(Collectors.toList());
         } else {
             consumerMetadataList =

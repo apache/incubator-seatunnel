@@ -21,10 +21,14 @@ import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.Options;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.catalog.Column;
+import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
 import org.apache.seatunnel.api.table.catalog.SeaTunnelDataTypeConvertorUtil;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
-import org.apache.seatunnel.transform.common.CommonOptions;
 import org.apache.seatunnel.transform.common.ErrorHandleWay;
+import org.apache.seatunnel.transform.common.TransformCommonOptions;
+import org.apache.seatunnel.transform.exception.TransformCommonError;
 import org.apache.seatunnel.transform.exception.TransformException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -87,12 +91,13 @@ public class JsonPathTransformConfig implements Serializable {
         this.errorHandleWay = errorHandleWay;
     }
 
-    public static JsonPathTransformConfig of(ReadonlyConfig config) {
+    public static JsonPathTransformConfig of(ReadonlyConfig config, CatalogTable table) {
         if (!config.toConfig().hasPath(COLUMNS.key())) {
             throw new TransformException(
                     COLUMNS_MUST_NOT_EMPTY, COLUMNS_MUST_NOT_EMPTY.getErrorMessage());
         }
-        ErrorHandleWay rowErrorHandleWay = config.get(CommonOptions.ROW_ERROR_HANDLE_WAY_OPTION);
+        ErrorHandleWay rowErrorHandleWay =
+                config.get(TransformCommonOptions.ROW_ERROR_HANDLE_WAY_OPTION);
         List<Map<String, String>> columns = config.get(COLUMNS);
         List<ColumnConfig> configs = new ArrayList<>(columns.size());
         for (Map<String, String> map : columns) {
@@ -102,14 +107,30 @@ public class JsonPathTransformConfig implements Serializable {
             String destField = map.get(DEST_FIELD.key());
             String type = map.getOrDefault(DEST_TYPE.key(), DEST_TYPE.defaultValue());
             ErrorHandleWay columnErrorHandleWay =
-                    Optional.ofNullable(map.get(CommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION.key()))
+                    Optional.ofNullable(
+                                    map.get(
+                                            TransformCommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION
+                                                    .key()))
                             .map(ErrorHandleWay::valueOf)
                             .orElse(null);
 
-            SeaTunnelDataType<?> dataType =
+            SeaTunnelDataType<?> srcFieldDataType =
                     SeaTunnelDataTypeConvertorUtil.deserializeSeaTunnelDataType(srcField, type);
+            if (!table.getTableSchema().contains(srcField)) {
+                throw TransformCommonError.cannotFindInputFieldError("JsonPath", srcField);
+            }
+            Column srcFieldColumn = table.getTableSchema().getColumn(srcField);
+            Column destFieldColumn =
+                    PhysicalColumn.of(
+                            destField,
+                            srcFieldDataType,
+                            srcFieldColumn.getColumnLength(),
+                            true,
+                            null,
+                            null);
             ColumnConfig columnConfig =
-                    new ColumnConfig(path, srcField, destField, dataType, columnErrorHandleWay);
+                    new ColumnConfig(
+                            path, srcField, destField, destFieldColumn, columnErrorHandleWay);
             configs.add(columnConfig);
         }
         return new JsonPathTransformConfig(configs, rowErrorHandleWay);

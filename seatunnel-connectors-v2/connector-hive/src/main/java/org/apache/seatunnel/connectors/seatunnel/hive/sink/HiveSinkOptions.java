@@ -19,9 +19,9 @@ package org.apache.seatunnel.connectors.seatunnel.hive.sink;
 
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.Options;
-import org.apache.seatunnel.connectors.seatunnel.hive.config.BaseHiveOptions;
+import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveOptions;
 
-public class HiveSinkOptions extends BaseHiveOptions {
+public class HiveSinkOptions extends HiveOptions {
 
     public static final Option<Boolean> ABORT_DROP_PARTITION_METADATA =
             Options.key("abort_drop_partition_metadata")

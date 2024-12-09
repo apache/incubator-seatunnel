@@ -71,7 +71,7 @@ SeaTunnel Engine implements cluster management based on [Hazelcast IMDG](https:/
 
 The `backup count` is a parameter that defines the number of synchronous backups. For example, if it is set to 1, the backup of the partition will be placed on one other member. If it is set to 2, it will be placed on two other members.
 
-We recommend that the value of `backup-count` be `min(1, max(5, N/2))`. `N` is the number of cluster nodes.
+We recommend that the value of `backup-count` be `max(1, min(5, N/2))`. `N` is the number of cluster nodes.
 
 ```yaml
 seatunnel:
@@ -173,7 +173,7 @@ seatunnel:
 This configuration mainly solves the problem of resource leakage caused by continuously creating and attempting to destroy class loaders.
 If you encounter an exception related to metaspace space overflow, you can try to enable this configuration.
 In order to reduce the frequency of creating class loaders, after enabling this configuration, SeaTunnel will not try to release the corresponding class loader when the job is completed, so that it can be used by subsequent jobs, that is to say, when not too many types of Source/Sink connector are used in the running job, it is more effective.
-The default value is false.
+The default value is true.
 Example
 
 ```yaml

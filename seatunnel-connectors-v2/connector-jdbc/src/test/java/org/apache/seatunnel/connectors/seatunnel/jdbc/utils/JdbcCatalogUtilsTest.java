@@ -25,6 +25,7 @@ import org.apache.seatunnel.api.table.catalog.PrimaryKey;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.BasicType;
+import org.apache.seatunnel.api.table.type.DecimalType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -313,5 +314,60 @@ public class JdbcCatalogUtilsTest {
         Assertions.assertEquals(
                 tableOfQuery.getTableSchema().getColumns(),
                 mergeTable.getTableSchema().getColumns());
+    }
+
+    @Test
+    public void testDecimalColumnMerge() {
+        CatalogTable tableOfQuery =
+                CatalogTable.of(
+                        TableIdentifier.of("default", null, null, "default"),
+                        TableSchema.builder()
+                                .column(
+                                        PhysicalColumn.of(
+                                                "f1",
+                                                new DecimalType(10, 1),
+                                                null,
+                                                true,
+                                                null,
+                                                null,
+                                                null,
+                                                false,
+                                                false,
+                                                null,
+                                                null,
+                                                null))
+                                .build(),
+                        Collections.emptyMap(),
+                        Collections.emptyList(),
+                        null);
+
+        CatalogTable tableOfPath =
+                CatalogTable.of(
+                        TableIdentifier.of("default", null, null, "default"),
+                        TableSchema.builder()
+                                .column(
+                                        PhysicalColumn.of(
+                                                "f1",
+                                                new DecimalType(10, 2),
+                                                null,
+                                                true,
+                                                null,
+                                                null,
+                                                null,
+                                                false,
+                                                false,
+                                                null,
+                                                null,
+                                                null))
+                                .build(),
+                        Collections.emptyMap(),
+                        Collections.emptyList(),
+                        null);
+
+        CatalogTable mergeTable = JdbcCatalogUtils.mergeCatalogTable(tableOfPath, tableOfQuery);
+        // When column type is decimal, the precision and scale should not affect the merge result
+        Assertions.assertEquals(
+                tableOfPath.getTableSchema().getColumns().get(0),
+                mergeTable.getTableSchema().getColumns().get(0));
     }
 }

@@ -12,20 +12,25 @@
 
 ## 选项
 
-|       名称       |   类型   |        是否必须         |  默认值   |
-|----------------|--------|---------------------|--------|
-| host           | string | 是                   | -      |
-| port           | int    | 是                   | -      |
-| key            | string | 是                   | -      |
-| data_type      | string | 是                   | -      |
-| user           | string | 否                   | -      |
-| auth           | string | 否                   | -      |
-| db_num         | int    | 否                   | 0      |
-| mode           | string | 否                   | single |
-| nodes          | list   | 当 mode=cluster 时为:是 | -      |
-| format         | string | 否                   | json   |
-| expire         | long   | 否                   | -1     |
-| common-options |        | 否                   | -      |
+| name               | type    |       required        | default value |
+|--------------------|---------|-----------------------|---------------|
+| host               | string  | yes                   | -             |
+| port               | int     | yes                   | -             |
+| key                | string  | yes                   | -             |
+| data_type          | string  | yes                   | -             |
+| batch_size         | int     | no                    | 10            |
+| user               | string  | no                    | -             |
+| auth               | string  | no                    | -             |
+| db_num             | int     | no                    | 0             |
+| mode               | string  | no                    | single        |
+| nodes              | list    | yes when mode=cluster | -             |
+| format             | string  | no                    | json          |
+| expire             | long    | no                    | -1            |
+| support_custom_key | boolean | no                    | false         |
+| value_field        | string  | no                    | -             |
+| hash_key_field     | string  | no                    | -             |
+| hash_value_field   | string  | no                    | -             |
+| common-options     |         | no                    | -             |
 
 ### host [string]
 
@@ -48,13 +53,12 @@ Redis 端口
 | 200  | 获取成功 | true    |
 | 500  | 内部错误 | false   |
 
-如果将字段名称指定为 `code` 并将 data_type 设置为 `key`，将有两个数据写入 Redis：
-1. `200 -> {code: 200, message: true, data: 获取成功}`
-2. `500 -> {code: 500, message: false, data: 内部错误}`
-
-如果将字段名称指定为 `value` 并将 data_type 设置为 `key`，则由于上游数据的字段中没有 `value` 字段，将只有一个数据写入 Redis：
-
-1. `value -> {code: 500, message: false, data: 内部错误}`
+如果将字段名称指定为 code 并将 data_type 设置为 key，将有两个数据写入 Redis：
+1. `200 -> {code: 200, data: 获取成功, success: true}`
+2. `500 -> {code: 500, data: 内部错误, success: false}`
+   
+如果将字段名称指定为 value 并将 data_type 设置为 key，则由于上游数据的字段中没有 value 字段，将只有一个数据写入 Redis：
+1. `value -> {code: 500, data: 内部错误, success: false}`
 
 请参见 data_type 部分以了解具体的写入规则。
 
@@ -128,6 +132,59 @@ Redis 节点信息，在集群模式下使用，必须按如下格式：
 
 设置 Redis 的过期时间，单位为秒。默认值为 -1，表示键不会自动过期。
 
+### support_custom_key [boolean]
+
+设置为true，表示启用自定义Key。
+
+上游数据如下：
+
+| code | data | success |
+|------|------|---------|
+| 200  | 获取成功 | true    |
+| 500  | 内部错误 | false   |
+
+可以使用`{`和`}`符号自定义Redis键名，`{}`中的字段名会被解析替换为上游数据中的某个字段值，例如：将字段名称指定为 `{code}` 并将 data_type 设置为 `key`，将有两个数据写入 Redis：
+1. `200 -> {code: 200, data: 获取成功, success: true}`
+2. `500 -> {code: 500, data: 内部错误, success: false}`
+
+Redis键名可以由固定部分和变化部分组成，通过Redis分组符号:连接，例如：将字段名称指定为 `code:{code}` 并将 data_type 设置为 `key`，将有两个数据写入 Redis：
+1. `code:200 -> {code: 200, data: 获取成功, success: true}`
+2. `code:500 -> {code: 500, data: 内部错误, success: false}`
+
+### value_field [string]
+
+要写入Redis的值的字段， `data_type` 支持 `key` `list` `set` `zset`.
+
+当你指定Redis键名字段`key`指定为 `value`，值字段`value_field`指定为`data`，并将`data_type`指定为`key`时,
+
+上游数据如下：
+
+| code | data | success |
+|------|------|---------|
+| 200  | 获取成功 | true    |
+
+如下的数据会被写入Redis:
+1. `value -> 获取成功`
+
+### hash_key_field [string]
+
+要写入Redis的hash键字段, `data_type` 支持 `hash`
+
+### hash_value_field [string]
+
+要写入Redis的hash值字段, `data_type` 支持 `hash`
+
+当你指定Redis键名字段`key`指定为 `value`，hash键字段`hash_key_field`指定为`data`，hash值字段`hash_value_field`指定为`success`，并将`data_type`指定为`hash`时,
+
+上游数据如下：
+
+| code | data | success |
+|------|------|---------|
+| 200  | 获取成功 | true    |
+
+如下的数据会被写入Redis:
+1. `value -> 获取成功 | true`
+
 ### common options
 
 Sink 插件通用参数，请参考 [Sink Common Options](../sink-common-options.md) 获取详情
@@ -142,6 +199,43 @@ Redis {
   port = 6379
   key = age
   data_type = list
+}
+```
+
+自定义Key示例：
+
+```hocon
+Redis {
+  host = localhost
+  port = 6379
+  key = "name:{name}"
+  support_custom_key = true
+  data_type = key
+}
+```
+
+自定义Value示例：
+
+```hocon
+Redis {
+  host = localhost
+  port = 6379
+  key = person
+  value_field = "name"
+  data_type = key
+}
+```
+
+自定义HashKey和HashValue示例：
+
+```hocon
+Redis {
+  host = localhost
+  port = 6379
+  key = person
+  hash_key_field = "name"
+  hash_value_field = "age"
+  data_type = hash
 }
 ```
 

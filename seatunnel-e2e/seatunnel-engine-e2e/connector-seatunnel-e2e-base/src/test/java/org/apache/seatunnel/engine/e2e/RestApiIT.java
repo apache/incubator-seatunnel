@@ -105,7 +105,8 @@ public class RestApiIT {
         node2Tags.setAttribute("node", "node2");
         Config node2hzconfig = node1Config.getHazelcastConfig().setMemberAttributeConfig(node2Tags);
         node2Config = ConfigProvider.locateAndGetSeaTunnelConfig();
-        node2Config.getEngineConfig().getHttpConfig().setPort(8081);
+        // Dynamically generated port
+        node2Config.getEngineConfig().getHttpConfig().setEnableDynamicPort(true);
         node2Config.getEngineConfig().getHttpConfig().setEnabled(true);
         node2Config.getEngineConfig().getSlotServiceConfig().setDynamicSlot(false);
         node2Config.getEngineConfig().getSlotServiceConfig().setSlotNum(20);
@@ -888,7 +889,7 @@ public class RestApiIT {
                                                         + "                    \"age\": \"int\"\n"
                                                         + "                }\n"
                                                         + "            },\n"
-                                                        + "            \"result_table_name\": \"fake\",\n"
+                                                        + "            \"plugin_output\": \"fake\",\n"
                                                         + "            \"parallelism\": 1,\n"
                                                         + "            \"hostname\": \"127.0.0.1\",\n"
                                                         + "            \"username\": \"seatunnel\",\n"
@@ -917,9 +918,7 @@ public class RestApiIT {
                                                                 + RestConstant.ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body(
-                                                        "source[0].result_table_name",
-                                                        equalTo("fake"))
+                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",
@@ -936,9 +935,7 @@ public class RestApiIT {
                                                                 + RestConstant.ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body(
-                                                        "source[0].result_table_name",
-                                                        equalTo("fake"))
+                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",
@@ -979,6 +976,31 @@ public class RestApiIT {
                                                 .body("[0].threadState", notNullValue())
                                                 .body("[0].stackTrace", notNullValue())
                                                 .body("[0].threadId", notNullValue());
+                                    });
+                        });
+    }
+
+    @Test
+    public void verifyHtmlResponseBasic() {
+        Arrays.asList(node2, node1)
+                .forEach(
+                        instance -> {
+                            ports.forEach(
+                                    (key, value) -> {
+                                        given().get(
+                                                        HOST
+                                                                + value
+                                                                + node1Config
+                                                                        .getEngineConfig()
+                                                                        .getHttpConfig()
+                                                                        .getContextPath())
+                                                .then()
+                                                .statusCode(200)
+                                                .contentType(containsString("text/html"))
+                                                .body(containsString("<html"))
+                                                .body(
+                                                        containsString(
+                                                                "<title>Seatunnel Engine UI</title>"));
                                     });
                         });
     }

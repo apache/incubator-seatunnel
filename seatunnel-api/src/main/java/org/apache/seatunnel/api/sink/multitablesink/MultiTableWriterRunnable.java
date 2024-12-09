@@ -32,6 +32,7 @@ public class MultiTableWriterRunnable implements Runnable {
     private final Map<String, SinkWriter<SeaTunnelRow, ?, ?>> tableIdWriterMap;
     private final BlockingQueue<SeaTunnelRow> queue;
     private volatile Throwable throwable;
+    private volatile String currentTableId;
 
     public MultiTableWriterRunnable(
             Map<String, SinkWriter<SeaTunnelRow, ?, ?>> tableIdWriterMap,
@@ -52,11 +53,14 @@ public class MultiTableWriterRunnable implements Runnable {
                 if (writer == null) {
                     if (tableIdWriterMap.size() == 1) {
                         writer = tableIdWriterMap.values().stream().findFirst().get();
+                        currentTableId = tableIdWriterMap.keySet().stream().findFirst().get();
                     } else {
                         throw new RuntimeException(
                                 "MultiTableWriterRunnable can't find writer for tableId: "
                                         + row.getTableId());
                     }
+                } else {
+                    currentTableId = row.getTableId();
                 }
                 synchronized (this) {
                     writer.write(row);
@@ -76,5 +80,9 @@ public class MultiTableWriterRunnable implements Runnable {
 
     public Throwable getThrowable() {
         return throwable;
+    }
+
+    public String getCurrentTableId() {
+        return currentTableId;
     }
 }

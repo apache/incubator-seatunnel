@@ -17,6 +17,12 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.postgres;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
+import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfigFactory;
+import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config.PostgresSourceConfigFactory;
+import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source.PostgresDialect;
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
@@ -29,6 +35,7 @@ import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +45,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 
-import com.google.common.collect.Lists;
+import io.debezium.jdbc.JdbcConnection;
+import io.debezium.relational.TableId;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -53,6 +61,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -177,6 +186,49 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                                         query(getQuerySQL(POSTGRESQL_SCHEMA, SOURCE_TABLE_1)),
                                         query(getQuerySQL(POSTGRESQL_SCHEMA, SINK_TABLE_1)));
                             });
+        } finally {
+            // Clear related content to ensure that multiple operations are not affected
+            clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+        }
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testMPostgresCdcMetadataTrans(TestContainer container) throws InterruptedException {
+
+        Long jobId = JobIdGenerator.newJobId();
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        container.executeJob(
+                                "/postgrescdc_to_postgres.conf", String.valueOf(jobId));
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                });
+        TimeUnit.SECONDS.sleep(10);
+        // insert update delete
+        upsertDeleteSourceTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+
+        TimeUnit.SECONDS.sleep(20);
+        await().atMost(2, TimeUnit.MINUTES)
+                .untilAsserted(
+                        () -> {
+                            String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                            Assertions.assertEquals("RUNNING", jobStatus);
+                        });
+
+        try {
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             // Clear related content to ensure that multiple operations are not affected
             clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
@@ -548,6 +600,32 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
         } finally {
             clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY);
             clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+        }
+    }
+
+    @Test
+    public void testDialectCheckDisabledCDCTable() throws SQLException {
+        JdbcSourceConfigFactory factory =
+                new PostgresSourceConfigFactory()
+                        .hostname(POSTGRES_CONTAINER.getHost())
+                        .port(5432)
+                        .username("postgres")
+                        .password("postgres")
+                        .databaseList(POSTGRESQL_DATABASE);
+        PostgresDialect dialect =
+                new PostgresDialect((PostgresSourceConfigFactory) factory, Collections.emptyList());
+        try (JdbcConnection connection = dialect.openJdbcConnection(factory.create(0))) {
+            SeaTunnelException exception =
+                    Assertions.assertThrows(
+                            SeaTunnelException.class,
+                            () ->
+                                    dialect.checkAllTablesEnabledCapture(
+                                            connection,
+                                            Collections.singletonList(
+                                                    TableId.parse(SINK_TABLE_1))));
+            Assertions.assertEquals(
+                    "Table sink_postgres_cdc_table_1 does not have a full replica identity, please execute: ALTER TABLE sink_postgres_cdc_table_1 REPLICA IDENTITY FULL;",
+                    exception.getMessage());
         }
     }
 

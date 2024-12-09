@@ -42,7 +42,7 @@ Next, I'll show how to quickly use SeaTunnel's own `base64` encryption:
 
    source {
      MySQL-CDC {
-       result_table_name = "fake"
+       plugin_output = "fake"
        parallelism = 1
        server-id = 5656
        port = 56725
@@ -96,7 +96,7 @@ Next, I'll show how to quickly use SeaTunnel's own `base64` encryption:
                "port" : 56725,
                "database-name" : "inventory_vwyw0n",
                "parallelism" : 1,
-               "result_table_name" : "fake",
+               "plugin_output" : "fake",
                "table-name" : "products",
                "plugin_name" : "MySQL-CDC",
                "server-id" : 5656,

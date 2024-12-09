@@ -23,9 +23,9 @@ import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.connectors.seatunnel.file.hadoop.HadoopLoginFactory;
 import org.apache.seatunnel.connectors.seatunnel.file.hdfs.source.config.HdfsSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveConfig;
+import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveOptions;
 import org.apache.seatunnel.connectors.seatunnel.hive.exception.HiveConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.hive.exception.HiveConnectorException;
-import org.apache.seatunnel.connectors.seatunnel.hive.source.config.HiveSourceOptions;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -54,7 +54,7 @@ public class HiveMetaStoreProxy {
     private static final List<String> HADOOP_CONF_FILES = ImmutableList.of("hive-site.xml");
 
     private HiveMetaStoreProxy(ReadonlyConfig readonlyConfig) {
-        String metastoreUri = readonlyConfig.get(HiveSourceOptions.METASTORE_URI);
+        String metastoreUri = readonlyConfig.get(HiveOptions.METASTORE_URI);
         String hiveHadoopConfigPath = readonlyConfig.get(HiveConfig.HADOOP_CONF_PATH);
         String hiveSitePath = readonlyConfig.get(HiveConfig.HIVE_SITE_PATH);
         HiveConf hiveConf = new HiveConf();
@@ -121,7 +121,7 @@ public class HiveMetaStoreProxy {
                     String.format(
                             "Using this hive uris [%s], hive conf [%s] to initialize "
                                     + "hive metastore client instance failed",
-                            metastoreUri, readonlyConfig.get(HiveSourceOptions.HIVE_SITE_PATH));
+                            metastoreUri, readonlyConfig.get(HiveOptions.HIVE_SITE_PATH));
             throw new HiveConnectorException(
                     HiveConnectorErrorCode.INITIALIZE_HIVE_METASTORE_CLIENT_FAILED, errorMsg, e);
         } catch (Exception e) {

@@ -17,9 +17,9 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import org.apache.seatunnel.common.utils.FileUtils;
 import org.apache.seatunnel.engine.common.config.server.HttpConfig;
 import org.apache.seatunnel.engine.server.SeaTunnelServer;
+import org.apache.seatunnel.engine.server.rest.service.LogService;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -30,15 +30,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 public class CurrentNodeLogServlet extends LogBaseServlet {
 
+    private final LogService logService;
+
     public CurrentNodeLogServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.logService = new LogService(nodeEngine);
     }
 
     @Override
@@ -50,17 +51,11 @@ public class CurrentNodeLogServlet extends LogBaseServlet {
                 seaTunnelServer.getSeaTunnelConfig().getEngineConfig().getHttpConfig();
         String contextPath = httpConfig.getContextPath();
         String uri = req.getRequestURI();
-        String logName = getLogParam(uri, contextPath);
-        String logPath = getLogPath();
+        String logName = logService.getLogParam(uri, contextPath);
+        String logPath = logService.getLogPath();
 
         if (StringUtils.isBlank(logName)) {
-            // Get Current Node Log List
-            List<File> logFileList = FileUtils.listFile(logPath);
-            StringBuffer logLink = new StringBuffer();
-            for (File file : logFileList) {
-                logLink.append(buildLogLink("log/" + file.getName(), file.getName()));
-            }
-            writeHtml(resp, buildWebSiteContent(logLink));
+            writeHtml(resp, logService.currentNodeLog(uri));
         } else {
             // Get Current Node Log Content
             prepareLogResponse(resp, logPath, logName);

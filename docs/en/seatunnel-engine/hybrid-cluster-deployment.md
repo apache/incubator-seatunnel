@@ -43,7 +43,7 @@ Therefore, the SeaTunnel Engine can implement cluster HA without using other ser
 
 `backup count` is a parameter that defines the number of synchronous backups. For example, if it is set to 1, the backup of the partition will be placed on one other member. If it is set to 2, it will be placed on two other members.
 
-We recommend that the value of `backup count` be `min(1, max(5, N/2))`. `N` is the number of cluster nodes.
+We recommend that the value of `backup count` be `max(1, min(5, N/2))`. `N` is the number of cluster nodes.
 
 ```yaml
 seatunnel:
@@ -127,7 +127,7 @@ seatunnel:
 This configuration primarily addresses the issue of resource leakage caused by constantly creating and attempting to destroy the class loader.
 If you encounter exceptions related to metaspace overflow, you can try enabling this configuration.
 To reduce the frequency of class loader creation, after enabling this configuration, SeaTunnel will not attempt to release the corresponding class loader when a job is completed, allowing it to be used by subsequent jobs. This is more effective when the number of Source/Sink connectors used in the running job is not excessive.
-The default value is false.
+The default value is true.
 Example
 
 ```yaml

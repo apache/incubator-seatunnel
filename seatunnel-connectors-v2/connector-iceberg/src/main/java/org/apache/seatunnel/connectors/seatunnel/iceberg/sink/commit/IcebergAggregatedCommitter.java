@@ -36,7 +36,7 @@ public class IcebergAggregatedCommitter
     private final IcebergFilesCommitter filesCommitter;
 
     public IcebergAggregatedCommitter(SinkConfig config, CatalogTable catalogTable) {
-        IcebergTableLoader tableLoader = IcebergTableLoader.create(config, catalogTable).open();
+        IcebergTableLoader tableLoader = IcebergTableLoader.create(config, catalogTable);
         this.filesCommitter = IcebergFilesCommitter.of(config, tableLoader);
     }
 
@@ -51,7 +51,8 @@ public class IcebergAggregatedCommitter
 
     private void commitFiles(List<IcebergCommitInfo> commitInfos) {
         for (IcebergCommitInfo icebergCommitInfo : commitInfos) {
-            if (icebergCommitInfo.getResults() == null) {
+            if (icebergCommitInfo.getResults() == null
+                    || icebergCommitInfo.getResults().isEmpty()) {
                 continue;
             }
             filesCommitter.doCommit(icebergCommitInfo.getResults());

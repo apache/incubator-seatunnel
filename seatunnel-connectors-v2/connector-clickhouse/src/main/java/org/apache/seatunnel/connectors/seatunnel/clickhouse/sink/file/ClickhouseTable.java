@@ -17,7 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.clickhouse.sink.file;
 
-import org.apache.seatunnel.connectors.seatunnel.clickhouse.sink.DistributedEngine;
+import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.DistributedEngine;
 
 import lombok.Getter;
 import lombok.Setter;

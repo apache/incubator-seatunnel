@@ -132,7 +132,7 @@ public class DefaultSeaTunnelRowSerializer implements SeaTunnelRowSerializer {
 
     private static Function<SeaTunnelRow, String> topicExtractor(
             String topic, SeaTunnelRowType rowType, MessageFormat format) {
-        if (MessageFormat.COMPATIBLE_DEBEZIUM_JSON.equals(format)) {
+        if (MessageFormat.COMPATIBLE_DEBEZIUM_JSON.equals(format) && topic == null) {
             int topicFieldIndex =
                     rowType.indexOf(CompatibleDebeziumJsonDeserializationSchema.FIELD_TOPIC);
             return row -> row.getField(topicFieldIndex).toString();

@@ -27,8 +27,10 @@ import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,14 +47,17 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Sorts;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -60,7 +65,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.awaitility.Awaitility.await;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.with;
+import static org.testcontainers.shaded.org.awaitility.Durations.TWO_SECONDS;
 
 @Slf4j
 @DisabledOnContainer(
@@ -73,7 +80,8 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
     // mongodb
     protected static final String MONGODB_DATABASE = "inventory";
 
-    protected static final String MONGODB_COLLECTION = "products";
+    protected static final String MONGODB_COLLECTION_1 = "products";
+    protected static final String MONGODB_COLLECTION_2 = "orders";
     protected MongoDBContainer mongodbContainer;
 
     protected MongoClient client;
@@ -91,7 +99,10 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
     private static final MySqlContainer MYSQL_CONTAINER = createMySqlContainer();
 
     // mysql sink table query sql
-    private static final String SINK_SQL = "select name,description,weight from products";
+    private static final String SINK_SQL_PRODUCTS = "select name,description,weight from products";
+
+    private static final String SINK_SQL_ORDERS =
+            "select order_number,order_date,quantity,product_id from orders order by order_number asc";
 
     private static final String MYSQL_DRIVER_JAR =
             "https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.16/mysql-connector-java-8.0.16.jar";
@@ -148,7 +159,9 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
     }
 
     @TestTemplate
-    public void testMongodbCdcToMysqlCheckDataE2e(TestContainer container) {
+    public void testMongodbCdcToMysqlCheckDataE2e(TestContainer container)
+            throws InterruptedException {
+        cleanSourceTable();
         CompletableFuture.supplyAsync(
                 () -> {
                     try {
@@ -159,69 +172,116 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
                     }
                     return null;
                 });
-        await().atMost(60000, TimeUnit.MILLISECONDS)
-                .untilAsserted(
-                        () -> {
-                            Assertions.assertIterableEquals(
-                                    readMongodbData().stream()
-                                            .peek(e -> e.remove("_id"))
-                                            .map(Document::entrySet)
-                                            .map(Set::stream)
-                                            .map(
-                                                    entryStream ->
-                                                            entryStream
-                                                                    .map(Map.Entry::getValue)
-                                                                    .collect(
-                                                                            Collectors.toCollection(
-                                                                                    ArrayList
-                                                                                            ::new)))
-                                            .collect(Collectors.toList()),
-                                    querySql());
-                        });
-
+        TimeUnit.SECONDS.sleep(10);
         // insert update delete
         upsertDeleteSourceTable();
-
-        await().atMost(60000, TimeUnit.MILLISECONDS)
-                .untilAsserted(
-                        () -> {
-                            Assertions.assertIterableEquals(
-                                    readMongodbData().stream()
-                                            .peek(e -> e.remove("_id"))
-                                            .map(Document::entrySet)
-                                            .map(Set::stream)
-                                            .map(
-                                                    entryStream ->
-                                                            entryStream
-                                                                    .map(Map.Entry::getValue)
-                                                                    .collect(
-                                                                            Collectors.toCollection(
-                                                                                    ArrayList
-                                                                                            ::new)))
-                                            .collect(Collectors.toList()),
-                                    querySql());
-                        });
+        TimeUnit.SECONDS.sleep(20);
+        assertionsSourceAndSink(MONGODB_COLLECTION_1, SINK_SQL_PRODUCTS);
 
         cleanSourceTable();
+        TimeUnit.SECONDS.sleep(20);
+        assertionsSourceAndSink(MONGODB_COLLECTION_1, SINK_SQL_PRODUCTS);
+    }
 
-        await().atMost(60000, TimeUnit.MILLISECONDS)
+    @TestTemplate
+    public void testMongodbCdcMultiTableToMysqlE2e(TestContainer container)
+            throws InterruptedException {
+        cleanSourceTable();
+        CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        container.executeJob("/mongodb_multi_table_cdc_to_mysql.conf");
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException();
+                    }
+                    return null;
+                });
+        TimeUnit.SECONDS.sleep(10);
+        // insert update delete
+        upsertDeleteSourceTable();
+        TimeUnit.SECONDS.sleep(30);
+        assertionsSourceAndSink(MONGODB_COLLECTION_1, SINK_SQL_PRODUCTS);
+        assertionsSourceAndSink(MONGODB_COLLECTION_2, SINK_SQL_ORDERS);
+
+        cleanSourceTable();
+        TimeUnit.SECONDS.sleep(20);
+        assertionsSourceAndSink(MONGODB_COLLECTION_1, SINK_SQL_PRODUCTS);
+        assertionsSourceAndSink(MONGODB_COLLECTION_2, SINK_SQL_ORDERS);
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testMongodbCdcMetadataTrans(TestContainer container) throws InterruptedException {
+        cleanSourceTable();
+        Long jobId = JobIdGenerator.newJobId();
+        CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        container.executeJob(
+                                "/mongodbcdc_metadata_trans.conf", String.valueOf(jobId));
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException();
+                    }
+                    return null;
+                });
+        TimeUnit.SECONDS.sleep(10);
+        // insert update delete
+        upsertDeleteSourceTable();
+        TimeUnit.SECONDS.sleep(20);
+        await().atMost(2, TimeUnit.MINUTES)
                 .untilAsserted(
                         () -> {
-                            Assertions.assertIterableEquals(
-                                    readMongodbData().stream()
-                                            .peek(e -> e.remove("_id"))
-                                            .map(Document::entrySet)
-                                            .map(Set::stream)
-                                            .map(
-                                                    entryStream ->
-                                                            entryStream
-                                                                    .map(Map.Entry::getValue)
-                                                                    .collect(
-                                                                            Collectors.toCollection(
-                                                                                    ArrayList
-                                                                                            ::new)))
-                                            .collect(Collectors.toList()),
-                                    querySql());
+                            String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                            Assertions.assertEquals("RUNNING", jobStatus);
+                        });
+
+        try {
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void assertionsSourceAndSink(String mongodbCollection, String sinkMysqlQuery) {
+        List<List<Object>> expected =
+                readMongodbData(mongodbCollection).stream()
+                        .peek(e -> e.remove("_id"))
+                        .map(Document::entrySet)
+                        .map(Set::stream)
+                        .map(
+                                entryStream ->
+                                        entryStream
+                                                .map(
+                                                        entry -> {
+                                                            Object value = entry.getValue();
+                                                            if (value instanceof Number) {
+                                                                return new BigDecimal(
+                                                                                value.toString())
+                                                                        .intValue();
+                                                            }
+                                                            if (value instanceof ObjectId) {
+                                                                return ((ObjectId) value)
+                                                                        .toString();
+                                                            }
+                                                            return value;
+                                                        })
+                                                .collect(Collectors.toCollection(ArrayList::new)))
+                        .collect(Collectors.toList());
+        log.info("Print mongodb source data: \n{}", expected);
+        with().pollInterval(TWO_SECONDS)
+                .pollDelay(500, TimeUnit.MILLISECONDS)
+                .await()
+                .atMost(450, TimeUnit.SECONDS)
+                .untilAsserted(
+                        () -> {
+                            Assertions.assertIterableEquals(expected, querySql(sinkMysqlQuery));
                         });
     }
 
@@ -232,10 +292,9 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
                 MYSQL_CONTAINER.getPassword());
     }
 
-    private List<List<Object>> querySql() {
+    private List<List<Object>> querySql(String querySql) {
         try (Connection connection = getJdbcConnection();
-                ResultSet resultSet =
-                        connection.createStatement().executeQuery(MongodbCDCIT.SINK_SQL)) {
+                ResultSet resultSet = connection.createStatement().executeQuery(querySql)) {
             List<List<Object>> result = new ArrayList<>();
             int columnCount = resultSet.getMetaData().getColumnCount();
             while (resultSet.next()) {
@@ -243,12 +302,34 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
                 for (int i = 1; i <= columnCount; i++) {
                     objects.add(resultSet.getObject(i));
                 }
-                log.info("Print mysql sink data:" + objects);
+                log.info("Print mysql sink data: {} ", objects);
                 result.add(objects);
             }
+            log.info("============================= mysql data ================================");
             return result;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void truncateMysqlTable(String tableName) {
+        String checkTableExistsSql =
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ?";
+        String truncateTableSql = String.format("TRUNCATE TABLE %s", tableName);
+
+        try (Connection connection = getJdbcConnection();
+                PreparedStatement checkStmt = connection.prepareStatement(checkTableExistsSql)) {
+            checkStmt.setString(1, MYSQL_DATABASE);
+            checkStmt.setString(2, tableName);
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    try (Statement truncateStmt = connection.createStatement()) {
+                        truncateStmt.executeUpdate(truncateTableSql);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error checking if table exists: " + tableName, e);
         }
     }
 
@@ -258,6 +339,8 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
 
     private void cleanSourceTable() {
         mongodbContainer.executeCommandFileInDatabase("inventoryClean", MONGODB_DATABASE);
+        truncateMysqlTable(MONGODB_COLLECTION_1);
+        truncateMysqlTable(MONGODB_COLLECTION_2);
     }
 
     public void initConnection() {
@@ -266,17 +349,13 @@ public class MongodbCDCIT extends TestSuiteBase implements TestResource {
         String url =
                 String.format(
                         "mongodb://%s:%s@%s:%d/%s?authSource=admin",
-                        "superuser",
-                        "superpw",
-                        ipAddress,
-                        port,
-                        MONGODB_DATABASE + "." + MONGODB_COLLECTION);
+                        "superuser", "superpw", ipAddress, port, MONGODB_DATABASE);
         client = MongoClients.create(url);
     }
 
-    protected List<Document> readMongodbData() {
+    protected List<Document> readMongodbData(String collection) {
         MongoCollection<Document> sinkTable =
-                client.getDatabase(MONGODB_DATABASE).getCollection(MongodbCDCIT.MONGODB_COLLECTION);
+                client.getDatabase(MONGODB_DATABASE).getCollection(collection);
         // If the cursor has been traversed, it will automatically close without explicitly closing.
         MongoCursor<Document> cursor = sinkTable.find().sort(Sorts.ascending("_id")).cursor();
         List<Document> documents = new ArrayList<>();

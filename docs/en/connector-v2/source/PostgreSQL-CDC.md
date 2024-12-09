@@ -93,7 +93,7 @@ ALTER TABLE your_table_name REPLICA IDENTITY FULL;
 | password                                       | String   | Yes      | -        | Password to use when connecting to the database server.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | database-names                                 | List     | No       | -        | Database name of the database to monitor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | table-names                                    | List     | Yes      | -        | Table name of the database to monitor. The table name needs to include the database name, for example: `database_name.table_name`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| table-names-config                             | List     | No       | -        | Table config list. for example: [{"table": "db1.schema1.table1","primaryKeys":["key1"]}]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| table-names-config                             | List     | No       | -        | Table config list. for example: [{"table": "db1.schema1.table1","primaryKeys": ["key1"],"snapshotSplitColumn": "key2"}]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | startup.mode                                   | Enum     | No       | INITIAL  | Optional startup mode for PostgreSQL CDC consumer, valid enumerations are `initial`, `earliest` and `latest`. <br/> `initial`: Synchronize historical data at startup, and then synchronize incremental data.<br/> `earliest`: Startup from the earliest offset possible.<br/> `latest`: Startup from the latest offset.                                                                                                                                                                                                                                                                                             |
 | snapshot.split.size                            | Integer  | No       | 8096     | The split size (number of rows) of table snapshot, captured tables are split into multiple splits when read the snapshot of table.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | snapshot.fetch.size                            | Integer  | No       | 1024     | The maximum fetch size for per poll when read table snapshot.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -132,7 +132,7 @@ env {
 
 source {
   Postgres-CDC {
-    result_table_name = "customers_Postgre_cdc"
+    plugin_output = "customers_Postgre_cdc"
     username = "postgres"
     password = "postgres"
     database-names = ["postgres_cdc"]
@@ -148,7 +148,7 @@ transform {
 
 sink {
   jdbc {
-    source_table_name = "customers_Postgre_cdc"
+    plugin_input = "customers_Postgre_cdc"
     url = "jdbc:postgresql://postgres_cdc_e2e:5432/postgres_cdc?loggerLevel=OFF"
     driver = "org.postgresql.Driver"
     user = "postgres"
@@ -169,7 +169,7 @@ sink {
 ```
 source {
   Postgres-CDC {
-    result_table_name = "customers_mysql_cdc"
+    plugin_output = "customers_mysql_cdc"
     username = "postgres"
     password = "postgres"
     database-names = ["postgres_cdc"]

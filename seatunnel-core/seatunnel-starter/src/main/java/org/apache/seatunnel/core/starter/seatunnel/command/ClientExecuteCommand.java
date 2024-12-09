@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.core.starter.seatunnel.command;
 
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.apache.seatunnel.common.utils.DateTimeUtils;
 import org.apache.seatunnel.common.utils.StringFormatUtils;
 import org.apache.seatunnel.core.starter.command.Command;
@@ -42,7 +44,6 @@ import org.apache.seatunnel.engine.server.SeaTunnelNodeContext;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.impl.HazelcastInstanceFactory;
@@ -85,7 +86,9 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
         try {
             String clusterName = clientCommandArgs.getClusterName();
             ClientConfig clientConfig = ConfigProvider.locateAndGetClientConfig();
-            if (clientCommandArgs.getMasterType().equals(MasterType.LOCAL)) {
+            //  get running mode
+            boolean isLocalMode = clientCommandArgs.getMasterType().equals(MasterType.LOCAL);
+            if (isLocalMode) {
                 clusterName =
                         creatRandomClusterName(
                                 StringUtils.isNotEmpty(clusterName)
@@ -160,7 +163,7 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                 // create job proxy
                 ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
                 if (clientCommandArgs.isAsync()) {
-                    if (clientCommandArgs.getMasterType().equals(MasterType.LOCAL)) {
+                    if (isLocalMode) {
                         log.warn("The job is running in local mode, can not use async mode.");
                     } else {
                         return;
@@ -200,10 +203,13 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                         seaTunnelConfig.getEngineConfig().getPrintJobMetricsInfoInterval(),
                         TimeUnit.SECONDS);
 
-                executorService.schedule(
-                        new JobStatusRunner(engineClient.getJobClient(), jobId),
-                        0,
-                        TimeUnit.SECONDS);
+                if (!isLocalMode) {
+                    // LOCAL mode does not require running the job status runner
+                    executorService.schedule(
+                            new JobStatusRunner(engineClient.getJobClient(), jobId),
+                            0,
+                            TimeUnit.SECONDS);
+                }
 
                 // wait for job complete
                 JobResult jobResult = clientJobProxy.waitForJobCompleteV2();

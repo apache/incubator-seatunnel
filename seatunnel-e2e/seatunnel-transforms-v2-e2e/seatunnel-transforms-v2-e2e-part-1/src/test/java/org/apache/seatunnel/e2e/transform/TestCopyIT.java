@@ -17,7 +17,9 @@
 
 package org.apache.seatunnel.e2e.transform;
 
+import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
+import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
@@ -30,6 +32,17 @@ public class TestCopyIT extends TestSuiteBase {
     @TestTemplate
     public void testCopy(TestContainer container) throws IOException, InterruptedException {
         Container.ExecResult execResult = container.executeJob("/copy_transform.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK},
+            disabledReason = "Currently SPARK do not multi table transform")
+    @TestTemplate
+    public void testCopyMultiTable(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult = container.executeJob("/copy_transform_multi_table.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
     }
 }

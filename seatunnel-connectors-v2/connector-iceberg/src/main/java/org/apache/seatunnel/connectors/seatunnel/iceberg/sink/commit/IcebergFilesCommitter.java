@@ -54,12 +54,10 @@ public class IcebergFilesCommitter implements Serializable {
 
     public void doCommit(List<WriteResult> results) {
         TableIdentifier tableIdentifier = icebergTableLoader.getTableIdentifier();
-        Table table = icebergTableLoader.loadTable();
-        log.info("do commit table : " + table.toString());
-        commit(tableIdentifier, table, results);
+        commit(tableIdentifier, results);
     }
 
-    private void commit(TableIdentifier tableIdentifier, Table table, List<WriteResult> results) {
+    private void commit(TableIdentifier tableIdentifier, List<WriteResult> results) {
         List<DataFile> dataFiles =
                 results.stream()
                         .filter(payload -> payload.getDataFiles() != null)
@@ -77,6 +75,8 @@ public class IcebergFilesCommitter implements Serializable {
         if (dataFiles.isEmpty() && deleteFiles.isEmpty()) {
             log.info(String.format("Nothing to commit to table %s, skipping", tableIdentifier));
         } else {
+            Table table = icebergTableLoader.loadTable();
+            log.info("do commit table : {}", table.toString());
             if (deleteFiles.isEmpty()) {
                 AppendFiles append = table.newAppend();
                 if (branch != null) {

@@ -157,7 +157,8 @@ public class CatalogTableUtil implements Serializable {
         }
     }
 
-    public static MultipleRowType convertToMultipleRowType(List<CatalogTable> catalogTables) {
+    @Deprecated
+    private static MultipleRowType convertToMultipleRowType(List<CatalogTable> catalogTables) {
         Map<String, SeaTunnelRowType> rowTypeMap = new HashMap<>();
         for (CatalogTable catalogTable : catalogTables) {
             String tableId = catalogTable.getTableId().toTablePath().toString();
@@ -215,9 +216,9 @@ public class CatalogTableUtil implements Serializable {
                             schemaConfig.get(
                                     TableSchemaOptions.TableIdentifierOptions.SCHEMA_FIRST));
         } else {
-            Optional<String> resultTableNameOptional =
-                    readonlyConfig.getOptional(CommonOptions.RESULT_TABLE_NAME);
-            tablePath = resultTableNameOptional.map(TablePath::of).orElse(TablePath.DEFAULT);
+            Optional<String> pluginOutputIdentifierOptional =
+                    readonlyConfig.getOptional(CommonOptions.PLUGIN_OUTPUT);
+            tablePath = pluginOutputIdentifierOptional.map(TablePath::of).orElse(TablePath.DEFAULT);
         }
 
         return CatalogTable.of(
@@ -254,7 +255,7 @@ public class CatalogTableUtil implements Serializable {
                 finalColumns.add(column);
             } else {
                 finalColumns.add(
-                        PhysicalColumn.of(fieldNames[i], fieldTypes[i], 0, false, null, null));
+                        PhysicalColumn.of(fieldNames[i], fieldTypes[i], 0, true, null, null));
             }
         }
 

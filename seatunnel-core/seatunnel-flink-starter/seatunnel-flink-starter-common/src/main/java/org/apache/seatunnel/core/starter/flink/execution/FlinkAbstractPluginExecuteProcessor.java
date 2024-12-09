@@ -20,6 +20,7 @@ package org.apache.seatunnel.core.starter.flink.execution;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.common.utils.ReflectionUtils;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.core.starter.execution.PluginExecuteProcessor;
@@ -30,12 +31,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
+import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_INPUT;
+
 public abstract class FlinkAbstractPluginExecuteProcessor<T>
         implements PluginExecuteProcessor<DataStreamTableInfo, FlinkRuntimeEnvironment> {
 
     protected static final String ENGINE_TYPE = "seatunnel";
-
-    protected static final String SOURCE_TABLE_NAME = "source_table_name";
 
     protected static final BiConsumer<ClassLoader, URL> ADD_URL_TO_CLASSLOADER =
             (classLoader, url) -> {
@@ -75,8 +76,16 @@ public abstract class FlinkAbstractPluginExecuteProcessor<T>
 
     protected Optional<DataStreamTableInfo> fromSourceTable(
             Config pluginConfig, List<DataStreamTableInfo> upstreamDataStreams) {
-        if (pluginConfig.hasPath(SOURCE_TABLE_NAME)) {
-            String tableName = pluginConfig.getString(SOURCE_TABLE_NAME);
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(pluginConfig);
+
+        if (readonlyConfig.getOptional(PLUGIN_INPUT).isPresent()) {
+            List<String> pluginInputIdentifiers = readonlyConfig.get(PLUGIN_INPUT);
+            if (pluginInputIdentifiers.size() > 1) {
+                throw new UnsupportedOperationException(
+                        "Multiple input tables are not supported in flink plugin");
+            }
+
+            String tableName = pluginInputIdentifiers.get(0);
             DataStreamTableInfo dataStreamTableInfo =
                     upstreamDataStreams.stream()
                             .filter(info -> tableName.equals(info.getTableName()))

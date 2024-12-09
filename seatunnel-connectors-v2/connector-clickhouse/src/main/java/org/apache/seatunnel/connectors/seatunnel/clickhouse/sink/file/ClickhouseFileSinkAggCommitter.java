@@ -21,9 +21,9 @@ import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.config.FileReaderOption;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.shard.Shard;
-import org.apache.seatunnel.connectors.seatunnel.clickhouse.sink.client.ClickhouseProxy;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.state.CKFileAggCommitInfo;
 import org.apache.seatunnel.connectors.seatunnel.clickhouse.state.CKFileCommitInfo;
+import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.ClickhouseProxy;
 
 import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseRequest;

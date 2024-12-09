@@ -10,8 +10,9 @@ completed jobs. The monitoring API is a RESTful API that accepts HTTP requests a
 ## Overview
 
 The v2 version of the api uses jetty support. It is the same as the interface specification of v1 version
-, you can specify the port and context-path by modifying the configuration items in `seatunnel.yaml`
-
+, you can specify the port and context-path by modifying the configuration items in `seatunnel.yaml`,
+you can configure `enable-dynamic-port` to enable dynamic ports (the default port is accumulated starting from `port`), and the default is closed,
+If enable-dynamic-port is true, We will use the unused port in the range within the range of `port` and `port` + `port-range`, default range is 100
 
 ```yaml
 
@@ -20,6 +21,8 @@ seatunnel:
     http:
       enable-http: true
       port: 8080
+      enable-dynamic-port: false
+      port-range: 100
 ```
 
 Context-path can also be configured as follows:
@@ -381,15 +384,18 @@ When we can't get the job info, the response will be:
 
 #### Parameters
 
-> |         name         |   type   | data type |            description            |
+> | name                 |   type   | data type |            description            |
 > |----------------------|----------|-----------|-----------------------------------|
 > | jobId                | optional | string    | job id                            |
 > | jobName              | optional | string    | job name                          |
 > | isStartWithSavePoint | optional | string    | if job is started with save point |
+> | format               | optional | string    | config format, support json and hocon, default json |
 
 #### Body
 
-```json
+You can choose json or hocon to pass request body.
+The json format example:
+``` json
 {
     "env": {
         "job.mode": "batch"
@@ -397,7 +403,7 @@ When we can't get the job info, the response will be:
     "source": [
         {
             "plugin_name": "FakeSource",
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -413,11 +419,42 @@ When we can't get the job info, the response will be:
     "sink": [
         {
             "plugin_name": "Console",
-            "source_table_name": ["fake"]
+            "plugin_input": ["fake"]
         }
     ]
 }
 ```
+The hocon format example:
+``` hocon
+env {
+  job.mode = "batch"
+}
+
+source {
+  FakeSource {
+    plugin_output = "fake"
+    row.num = 100
+    schema = {
+      fields {
+        name = "string"
+        age = "int"
+        card = "int"
+      }
+    }
+  }
+}
+
+transform {
+}
+
+sink {
+  Console {
+    plugin_input = "fake"
+  }
+}
+
+```
+
 
 #### Responses
 
@@ -460,7 +497,7 @@ When we can't get the job info, the response will be:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -476,7 +513,7 @@ When we can't get the job info, the response will be:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   },
@@ -491,7 +528,7 @@ When we can't get the job info, the response will be:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -507,7 +544,7 @@ When we can't get the job info, the response will be:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   }
@@ -616,7 +653,7 @@ For more information about customize encryption, please refer to the documentati
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -656,7 +693,7 @@ For more information about customize encryption, please refer to the documentati
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",

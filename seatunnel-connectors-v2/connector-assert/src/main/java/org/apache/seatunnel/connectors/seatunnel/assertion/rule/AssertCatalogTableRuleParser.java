@@ -87,7 +87,7 @@ public class AssertCatalogTableRuleParser {
                                 config -> {
                                     String name = config.getString(COLUMN_NAME);
                                     String type = config.getString(COLUMN_TYPE);
-                                    Integer columnLength =
+                                    Long columnLength =
                                             TypesafeConfigUtils.getConfig(
                                                     config,
                                                     COLUMN_LENGTH,
