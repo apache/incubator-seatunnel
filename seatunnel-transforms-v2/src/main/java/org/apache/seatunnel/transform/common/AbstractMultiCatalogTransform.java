@@ -29,6 +29,7 @@ import org.apache.seatunnel.api.transform.SeaTunnelTransform;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -89,6 +90,13 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
                                     return transformMap.get(tableName).getProducedCatalogTable();
                                 })
                         .collect(Collectors.toList());
+    }
+
+    @Override
+    public void open() {
+        if (Objects.nonNull(metricsContext)) {
+            transformMap.values().forEach(transform -> transform.setMetricsContext(metricsContext));
+        }
     }
 
     @Override

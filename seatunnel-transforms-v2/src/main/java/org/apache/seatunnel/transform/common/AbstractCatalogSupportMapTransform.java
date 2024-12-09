@@ -25,6 +25,8 @@ import org.apache.seatunnel.api.transform.SeaTunnelMapTransform;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
+
 @Slf4j
 public abstract class AbstractCatalogSupportMapTransform
         extends AbstractSeaTunnelTransform<SeaTunnelRow, SeaTunnelRow>
@@ -44,9 +46,9 @@ public abstract class AbstractCatalogSupportMapTransform
     @Override
     public SeaTunnelRow map(SeaTunnelRow row) {
         SeaTunnelRow result = transform(row);
-        // if (Objects.nonNull(result)) {
-        //     hazelcastMetric();
-        // }
+        if (Objects.nonNull(result)) {
+            hazelcastMetric();
+        }
         return result;
     }
 }

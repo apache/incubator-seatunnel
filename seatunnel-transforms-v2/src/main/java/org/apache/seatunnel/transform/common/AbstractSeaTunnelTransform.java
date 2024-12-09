@@ -146,7 +146,7 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
 
     protected void hazelcastMetric(long size) {
         if (metricsContext != null) {
-            metricsContext.counter(getTransformMetricName(this)).inc(size);
+            metricsContext.counter(getTransformMetricName()).inc(size);
         }
     }
 
@@ -156,7 +156,7 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
         }
     }
 
-    protected String getTransformMetricName(SeaTunnelTransform transformer) {
+    protected String getTransformMetricName() {
         StringBuilder metricName = new StringBuilder();
         metricName
                 .append(MetricNames.TRANSFORM_COUNT)
