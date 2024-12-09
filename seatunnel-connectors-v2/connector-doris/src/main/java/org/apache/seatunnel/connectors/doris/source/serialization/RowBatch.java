@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.doris.source.serialization;
 
+import org.apache.seatunnel.shade.com.google.common.base.Preconditions;
 import org.apache.seatunnel.shade.org.apache.arrow.memory.RootAllocator;
 import org.apache.seatunnel.shade.org.apache.arrow.vector.BigIntVector;
 import org.apache.seatunnel.shade.org.apache.arrow.vector.BitVector;
@@ -55,7 +56,6 @@ import org.apache.seatunnel.connectors.doris.exception.DorisConnectorException;
 
 import org.apache.doris.sdk.thrift.TScanBatchResult;
 
-import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;

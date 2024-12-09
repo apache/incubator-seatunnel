@@ -29,6 +29,7 @@ import org.apache.seatunnel.engine.core.dag.actions.SourceAction;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalDag;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalVertex;
 import org.apache.seatunnel.engine.core.job.Edge;
+import org.apache.seatunnel.engine.core.job.ExecutionAddress;
 import org.apache.seatunnel.engine.core.job.JobDAGInfo;
 import org.apache.seatunnel.engine.core.job.JobImmutableInformation;
 import org.apache.seatunnel.engine.core.job.VertexInfo;
@@ -42,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,7 +54,9 @@ public class DAGUtils {
             LogicalDag logicalDag,
             JobImmutableInformation jobImmutableInformation,
             EngineConfig engineConfig,
-            boolean isPhysicalDAGIInfo) {
+            boolean isPhysicalDAGIInfo,
+            ExecutionAddress master,
+            Set<ExecutionAddress> historyExecutionAddress) {
         List<Pipeline> pipelines =
                 new ExecutionPlanGenerator(logicalDag, jobImmutableInformation, engineConfig)
                         .generate()
@@ -89,7 +93,9 @@ public class DAGUtils {
                     jobImmutableInformation.getJobId(),
                     logicalDag.getJobConfig().getEnvOptions(),
                     pipelineWithEdges,
-                    vertexInfoMap);
+                    vertexInfoMap,
+                    master,
+                    historyExecutionAddress);
         } else {
             // Generate LogicalPlan DAG
             List<Edge> edges =
@@ -136,7 +142,9 @@ public class DAGUtils {
                     jobImmutableInformation.getJobId(),
                     logicalDag.getJobConfig().getEnvOptions(),
                     pipelineWithEdges,
-                    vertexInfoMap);
+                    vertexInfoMap,
+                    master,
+                    historyExecutionAddress);
         }
     }
 

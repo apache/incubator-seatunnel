@@ -20,6 +20,7 @@ package org.apache.seatunnel.core.starter.spark.execution;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.core.starter.execution.PluginExecuteProcessor;
 import org.apache.seatunnel.translation.spark.execution.DatasetTableInfo;
@@ -30,7 +31,8 @@ import org.apache.spark.sql.Row;
 import java.util.List;
 import java.util.Optional;
 
-import static org.apache.seatunnel.api.common.CommonOptions.RESULT_TABLE_NAME;
+import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_INPUT;
+import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_OUTPUT;
 
 public abstract class SparkAbstractPluginExecuteProcessor<T>
         implements PluginExecuteProcessor<DatasetTableInfo, SparkRuntimeEnvironment> {
@@ -39,7 +41,6 @@ public abstract class SparkAbstractPluginExecuteProcessor<T>
     protected final JobContext jobContext;
     protected final List<T> plugins;
     protected static final String ENGINE_TYPE = "seatunnel";
-    protected static final String SOURCE_TABLE_NAME = "source_table_name";
 
     protected SparkAbstractPluginExecuteProcessor(
             SparkRuntimeEnvironment sparkRuntimeEnvironment,
@@ -59,8 +60,9 @@ public abstract class SparkAbstractPluginExecuteProcessor<T>
     protected abstract List<T> initializePlugins(List<? extends Config> pluginConfigs);
 
     protected void registerInputTempView(Config pluginConfig, Dataset<Row> dataStream) {
-        if (pluginConfig.hasPath(RESULT_TABLE_NAME.key())) {
-            String tableName = pluginConfig.getString(RESULT_TABLE_NAME.key());
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(pluginConfig);
+        if (readonlyConfig.getOptional(PLUGIN_OUTPUT).isPresent()) {
+            String tableName = readonlyConfig.get(PLUGIN_OUTPUT);
             registerTempView(tableName, dataStream);
         }
     }
@@ -69,24 +71,34 @@ public abstract class SparkAbstractPluginExecuteProcessor<T>
             Config pluginConfig,
             SparkRuntimeEnvironment sparkRuntimeEnvironment,
             List<DatasetTableInfo> upstreamDataStreams) {
-        if (!pluginConfig.hasPath(SOURCE_TABLE_NAME)) {
+        List<String> pluginInputIdentifiers =
+                ReadonlyConfig.fromConfig(pluginConfig).get(PLUGIN_INPUT);
+        if (pluginInputIdentifiers == null || pluginInputIdentifiers.isEmpty()) {
             return Optional.empty();
         }
-        String sourceTableName = pluginConfig.getString(SOURCE_TABLE_NAME);
+        if (pluginInputIdentifiers.size() > 1) {
+            throw new UnsupportedOperationException(
+                    "Multiple input tables are not supported in the current version");
+        }
+        String pluginInputIdentifier = pluginInputIdentifiers.get(0);
         DatasetTableInfo datasetTableInfo =
                 upstreamDataStreams.stream()
-                        .filter(info -> sourceTableName.equals(info.getTableName()))
+                        .filter(info -> pluginInputIdentifier.equals(info.getTableName()))
                         .findFirst()
                         .orElseThrow(
                                 () ->
                                         new SeaTunnelException(
                                                 String.format(
-                                                        "table %s not found", sourceTableName)));
+                                                        "table %s not found",
+                                                        pluginInputIdentifier)));
         return Optional.of(
                 new DatasetTableInfo(
-                        sparkRuntimeEnvironment.getSparkSession().read().table(sourceTableName),
+                        sparkRuntimeEnvironment
+                                .getSparkSession()
+                                .read()
+                                .table(pluginInputIdentifier),
                         datasetTableInfo.getCatalogTables(),
-                        sourceTableName));
+                        pluginInputIdentifier));
     }
 
     private void registerTempView(String tableName, Dataset<Row> ds) {

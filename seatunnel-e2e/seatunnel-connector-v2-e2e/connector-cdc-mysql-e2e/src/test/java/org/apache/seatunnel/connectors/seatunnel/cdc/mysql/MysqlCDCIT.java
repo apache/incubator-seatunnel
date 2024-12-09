@@ -181,6 +181,45 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
     }
 
     @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testMysqlCdcMetadataTrans(TestContainer container) throws InterruptedException {
+        // Clear related content to ensure that multiple operations are not affected
+        clearTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+        clearTable(MYSQL_DATABASE, SINK_TABLE);
+        Long jobId = JobIdGenerator.newJobId();
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        container.executeJob(
+                                "/mysqlcdc_to_metadata_trans.conf", String.valueOf(jobId));
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                });
+        TimeUnit.SECONDS.sleep(10);
+        // insert update delete
+        upsertDeleteSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+        TimeUnit.SECONDS.sleep(10);
+        await().atMost(2, TimeUnit.MINUTES)
+                .untilAsserted(
+                        () -> {
+                            String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                            Assertions.assertEquals("RUNNING", jobStatus);
+                        });
+        try {
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @TestTemplate
     public void testMysqlCdcCheckDataWithDisableExactlyonce(TestContainer container) {
         // Clear related content to ensure that multiple operations are not affected
         clearTable(MYSQL_DATABASE, SINK_TABLE);
@@ -346,6 +385,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
         // wait for data written to sink
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
                                 Assertions.assertTrue(
@@ -372,20 +412,13 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
         changeSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
 
         // stream stage
-        await().atMost(60000, TimeUnit.MILLISECONDS)
+        await().atMost(300000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
-                                Assertions.assertAll(
-                                        () ->
-                                                Assertions.assertIterableEquals(
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE,
-                                                                        SOURCE_TABLE_1)),
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE2,
-                                                                        SOURCE_TABLE_1)))));
+                                Assertions.assertIterableEquals(
+                                        query(getSourceQuerySQL(MYSQL_DATABASE, SOURCE_TABLE_1)),
+                                        query(getSourceQuerySQL(MYSQL_DATABASE2, SOURCE_TABLE_1))));
         await().atMost(60000, TimeUnit.MILLISECONDS)
                 .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .until(() -> getConnectionStatus("st_user_source").size() == 1);
@@ -413,6 +446,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
         // stream stage
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
                                 Assertions.assertAll(

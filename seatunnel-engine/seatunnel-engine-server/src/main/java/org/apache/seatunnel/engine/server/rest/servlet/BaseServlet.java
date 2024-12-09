@@ -116,6 +116,20 @@ public class BaseServlet extends HttpServlet {
         return requestBody.getBytes(StandardCharsets.UTF_8);
     }
 
+    public byte[] requestHoconBody(HttpServletRequest req) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+
+        try (BufferedReader reader = req.getReader()) {
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line).append("\n");
+            }
+        }
+
+        String requestBody = stringBuilder.toString();
+        return requestBody.getBytes(StandardCharsets.UTF_8);
+    }
+
     protected Map<String, String> getParameterMap(HttpServletRequest req) {
         Map<String, String> reqParameterMap = new HashMap<>();
 

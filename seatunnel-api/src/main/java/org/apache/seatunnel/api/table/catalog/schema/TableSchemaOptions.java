@@ -55,6 +55,14 @@ public class TableSchemaOptions {
                     .noDefaultValue()
                     .withDescription("SeaTunnel Schema");
 
+    public static final Option<List<Map<String, Object>>> TABLE_CONFIGS =
+            Options.key("tables_configs")
+                    .type(new TypeReference<List<Map<String, Object>>>() {})
+                    .noDefaultValue()
+                    .withDescription(
+                            "SeaTunnel Multi Table Schema, acts on unstructed data sources. "
+                                    + "such as file, assert, mongodb, etc");
+
     // We should use ColumnOptions instead of FieldOptions
     @Deprecated
     public static class FieldOptions {
@@ -92,10 +100,10 @@ public class TableSchemaOptions {
                         .noDefaultValue()
                         .withDescription("SeaTunnel Schema Column scale");
 
-        public static final Option<Integer> COLUMN_LENGTH =
+        public static final Option<Long> COLUMN_LENGTH =
                 Options.key("columnLength")
-                        .intType()
-                        .defaultValue(0)
+                        .longType()
+                        .defaultValue(0L)
                         .withDescription("SeaTunnel Schema Column Length");
 
         public static final Option<Boolean> NULLABLE =

@@ -35,6 +35,7 @@
         <module>seatunnel-hazelcast</module>
         <module>seatunnel-janino</module>
         <module>seatunnel-jetty9-9.4.56</module>
+        <module>seatunnel-hadoop-aws</module>
 
     </modules>
 

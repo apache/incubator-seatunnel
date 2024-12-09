@@ -61,6 +61,13 @@ All `changelog-producer` modes are currently supported. The default is `none`.
 > note： 
 > When you use a streaming mode to read paimon table，different mode will produce [different results](https://github.com/apache/seatunnel/blob/dev/docs/en/connector-v2/source/Paimon.md#changelog)。
 
+## Filesystems
+The Paimon connector supports writing data to multiple file systems. Currently, the supported file systems are hdfs and s3.
+If you use the s3 filesystem. You can configure the `fs.s3a.access-key`、`fs.s3a.secret-key`、`fs.s3a.endpoint`、`fs.s3a.path.style.access`、`fs.s3a.aws.credentials.provider` properties in the `paimon.hadoop.conf` option.
+Besides, the warehouse should start with `s3a://`.
+
+
+
 ## Examples
 
 ### Single table
@@ -90,6 +97,53 @@ sink {
     warehouse="file:///tmp/seatunnel/paimon/hadoop-sink/"
     database="seatunnel"
     table="role"
+  }
+}
+```
+
+### Single table with s3 filesystem
+
+```hocon
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  FakeSource {
+    schema = {
+      fields {
+        c_map = "map<string, string>"
+        c_array = "array<int>"
+        c_string = string
+        c_boolean = boolean
+        c_tinyint = tinyint
+        c_smallint = smallint
+        c_int = int
+        c_bigint = bigint
+        c_float = float
+        c_double = double
+        c_bytes = bytes
+        c_date = date
+        c_decimal = "decimal(38, 18)"
+        c_timestamp = timestamp
+      }
+    }
+  }
+}
+
+sink {
+  Paimon {
+    warehouse = "s3a://test/"
+    database = "seatunnel_namespace11"
+    table = "st_test"
+    paimon.hadoop.conf = {
+        fs.s3a.access-key=G52pnxg67819khOZ9ezX
+        fs.s3a.secret-key=SHJuAQqHsLrgZWikvMa3lJf5T0NfM5LMFliJh9HF
+        fs.s3a.endpoint="http://minio4:9000"
+        fs.s3a.path.style.access=true
+        fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider
+    }
   }
 }
 ```

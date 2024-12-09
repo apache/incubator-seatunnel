@@ -115,12 +115,17 @@ public class ClickhouseSinkFactory implements TableSinkFactory {
             String[] primaryKeys = null;
             if (readonlyConfig.getOptional(PRIMARY_KEY).isPresent()) {
                 String primaryKey = readonlyConfig.get(PRIMARY_KEY);
+                if (primaryKey == null || primaryKey.trim().isEmpty()) {
+                    throw new ClickhouseConnectorException(
+                            CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT,
+                            "primary_key can not be empty");
+                }
                 if (shardKey != null && !Objects.equals(primaryKey, shardKey)) {
                     throw new ClickhouseConnectorException(
                             CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT,
                             "sharding_key and primary_key must be consistent to ensure correct processing of cdc events");
                 }
-                primaryKeys = new String[] {primaryKey};
+                primaryKeys = primaryKey.replaceAll("\\s+", "").split(",");
             }
             boolean supportUpsert = readonlyConfig.get(SUPPORT_UPSERT);
             boolean allowExperimentalLightweightDelete =

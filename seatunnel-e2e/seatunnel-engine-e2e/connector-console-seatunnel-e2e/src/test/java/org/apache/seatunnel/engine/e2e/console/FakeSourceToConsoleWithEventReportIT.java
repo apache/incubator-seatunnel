@@ -44,7 +44,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -109,16 +109,23 @@ public class FakeSourceToConsoleWithEventReportIT extends SeaTunnelContainer {
                 arrayNode.elements().forEachRemaining(jsonNode -> events.add(jsonNode));
             }
         }
-        Assertions.assertEquals(10, events.size());
-        Set<String> eventTypes =
-                events.stream().map(e -> e.get("eventType").asText()).collect(Collectors.toSet());
+        Map<String, Integer> eventMap =
+                events.stream()
+                        .map(e -> e.get("eventType").asText())
+                        .collect(Collectors.groupingBy(e -> e, Collectors.summingInt(e -> 1)));
         Assertions.assertTrue(
-                eventTypes.containsAll(
-                        Arrays.asList(
-                                EventType.LIFECYCLE_ENUMERATOR_OPEN.name(),
-                                EventType.LIFECYCLE_ENUMERATOR_CLOSE.name(),
-                                EventType.LIFECYCLE_READER_OPEN.name(),
-                                EventType.LIFECYCLE_READER_CLOSE.name(),
-                                EventType.LIFECYCLE_WRITER_CLOSE.name())));
+                eventMap.keySet()
+                        .containsAll(
+                                Arrays.asList(
+                                        EventType.LIFECYCLE_ENUMERATOR_OPEN.name(),
+                                        EventType.LIFECYCLE_ENUMERATOR_CLOSE.name(),
+                                        EventType.LIFECYCLE_READER_OPEN.name(),
+                                        EventType.LIFECYCLE_READER_CLOSE.name(),
+                                        EventType.LIFECYCLE_WRITER_CLOSE.name())));
+        Assertions.assertEquals(2, eventMap.get(EventType.LIFECYCLE_READER_OPEN.name()));
+        Assertions.assertEquals(1, eventMap.get(EventType.LIFECYCLE_ENUMERATOR_OPEN.name()));
+        Assertions.assertEquals(1, eventMap.get(EventType.LIFECYCLE_ENUMERATOR_CLOSE.name()));
+        Assertions.assertEquals(2, eventMap.get(EventType.LIFECYCLE_READER_CLOSE.name()));
+        Assertions.assertEquals(2, eventMap.get(EventType.LIFECYCLE_WRITER_CLOSE.name()));
     }
 }

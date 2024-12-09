@@ -28,7 +28,7 @@ import lombok.NonNull;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 @Data
 public class LogicalEdge implements IdentifiedDataSerializable {

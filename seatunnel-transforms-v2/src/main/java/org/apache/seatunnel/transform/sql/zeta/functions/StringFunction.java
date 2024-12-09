@@ -21,6 +21,8 @@ import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.transform.exception.TransformException;
 import org.apache.seatunnel.transform.sql.zeta.ZetaSQLFunction;
 
+import org.apache.groovy.parser.antlr4.util.StringUtils;
+
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
@@ -330,6 +332,18 @@ public class StringFunction {
             sp = (String) args.get(1);
         }
         return trim(arg, true, true, sp);
+    }
+
+    public static String[] split(List<Object> args) {
+        String arg = (String) args.get(0);
+        if (StringUtils.isEmpty(arg)) {
+            return null;
+        }
+        String delimiter = "";
+        if (args.size() >= 2) {
+            delimiter = (String) args.get(1);
+        }
+        return arg.split(delimiter);
     }
 
     public static String trim(String s, boolean leading, boolean trailing, String sp) {

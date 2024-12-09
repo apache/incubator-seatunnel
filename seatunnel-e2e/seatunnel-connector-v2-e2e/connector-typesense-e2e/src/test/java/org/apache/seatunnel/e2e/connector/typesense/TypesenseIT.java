@@ -19,6 +19,7 @@ package org.apache.seatunnel.e2e.connector.typesense;
 
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.Catalog;
@@ -52,7 +53,6 @@ import org.testcontainers.utility.DockerLoggerFactory;
 import org.typesense.api.FieldTypes;
 import org.typesense.model.Field;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;

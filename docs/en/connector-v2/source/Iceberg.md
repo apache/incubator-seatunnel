@@ -127,7 +127,7 @@ source {
     }
     namespace = "database1"
     table = "source"
-    result_table_name = "iceberg"
+    plugin_output = "iceberg"
   }
 }
 
@@ -136,7 +136,7 @@ transform {
 
 sink {
   Console {
-    source_table_name = "iceberg"
+    plugin_input = "iceberg"
   }
 }
 ```
@@ -160,7 +160,7 @@ source {
     }
     namespace = "your_iceberg_database"
     table = "your_iceberg_table"
-    result_table_name = "iceberg_test"
+    plugin_output = "iceberg_test"
   }
 }
 ```

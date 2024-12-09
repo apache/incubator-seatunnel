@@ -138,3 +138,12 @@ bin/seatunnel.sh --config $SEATUNNEL_HOME/config/v2.batch.config.template
 
 被cancel的作业的所有断点信息都将被删除，无法通过seatunnel.sh -r &lt;jobId&gt;恢复。
 
+## 配置JVM参数
+
+我们可以通过以下方式为 SeaTunnel Engine 客户端配置 JVM 参数：
+
+1. 添加JVM参数到`$SEATUNNEL_HOME/config/jvm_client_options`文件中。
+
+   在 `$SEATUNNEL_HOME/config/jvm_client_options` 文件中修改 JVM 参数。请注意，该文件中的 JVM 参数将应用于使用 `seatunnel.sh` 提交的所有作业，包括 Local 模式和 Cluster 模式。
+
+2. 在提交作业时添加 JVM 参数。例如，`sh bin/seatunnel.sh --config $SEATUNNEL_HOME/config/v2.batch.config.template -DJvmOption="-Xms2G -Xmx2G"`

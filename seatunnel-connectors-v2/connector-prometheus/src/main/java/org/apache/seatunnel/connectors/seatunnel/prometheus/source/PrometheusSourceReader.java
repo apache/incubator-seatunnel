@@ -16,6 +16,8 @@
  */
 package org.apache.seatunnel.connectors.seatunnel.prometheus.source;
 
+import org.apache.seatunnel.shade.com.google.common.base.Strings;
+
 import org.apache.seatunnel.api.source.Boundedness;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -34,7 +36,6 @@ import org.apache.seatunnel.connectors.seatunnel.prometheus.pojo.RangePoint;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import com.google.common.base.Strings;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;

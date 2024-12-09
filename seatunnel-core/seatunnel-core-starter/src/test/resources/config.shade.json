@@ -22,7 +22,7 @@
           "sex" : "boolean"
         }
       },
-      "result_table_name" : "fake"
+      "plugin_output" : "fake"
     }
   ],
   "transform" : [],

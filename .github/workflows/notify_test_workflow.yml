@@ -80,7 +80,7 @@ jobs:
               status = 'completed'
               const conclusion = 'action_required'
 
-              github.rest.checks.create({
+              await github.rest.checks.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 name: name,

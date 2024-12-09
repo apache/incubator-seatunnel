@@ -220,7 +220,7 @@ exit;
 
 ## Source Options
 
-|                      Name                      |   Type   | Required | Default |                                                                                                                                                                                                                                                                                                     Description                                                                                                                                                                                                                                                                                                      |
+|                      Name                      |   Type   | Required | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 |------------------------------------------------|----------|----------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | base-url                                       | String   | Yes      | -       | The URL of the JDBC connection. Refer to a case: `idbc:oracle:thin:datasource01:1523:xe`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | username                                       | String   | Yes      | -       | Name of the database to use when connecting to the database server.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -228,7 +228,7 @@ exit;
 | database-names                                 | List     | No       | -       | Database name of the database to monitor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | schema-names                                   | List     | No       | -       | Schema name of the database to monitor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | table-names                                    | List     | Yes      | -       | Table name of the database to monitor. The table name needs to include the database name, for example: `database_name.table_name`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| table-names-config                             | List     | No       | -       | Table config list. for example: [{"table": "db1.schema1.table1","primaryKeys":["key1"]}]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| table-names-config                             | List     | No       | -       | Table config list. for example: [{"table": "db1.schema1.table1","primaryKeys": ["key1"],"snapshotSplitColumn": "key2"}]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | startup.mode                                   | Enum     | No       | INITIAL | Optional startup mode for Oracle CDC consumer, valid enumerations are `initial`, `earliest`, `latest` and `specific`. <br/> `initial`: Synchronize historical data at startup, and then synchronize incremental data.<br/> `earliest`: Startup from the earliest offset possible.<br/> `latest`: Startup from the latest offset.<br/> `specific`: Startup from user-supplied specific offsets.                                                                                                                                                                                                                       |
 | startup.specific-offset.file                   | String   | No       | -       | Start from the specified binlog file name. **Note, This option is required when the `startup.mode` option used `specific`.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | startup.specific-offset.pos                    | Long     | No       | -       | Start from the specified binlog file position. **Note, This option is required when the `startup.mode` option used `specific`.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -262,7 +262,7 @@ exit;
 source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   Oracle-CDC {
-    result_table_name = "customers"
+    plugin_output = "customers"
     username = "system"
     password = "oracle"
     database-names = ["XE"]
@@ -280,7 +280,7 @@ source {
 > source {
 > # This is a example source plugin **only for test and demonstrate the feature source plugin**
 > Oracle-CDC {
-> result_table_name = "customers"
+> plugin_output = "customers"
 > use_select_count = true 
 > username = "system"
 > password = "oracle"
@@ -299,7 +299,7 @@ source {
 > source {
 > # This is a example source plugin **only for test and demonstrate the feature source plugin**
 > Oracle-CDC {
-> result_table_name = "customers"
+> plugin_output = "customers"
 > skip_analyze = true 
 > username = "system"
 > password = "oracle"
@@ -318,7 +318,7 @@ source {
 
 source {
   Oracle-CDC {
-    result_table_name = "customers"
+    plugin_output = "customers"
     base-url = "jdbc:oracle:thin:system/oracle@oracle-host:1521:xe"
     source.reader.close.timeout = 120000
     username = "system"

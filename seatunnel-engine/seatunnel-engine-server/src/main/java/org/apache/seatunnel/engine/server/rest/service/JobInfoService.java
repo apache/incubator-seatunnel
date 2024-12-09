@@ -18,6 +18,7 @@
 package org.apache.seatunnel.engine.server.rest.service;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
+import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
 import org.apache.seatunnel.api.common.metrics.JobMetrics;
 import org.apache.seatunnel.common.utils.JsonUtils;
@@ -37,10 +38,14 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import scala.Tuple2;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.seatunnel.engine.server.rest.RestConstant.CONFIG_FORMAT;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.HOCON;
 
 public class JobInfoService extends BaseService {
 
@@ -157,9 +162,13 @@ public class JobInfoService extends BaseService {
                 && requestParams.get(RestConstant.JOB_ID) == null) {
             throw new IllegalArgumentException("Please provide jobId when start with save point.");
         }
-
-        Config config = RestUtil.buildConfig(requestHandle(requestBody), false);
-
+        Config config;
+        if (HOCON.equalsIgnoreCase(requestParams.get(CONFIG_FORMAT))) {
+            String requestBodyStr = new String(requestBody, StandardCharsets.UTF_8);
+            config = ConfigFactory.parseString(requestBodyStr);
+        } else {
+            config = RestUtil.buildConfig(requestHandle(requestBody), false);
+        }
         SeaTunnelServer seaTunnelServer = getSeaTunnelServer(false);
         return submitJobInternal(config, requestParams, seaTunnelServer, nodeEngine.getNode());
     }
