@@ -1,7 +1,16 @@
 # Schema evolution
 Schema Evolution means that the schema of a data table can be changed and the data synchronization task can automatically adapt to the changes of the new table structure without any other operations.
-Now we only support the operation about `add column`、`drop column`、`rename column` and `modify column` of the table in CDC source. This feature is only support zeta engine at now. 
 
+## Supported engines
+
+- Zeta
+
+## Supported schema change event types
+
+- `ADD COLUMN`
+- `DROP COLUMN`
+- `RENAME COLUMN`
+- `MODIFY COLUMN`
 
 ## Supported connectors
 
@@ -21,7 +30,7 @@ When you use the Oracle-CDC，you can not use the username named `SYS` or `SYSTE
 Otherwise, If your table name start with `ORA_TEMP_` will also has the same problem.
 
 ## Enable schema evolution
-Schema evolution is disabled by default in CDC source. You need configure `debezium.include.schema.changes = true` which is only supported in CDC to enable it. When you use Oracle-CDC with schema-evolution enabled, you must specify `redo_log_catalog` as `log.mining.strategy` in the `debezium` attribute.
+Schema evolution is disabled by default in CDC source. You need configure `schema-changes.enabled = true` which is only supported in CDC to enable it.
 
 ## Examples
 
@@ -43,9 +52,8 @@ source {
     password = "mysqlpw"
     table-names = ["shop.products"]
     base-url = "jdbc:mysql://mysql_cdc_e2e:3306/shop"
-    debezium = {
-      include.schema.changes = true
-    }
+    
+    schema-changes.enabled = true
   }
 }
 
@@ -86,10 +94,8 @@ source {
     base-url = "jdbc:oracle:thin:@oracle-host:1521/ORCLCDB"
     source.reader.close.timeout = 120000
     connection.pool.size = 1
-    debezium {
-        include.schema.changes = true
-        log.mining.strategy = redo_log_catalog
-    }
+    
+    schema-changes.enabled = true
   }
 }
 
@@ -131,10 +137,8 @@ source {
     base-url = "jdbc:oracle:thin:@oracle-host:1521/ORCLCDB"
     source.reader.close.timeout = 120000
     connection.pool.size = 1
-    debezium {
-        include.schema.changes = true
-        log.mining.strategy = redo_log_catalog
-    }
+    
+    schema-changes.enabled = true
   }
 }
 
@@ -169,9 +173,8 @@ source {
     password = "mysqlpw"
     table-names = ["shop.products"]
     base-url = "jdbc:mysql://mysql_cdc_e2e:3306/shop"
-    debezium = {
-      include.schema.changes = true
-    }
+    
+    schema-changes.enabled = true
   }
 }
 
