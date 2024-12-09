@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.engine.server.rest;
 
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.JobContext;
@@ -32,7 +33,6 @@ import org.apache.seatunnel.engine.server.SeaTunnelServer;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hazelcast.instance.impl.Node;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 

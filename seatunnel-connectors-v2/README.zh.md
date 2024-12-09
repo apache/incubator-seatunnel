@@ -10,7 +10,7 @@ SeaTunnel为与计算引擎进行解耦，设计了新的连接器API，通过�
 ### **工程结构**
 
 - ../`seatunnel-connectors-v2`                                         connector-v2代码实现
-- ../`seatunnel-translation`                                           connector-v2的翻译层 
+- ../`seatunnel-translation`                                           connector-v2的翻译层
 - ../`seatunnel-transform-v2`                                          transform-v2代码实现
 - ../seatunnel-e2e/`seatunnel-connector-v2-e2e`                        connector-v2端到端测试
 - ../seatunnel-examples/`seatunnel-flink-connector-v2-example`         seatunnel connector-v2的flink local运行的实例
@@ -39,13 +39,18 @@ SeaTunnel为与计算引擎进行解耦，设计了新的连接器API，通过�
 
 3.新建两个package分别对应source和sink
 
-​       package org.apache.seatunnel.connectors.seatunnel.{连接器名}.source
-
-​       package org.apache.seatunnel.connectors.seatunnel.{连接器名}.sink
+    package org.apache.seatunnel.connectors.seatunnel.{连接器名}.source
+    package org.apache.seatunnel.connectors.seatunnel.{连接器名}.sink
 
 4.将连接器信息添加到在项目根目录的plugin-mapping.properties文件中.
 
 5.将连接器添加到seatunnel-dist/pom.xml,这样连接器jar就可以在二进制包中找到.
+
+6.source端有几个必须实现的类，分别是{连接器名}Source、{连接器名}SourceFactory、{连接器名}SourceReader；sink端有几个必须实现的类，分别是{连接器名}Sink、{连接器名}SinkFactory、{连接器名}SinkWriter，具体可以参考其他连接器
+
+7.{连接器名}SourceFactory 和 {连接器名}SinkFactory 里面需要在类名上标注 **@AutoService(Factory.class)** 注解，并且除了必须实现的方法外，source端需要额外再重写一个 **createSource** 方法，sink端需要额外再重写一个 **createSink** 方法
+
+8.{连接器名}Source 需要重写 **getProducedCatalogTables** 方法；{连接器名}Sink 需要重写 **getWriteCatalogTable** 方法
 
 ### 启动类
 
@@ -154,13 +159,12 @@ Sink可以根据组件属性进行选择，到底是只实现`SinkCommitter`或`
 为了实现自动化的创建Source或者Sink，我们需要连接器能够声明并返回创建他们所需要的参数列表和每个参数的校验规则。为了实现这个目标，我们定义了TableSourceFactory和TableSinkFactory，
 建议将其放在和SeaTunnelSource或SeaTunnelSink实现类同一目录下，方便寻找。
 
-- `factoryIdentifier` 用于表明当前Factory的名称，这个值应该和`getPluginName`返回的值一致，这样后续如果使用Factory来创建Source/Sink，
-就能实现无缝切换。
-- `createSink` 和 `createSource` 分别是创建Source和Sink的方法，目前不用实现。
+- `factoryIdentifier` 用于表明当前Factory的名称，这个值应该和`getPluginName`返回的值一致，这样后续如果使用Factory来创建Source/Sink，就能实现无缝切换。
+- `createSink` 和 `createSource` 分别是创建Source和Sink的方法。
 - `optionRule` 返回的是参数逻辑，用于表示我们的连接器参数哪些支持，哪些参数是必须(required)的，哪些参数是可选(optional)的，哪些参数是互斥(exclusive)的，哪些参数是绑定(bundledRequired)的。
-这个方法会在我们可视化创建连接器逻辑的时候用到，同时也会用于根据用户配置的参数生成完整的参数对象，然后连接器开发者就不用在Config里面一个个判断参数是否存在，直接使用即可。
-可以参考现有的实现，比如`org.apache.seatunnel.connectors.seatunnel.elasticsearch.source.ElasticsearchSourceFactory`。针对很多Source都有支持配置Schema，所以采用了通用的Option，
-需要Schema则可以引用`org.apache.seatunnel.api.table.catalog.CatalogTableUtil.SCHEMA`。
+  这个方法会在我们可视化创建连接器逻辑的时候用到，同时也会用于根据用户配置的参数生成完整的参数对象，然后连接器开发者就不用在Config里面一个个判断参数是否存在，直接使用即可。
+  可以参考现有的实现，比如`org.apache.seatunnel.connectors.seatunnel.elasticsearch.source.ElasticsearchSourceFactory`。针对很多Source都有支持配置Schema，所以采用了通用的Option，
+  需要Schema则可以引用`org.apache.seatunnel.api.table.catalog.CatalogTableUtil.SCHEMA`。
 
 别忘记添加`@AutoService(Factory.class)` 到类上面。这个Factory即TableSourceFactory 和 TableSinkFactory的父类。
 

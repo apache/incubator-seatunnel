@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.iceberg.sink;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
+import org.apache.seatunnel.api.sink.DataSaveMode;
 import org.apache.seatunnel.api.sink.SinkCommonOptions;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
@@ -56,6 +57,8 @@ public class IcebergSinkFactory implements TableSinkFactory {
                         SinkConfig.KERBEROS_KEYTAB_PATH,
                         SinkConfig.KRB5_PATH,
                         SinkConfig.WRITE_PROPS,
+                        SinkConfig.SCHEMA_SAVE_MODE,
+                        SinkConfig.DATA_SAVE_MODE,
                         SinkConfig.AUTO_CREATE_PROPS,
                         SinkConfig.TABLE_PRIMARY_KEYS,
                         SinkConfig.TABLE_DEFAULT_PARTITION_KEYS,
@@ -63,6 +66,10 @@ public class IcebergSinkFactory implements TableSinkFactory {
                         SinkConfig.TABLE_SCHEMA_EVOLUTION_ENABLED_PROP,
                         SinkConfig.TABLES_DEFAULT_COMMIT_BRANCH,
                         SinkCommonOptions.MULTI_TABLE_SINK_REPLICA)
+                .conditional(
+                        SinkConfig.DATA_SAVE_MODE,
+                        DataSaveMode.CUSTOM_PROCESSING,
+                        SinkConfig.DATA_SAVE_MODE_CUSTOM_SQL)
                 .build();
     }
 

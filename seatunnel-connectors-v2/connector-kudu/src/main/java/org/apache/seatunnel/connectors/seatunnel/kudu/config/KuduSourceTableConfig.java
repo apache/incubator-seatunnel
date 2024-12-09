@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.kudu.config;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.catalog.CatalogOptions;
@@ -28,7 +30,6 @@ import org.apache.seatunnel.api.table.factory.FactoryUtil;
 import org.apache.seatunnel.connectors.seatunnel.kudu.catalog.KuduCatalog;
 import org.apache.seatunnel.connectors.seatunnel.kudu.catalog.KuduCatalogFactory;
 
-import com.google.common.collect.Lists;
 import lombok.Getter;
 
 import java.io.Serializable;

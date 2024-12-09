@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.core.starter.execution;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.CommonOptions;
@@ -43,8 +44,6 @@ import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelFactoryDiscovery
 import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelSinkPluginDiscovery;
 import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelSourcePluginDiscovery;
 import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelTransformPluginDiscovery;
-
-import com.google.common.collect.Lists;
 
 import java.net.URL;
 import java.util.HashMap;

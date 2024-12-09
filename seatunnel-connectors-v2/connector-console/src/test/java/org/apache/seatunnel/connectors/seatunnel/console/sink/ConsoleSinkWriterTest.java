@@ -39,7 +39,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class ConsoleSinkWriterIT {
+public class ConsoleSinkWriterTest {
 
     private ConsoleSinkWriter consoleSinkWriter;
 

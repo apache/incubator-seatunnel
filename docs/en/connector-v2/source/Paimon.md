@@ -189,8 +189,11 @@ source {
 ```
 
 ## Changelog
-If you want to read the changelog of this connector, your sink table of paimon which mast has the options named `changelog-producer=input`, then you can refer to [Paimon changelog](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/).
-Currently, we only support the `input` and `none` mode of changelog producer. If the changelog producer is `input`, the streaming read of the connector will generate -U,+U,+I,+D data. But if the changelog producer is `none`, the streaming read of the connector will generate +I,+U,+D data.
+If you want to read the changelog of the Paimon table, first set the `changelog-producer` for the Paimon source table and then use the SeaTunnel stream task to read it.
+
+### Note
+
+Currently, batch reads are always the latest snapshot read, so to read full changelog data, you need to use stream reads and start stream reads before writing data to the Piamon table, and to ensure order, the parallelism of the stream read task should be set to 1.
 
 ### Streaming read example
 ```hocon

@@ -22,11 +22,11 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>seatunnel-arrow-5.0</artifactId>
-    <name>SeaTunnel : Shade : Arrow5.0</name>
+    <artifactId>seatunnel-arrow</artifactId>
+    <name>SeaTunnel : Shade : Arrow</name>
 
     <properties>
-        <arrow.version>5.0.0</arrow.version>
+        <arrow.version>15.0.1</arrow.version>
     </properties>
 
     <dependencies>
@@ -39,36 +39,12 @@
             <groupId>org.apache.arrow</groupId>
             <artifactId>arrow-memory-netty</artifactId>
             <version>${arrow.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>netty-common</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-common</artifactId>
-            <version>4.1.77.Final</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
@@ -77,8 +53,8 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <finalName>seatunnel-arrow-5.0</finalName>
-                            <createSourcesJar>${enableSourceJarCreation}</createSourcesJar>
+                            <finalName>seatunnel-arrow</finalName>
+                            <createSourcesJar>true</createSourcesJar>
                             <shadeSourcesContent>true</shadeSourcesContent>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
@@ -98,12 +74,16 @@
                                     <shadedPattern>${seatunnel.shade.package}.org.apache.arrow</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>io.netty</pattern>
+                                    <shadedPattern>${seatunnel.shade.package}.io.netty</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>com.google.flatbuffers</pattern>
                                     <shadedPattern>${seatunnel.shade.package}.com.google.flatbuffers</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>io.netty</pattern>
-                                    <shadedPattern>${seatunnel.shade.package}.io.netty</shadedPattern>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>${seatunnel.shade.package}.com.fasterxml.jackson</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -123,7 +103,7 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>${basedir}/target/seatunnel-arrow-5.0.jar</file>
+                                    <file>${basedir}/target/seatunnel-arrow.jar</file>
                                     <type>jar</type>
                                     <classifier>optional</classifier>
                                 </artifact>
@@ -134,5 +114,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
