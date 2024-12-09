@@ -78,7 +78,7 @@ public class MongodbSource
     public SourceReader<SeaTunnelRow, MongoSplit> createReader(SourceReader.Context readerContext) {
         return new MongodbReader(
                 readerContext,
-                crateClientProvider(options),
+                createClientProvider(options),
                 createDeserializer(options, catalogTable.getSeaTunnelRowType()),
                 createMongodbReadOptions(options));
     }
@@ -86,7 +86,7 @@ public class MongodbSource
     @Override
     public SourceSplitEnumerator<MongoSplit, ArrayList<MongoSplit>> createEnumerator(
             SourceSplitEnumerator.Context<MongoSplit> enumeratorContext) {
-        MongodbClientProvider clientProvider = crateClientProvider(options);
+        MongodbClientProvider clientProvider = createClientProvider(options);
         return new MongodbSplitEnumerator(
                 enumeratorContext, clientProvider, createSplitStrategy(options, clientProvider));
     }
@@ -95,7 +95,7 @@ public class MongodbSource
     public SourceSplitEnumerator<MongoSplit, ArrayList<MongoSplit>> restoreEnumerator(
             SourceSplitEnumerator.Context<MongoSplit> enumeratorContext,
             ArrayList<MongoSplit> checkpointState) {
-        MongodbClientProvider clientProvider = crateClientProvider(options);
+        MongodbClientProvider clientProvider = createClientProvider(options);
         return new MongodbSplitEnumerator(
                 enumeratorContext,
                 clientProvider,
@@ -103,7 +103,7 @@ public class MongodbSource
                 checkpointState);
     }
 
-    private MongodbClientProvider crateClientProvider(ReadonlyConfig config) {
+    private MongodbClientProvider createClientProvider(ReadonlyConfig config) {
         return MongodbCollectionProvider.builder()
                 .connectionString(config.get(MongodbConfig.URI))
                 .database(config.get(MongodbConfig.DATABASE))
