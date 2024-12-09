@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor;
 
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -671,6 +673,7 @@ public class FieldNamedPreparedStatement implements PreparedStatement {
                 connection.prepareStatement(parsedSQL), indexMapping);
     }
 
+    @VisibleForTesting
     public static String parseNamedStatement(String sql, Map<String, List<Integer>> paramMap) {
         Pattern pattern =
                 Pattern.compile(":([\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}\\$\\-\\.@%&*#~!?^+=<>|]+)");
