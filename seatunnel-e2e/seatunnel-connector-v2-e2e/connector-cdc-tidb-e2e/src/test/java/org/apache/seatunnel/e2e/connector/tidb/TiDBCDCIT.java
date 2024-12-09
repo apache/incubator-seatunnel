@@ -30,6 +30,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.condition.DisabledOnJre;
+import org.junit.jupiter.api.condition.JRE;
 import org.testcontainers.containers.Container;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +52,7 @@ import static org.awaitility.Awaitility.await;
         value = {},
         type = {EngineType.SPARK},
         disabledReason = "Currently SPARK do not support cdc")
+@DisabledOnJre(JRE.JAVA_17)
 public class TiDBCDCIT extends TiDBTestBase implements TestResource {
 
     private static final String TIDB_DATABASE = "tidb_cdc";

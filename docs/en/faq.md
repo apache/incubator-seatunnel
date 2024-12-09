@@ -114,3 +114,7 @@ SeaTunnel features a highly abstracted and well-structured architecture, making 
 
 ## Do I need to understand all of SeaTunnel’s source code if I want to develop my own source, sink, or transform?
 No, you only need to focus on the interfaces for source, sink, and transform. If you want to develop your own connector (Connector V2) for the SeaTunnel API, refer to the **[Connector Development Guide](https://github.com/apache/seatunnel/blob/dev/seatunnel-connectors-v2/README.md)**.
+
+## How to solve java.lang.NoClassDefFoundError: org/apache/hadoop/shaded/com/ctc/wstx/io/InputBootstrapper in jdk17
+
+Upgrade hadoop version to 3.3.4

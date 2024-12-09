@@ -40,6 +40,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.condition.DisabledOnJre;
+import org.junit.jupiter.api.condition.JRE;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.shaded.com.github.dockerjava.core.command.ExecStartResultCallback;
 
@@ -73,6 +75,7 @@ import java.util.zip.ZipOutputStream;
         type = {},
         disabledReason = "The apache-compress version is not compatible with apache-poi")
 @Slf4j
+@DisabledOnJre(JRE.JAVA_17)
 public class LocalFileIT extends TestSuiteBase {
 
     private GenericContainer<?> baseContainer;

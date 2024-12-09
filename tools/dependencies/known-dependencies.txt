@@ -15,7 +15,7 @@ jackson-core-2.13.3.jar
 jackson-databind-2.13.3.jar
 jackson-dataformat-properties-2.13.3.jar
 jackson-datatype-jsr310-2.13.3.jar
-jcl-over-slf4j-1.7.25.jar
+jcl-over-slf4j-1.7.36.jar
 jcommander-1.81.jar
 log4j-api-2.17.1.jar
 log4j-core-2.17.1.jar
@@ -29,7 +29,7 @@ scala-library-2.12.15.jar
 seatunnel-jackson-2.3.9-SNAPSHOT-optional.jar
 seatunnel-guava-2.3.9-SNAPSHOT-optional.jar
 seatunnel-hazelcast-shade-2.3.9-SNAPSHOT-optional.jar
-slf4j-api-1.7.25.jar
+slf4j-api-1.7.36.jar
 jsqlparser-4.9.jar
 animal-sniffer-annotations-1.17.jar
 checker-qual-3.10.0.jar
@@ -45,6 +45,14 @@ json-smart-2.4.7.jar
 accessors-smart-2.4.7.jar
 asm-9.1.jar
 avro-1.11.1.jar
+annotations-13.0.jar
+kotlin-stdlib-1.8.21.jar
+kotlin-stdlib-common-1.9.10.jar
+kotlin-stdlib-jdk7-1.8.21.jar
+kotlin-stdlib-jdk8-1.8.21.jar
+okhttp-4.12.0.jar
+okio-3.6.0.jar
+okio-jvm-3.6.0.jar
 groovy-4.0.16.jar
 seatunnel-janino-2.3.9-SNAPSHOT-optional.jar
 protobuf-java-util-3.25.3.jar
@@ -65,8 +73,8 @@ jetty-io-9.4.56.v20240826.jar
 jetty-security-9.4.56.v20240826.jar
 jetty-server-9.4.56.v20240826.jar
 jetty-servlet-9.4.56.v20240826.jar
-jetty-util-9.4.20.v20190813.jar
 jetty-util-9.4.56.v20240826.jar
+jetty-util-9.4.43.v20210629.jar
 jetty-util-ajax-9.4.56.v20240826.jar
 javax.servlet-api-3.1.0.jar
 seatunnel-jetty9-9.4.56-2.3.9-SNAPSHOT-optional.jar

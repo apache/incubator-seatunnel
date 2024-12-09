@@ -25,7 +25,9 @@ import org.junit.jupiter.api.condition.JRE;
 public class ServerExecuteCommandTest {
 
     @Test
-    @DisabledOnJre(value = JRE.JAVA_11, disabledReason = "the test case only works on Java 8")
+    @DisabledOnJre(
+            value = {JRE.JAVA_11, JRE.JAVA_17},
+            disabledReason = "the test case only works on Java 8")
     public void testJavaVersionCheck() {
         String realVersion = System.getProperty("java.version");
         System.setProperty("java.version", "1.8.0_191");
