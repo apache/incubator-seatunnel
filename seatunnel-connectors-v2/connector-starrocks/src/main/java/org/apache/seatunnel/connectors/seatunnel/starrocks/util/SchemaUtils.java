@@ -19,6 +19,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.starrocks.util;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
@@ -35,11 +36,14 @@ import org.apache.seatunnel.connectors.seatunnel.starrocks.datatypes.StarRocksTy
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 @Slf4j
 public class SchemaUtils {
+
+    private static final String MIN_VERSION_TABLE_CHANGE_COLUMN = "3.3.2";
 
     private SchemaUtils() {}
 
@@ -111,33 +115,50 @@ public class SchemaUtils {
     public static void applySchemaChange(
             Connection connection, TablePath tablePath, AlterTableChangeColumnEvent event)
             throws SQLException {
-        StringBuilder sqlBuilder =
-                new StringBuilder()
-                        .append("ALTER TABLE")
-                        .append(" ")
-                        .append(tablePath.getFullName())
-                        .append(" ")
-                        .append("RENAME COLUMN")
-                        .append(" ")
-                        .append(quoteIdentifier(event.getOldColumn()))
-                        .append(" TO ")
-                        .append(quoteIdentifier(event.getColumn().getName()));
-        if (event.getColumn().getComment() != null) {
-            sqlBuilder
-                    .append(" ")
-                    .append("COMMENT ")
-                    .append("'")
-                    .append(event.getColumn().getComment())
-                    .append("'");
-        }
-        if (event.getAfterColumn() != null) {
-            sqlBuilder.append(" ").append("AFTER ").append(quoteIdentifier(event.getAfterColumn()));
+        ComparableVersion targetVersion = new ComparableVersion(MIN_VERSION_TABLE_CHANGE_COLUMN);
+        ComparableVersion currentVersion;
+        try (Statement statement = connection.createStatement()) {
+            ResultSet resultSet =
+                    statement.executeQuery(
+                            "SELECT SPLIT_PART(CURRENT_VERSION(), ' ', 1) as version");
+            resultSet.next();
+            currentVersion = new ComparableVersion(resultSet.getString(1));
         }
 
-        String changeColumnSQL = sqlBuilder.toString();
-        try (Statement statement = connection.createStatement()) {
-            log.info("Executing change column SQL: " + changeColumnSQL);
-            statement.execute(changeColumnSQL);
+        if (currentVersion.compareTo(targetVersion) >= 0) {
+            StringBuilder sqlBuilder =
+                    new StringBuilder()
+                            .append("ALTER TABLE")
+                            .append(" ")
+                            .append(tablePath.getFullName())
+                            .append(" ")
+                            .append("RENAME COLUMN")
+                            .append(" ")
+                            .append(quoteIdentifier(event.getOldColumn()))
+                            .append(" TO ")
+                            .append(quoteIdentifier(event.getColumn().getName()));
+            if (event.getColumn().getComment() != null) {
+                sqlBuilder
+                        .append(" ")
+                        .append("COMMENT ")
+                        .append("'")
+                        .append(event.getColumn().getComment())
+                        .append("'");
+            }
+            if (event.getAfterColumn() != null) {
+                sqlBuilder
+                        .append(" ")
+                        .append("AFTER ")
+                        .append(quoteIdentifier(event.getAfterColumn()));
+            }
+
+            String changeColumnSQL = sqlBuilder.toString();
+            try (Statement statement = connection.createStatement()) {
+                log.info("Executing change column SQL: " + changeColumnSQL);
+                statement.execute(changeColumnSQL);
+            }
+        } else {
+            log.warn("versions prior to starrocks 3.3.2 do not support rename column operations");
         }
     }
 
