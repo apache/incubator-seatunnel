@@ -18,7 +18,6 @@ package org.apache.seatunnel.transform.common;
 
 import org.apache.seatunnel.api.common.CommonOptions;
 import org.apache.seatunnel.api.common.metrics.MetricNames;
-import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
@@ -47,7 +46,7 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
 
     protected String outTableName;
 
-    protected MetricsContext metricsContext;
+    private Context context;
 
     @Override
     public void open() {}
@@ -97,6 +96,11 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
         return Collections.singletonList(getProducedCatalogTable());
     }
 
+    @Override
+    public void loadContext(Context context) {
+        this.context = context;
+    }
+
     private CatalogTable transformCatalogTable() {
         TableIdentifier tableIdentifier = transformTableIdentifier();
         TableSchema tableSchema = transformTableSchema();
@@ -139,19 +143,14 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
 
     protected abstract TableIdentifier transformTableIdentifier();
 
-    @Override
-    public void setMetricsContext(MetricsContext metricsContext) {
-        this.metricsContext = metricsContext;
-    }
-
     protected void hazelcastMetric(long size) {
-        if (metricsContext != null) {
-            metricsContext.counter(getTransformMetricName()).inc(size);
+        if (context.getMetricsContext() != null) {
+            context.getMetricsContext().counter(getTransformMetricName()).inc(size);
         }
     }
 
     protected void hazelcastMetric() {
-        if (metricsContext != null) {
+        if (context.getMetricsContext() != null) {
             hazelcastMetric(1);
         }
     }

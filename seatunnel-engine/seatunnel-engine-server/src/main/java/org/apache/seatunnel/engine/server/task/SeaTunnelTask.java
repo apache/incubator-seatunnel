@@ -236,6 +236,7 @@ public abstract class SeaTunnelTask extends AbstractTask {
                         new TransformFlowLifeCycle<SeaTunnelRow>(
                                 (TransformChainAction) f.getAction(),
                                 this,
+                                taskLocation,
                                 new SeaTunnelTransformCollector(flowLifeCycles),
                                 completableFuture,
                                 this.getMetricsContext());

@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.transform.common;
 
-import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
@@ -29,7 +28,6 @@ import org.apache.seatunnel.api.transform.SeaTunnelTransform;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,7 +44,7 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
 
     protected Map<String, SeaTunnelTransform<SeaTunnelRow>> transformMap;
 
-    protected MetricsContext metricsContext;
+    private Context context;
 
     public AbstractMultiCatalogTransform(
             List<CatalogTable> inputCatalogTables, ReadonlyConfig config) {
@@ -93,15 +91,12 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
     }
 
     @Override
-    public void open() {
-        if (Objects.nonNull(metricsContext)) {
-            transformMap.values().forEach(transform -> transform.setMetricsContext(metricsContext));
-        }
-    }
+    public void open() {}
 
     @Override
-    public void setMetricsContext(MetricsContext metricsContext) {
-        this.metricsContext = metricsContext;
+    public void loadContext(Context context) {
+        this.context = context;
+        transformMap.values().forEach(transform -> transform.loadContext(context));
     }
 
     protected abstract SeaTunnelTransform<SeaTunnelRow> buildTransform(

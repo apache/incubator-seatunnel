@@ -19,6 +19,7 @@ package org.apache.seatunnel.api.transform;
 
 import org.apache.seatunnel.api.common.PluginIdentifierInterface;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
+import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.source.SeaTunnelJobAware;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
@@ -56,5 +57,18 @@ public interface SeaTunnelTransform<T>
     /** call it when Transformer completed */
     default void close() {}
 
-    void setMetricsContext(MetricsContext metricsContext);
+    void loadContext(Context context);
+
+    interface Context extends Serializable {
+
+        /** @return metricsContext of this reader. */
+        MetricsContext getMetricsContext();
+
+        /**
+         * Get the {@link EventListener} of this writer.
+         *
+         * @return
+         */
+        EventListener getEventListener();
+    }
 }
