@@ -191,6 +191,9 @@ public class StarRocksSchemaChangeIT extends TestSuiteBase implements TestResour
         assertSchemaEvolutionForAddColumns(
                 DATABASE, SOURCE_TABLE, SINK_TABLE, mysqlConnection, starRocksConnection);
 
+        assertSchemaEvolutionForDropColumns(
+                DATABASE, SOURCE_TABLE, SINK_TABLE, mysqlConnection, starRocksConnection);
+
         // savepoint 1
         Assertions.assertEquals(0, container.savepointJob(jobId).getExitCode());
 
@@ -301,6 +304,27 @@ public class StarRocksSchemaChangeIT extends TestSuiteBase implements TestResour
                                             String.format(PROJECTION_QUERY, database, sinkTable),
                                             sinkConnection));
                         });
+    }
+
+    private void assertSchemaEvolutionForDropColumns(
+            String database,
+            String sourceTable,
+            String sinkTable,
+            Connection sourceConnection,
+            Connection sinkConnection) {
+
+        // case1 add columns with cdc data at same time
+        shopDatabase.setTemplateName("drop_columns_validate_schema.sql").createAndInitialize();
+        await().atMost(60000, TimeUnit.MILLISECONDS)
+                .untilAsserted(
+                        () ->
+                                Assertions.assertIterableEquals(
+                                        query(
+                                                String.format(QUERY_COLUMNS, database, sourceTable),
+                                                sourceConnection),
+                                        query(
+                                                String.format(QUERY_COLUMNS, database, sinkTable),
+                                                sinkConnection)));
     }
 
     private void assertTableStructureAndData(
