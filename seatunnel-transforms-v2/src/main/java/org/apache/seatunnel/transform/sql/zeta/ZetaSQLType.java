@@ -449,7 +449,7 @@ public class ZetaSQLType {
             case ZetaSQLFunction.TRUNCATE:
                 return BasicType.DOUBLE_TYPE;
             case ZetaSQLFunction.ARRAY:
-                return ArrayFunction.castArrayTypeMapping(function);
+                return ArrayFunction.castArrayTypeMapping(function, inputRowType);
             case ZetaSQLFunction.SPLIT:
                 return ArrayType.STRING_ARRAY_TYPE;
             case ZetaSQLFunction.NOW:

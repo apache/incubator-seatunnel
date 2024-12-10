@@ -19,6 +19,7 @@ package org.apache.seatunnel.transform.sql.zeta.functions;
 import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
+import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 
 import net.sf.jsqlparser.expression.DoubleValue;
@@ -28,6 +29,7 @@ import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.schema.Column;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -39,8 +41,7 @@ public class ArrayFunction {
         if (args == null || args.isEmpty()) {
             return new Object[0];
         }
-        Class<?> arrayType = getClassType(args);
-
+        Class<?> arrayType = getDataClassType(args);
         Object[] result = (Object[]) java.lang.reflect.Array.newInstance(arrayType, args.size());
         for (int i = 0; i < args.size(); i++) {
             result[i] = convertToType(args.get(i), arrayType);
@@ -49,11 +50,11 @@ public class ArrayFunction {
         return result;
     }
 
-    public static ArrayType castArrayTypeMapping(Function function) {
-        return castArrayTypeMapping(getFunctionArgs(function));
+    public static ArrayType castArrayTypeMapping(Function function, SeaTunnelRowType inputRowType) {
+        return castArrayTypeMapping(getFunctionArgs(function, inputRowType));
     }
 
-    public static ArrayType castArrayTypeMapping(List<Object> args) {
+    public static ArrayType castArrayTypeMapping(List<Class<?>> args) {
         if (args == null || args.isEmpty()) {
             return ArrayType.STRING_ARRAY_TYPE;
         }
@@ -125,7 +126,22 @@ public class ArrayFunction {
         return String.class;
     }
 
-    private static Class<?> getClassType(List<Object> args) {
+    private static Class<?> getClassType(List<Class<?>> args) {
+        Class<?> arrayType = null;
+        for (Class<?> obj : args) {
+            if (obj == null) {
+                continue;
+            }
+            if (arrayType == null) {
+                arrayType = obj;
+            } else {
+                arrayType = getArrayType(arrayType, obj);
+            }
+        }
+        return arrayType == null ? String.class : arrayType;
+    }
+
+    private static Class<?> getDataClassType(List<Object> args) {
         Class<?> arrayType = null;
         for (Object obj : args) {
             if (obj == null) {
@@ -140,10 +156,11 @@ public class ArrayFunction {
         return arrayType == null ? String.class : arrayType;
     }
 
-    private static List<Object> getFunctionArgs(Function function) {
+    private static List<Class<?>> getFunctionArgs(
+            Function function, SeaTunnelRowType inputRowType) {
         ExpressionList<Expression> expressionList =
                 (ExpressionList<Expression>) function.getParameters();
-        List<Object> functionArgs = new ArrayList<>();
+        List<Class<?>> functionArgs = new ArrayList<>();
         if (expressionList != null) {
             for (Expression expression : expressionList.getExpressions()) {
                 if (expression instanceof NullValue) {
@@ -151,20 +168,26 @@ public class ArrayFunction {
                     continue;
                 }
                 if (expression instanceof DoubleValue) {
-                    functionArgs.add(((DoubleValue) expression).getValue());
+                    functionArgs.add(Double.class);
                     continue;
                 }
+                if (expression instanceof Column) {
+                    int columnIndex = inputRowType.indexOf(((Column) expression).getColumnName());
+                    functionArgs.add(inputRowType.getFieldType(columnIndex).getTypeClass());
+                    continue;
+                }
+
                 if (expression instanceof LongValue) {
                     long longVal = ((LongValue) expression).getValue();
                     if (longVal <= Integer.MAX_VALUE && longVal >= Integer.MIN_VALUE) {
-                        functionArgs.add((int) longVal);
+                        functionArgs.add(Integer.class);
                     } else {
-                        functionArgs.add(longVal);
+                        functionArgs.add(Long.class);
                     }
                     continue;
                 }
                 if (expression instanceof StringValue) {
-                    functionArgs.add(((StringValue) expression).getValue());
+                    functionArgs.add(String.class);
                     continue;
                 }
                 throw new SeaTunnelException("unSupport expression： " + expression.toString());

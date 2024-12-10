@@ -59,6 +59,7 @@ public class ZetaSQLEngine implements SQLEngine {
     private String inputTableName;
     @Nullable private String catalogTableName;
     private SeaTunnelRowType inputRowType;
+    private SeaTunnelRowType outRowType;
 
     private String sql;
     private PlainSelect selectBody;
@@ -219,10 +220,13 @@ public class ZetaSQLEngine implements SQLEngine {
         }
         List<LateralView> lateralViews = selectBody.getLateralViews();
         if (CollectionUtils.isEmpty(lateralViews)) {
-            return new SeaTunnelRowType(fieldNames, seaTunnelDataTypes);
+            outRowType = new SeaTunnelRowType(fieldNames, seaTunnelDataTypes);
+        } else {
+            outRowType =
+                    zetaSQLFunction.lateralViewMapping(
+                            fieldNames, seaTunnelDataTypes, lateralViews, inputColumnsMapping);
         }
-        return zetaSQLFunction.lateralViewMapping(
-                fieldNames, seaTunnelDataTypes, lateralViews, inputColumnsMapping);
+        return outRowType;
     }
 
     @Override

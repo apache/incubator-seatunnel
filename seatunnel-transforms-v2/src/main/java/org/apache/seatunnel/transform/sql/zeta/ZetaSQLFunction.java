@@ -192,6 +192,7 @@ public class ZetaSQLFunction {
     public static final String UUID = "UUID";
 
     private final SeaTunnelRowType inputRowType;
+
     private final ZetaSQLType zetaSQLType;
     private final ZetaSQLFilter zetaSQLFilter;
 
