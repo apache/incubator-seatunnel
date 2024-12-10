@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.hbase.client;
 
-import org.apache.hadoop.hbase.client.RetriesExhaustedWithDetailsException;
 import org.apache.seatunnel.connectors.seatunnel.hbase.config.HbaseParameters;
 import org.apache.seatunnel.connectors.seatunnel.hbase.exception.HbaseConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.hbase.exception.HbaseConnectorException;
