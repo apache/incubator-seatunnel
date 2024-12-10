@@ -804,7 +804,6 @@
                     <artifactId>maven-dependency-plugin</artifactId>
                     <version>${maven-dependency-plugin.version}</version>
                     <configuration>
-                        <skip>${e2e.dependency.skip}</skip>
                         <appendOutput>true</appendOutput>
                     </configuration>
                 </plugin>
