@@ -144,13 +144,13 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
     protected abstract TableIdentifier transformTableIdentifier();
 
     protected void hazelcastMetric(long size) {
-        if (context.getMetricsContext() != null) {
+        if (context != null && context.getMetricsContext() != null) {
             context.getMetricsContext().counter(getTransformMetricName()).inc(size);
         }
     }
 
     protected void hazelcastMetric() {
-        if (context.getMetricsContext() != null) {
+        if (context != null && context.getMetricsContext() != null) {
             hazelcastMetric(1);
         }
     }
