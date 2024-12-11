@@ -60,7 +60,7 @@ public class StringFormatUtils {
                         + String.join("", Collections.nCopies(blankNum, " "))
                         + "%s"
                         + "\n"
-                        + String.join("", Collections.nCopies(tableBlankNum, " "))
+                        + "originTable:"
                         + "%s"
                         + "\n"
                         + "***********************************************"
