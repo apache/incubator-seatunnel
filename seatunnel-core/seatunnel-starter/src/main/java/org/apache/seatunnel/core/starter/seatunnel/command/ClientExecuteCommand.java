@@ -257,9 +257,10 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                             .forEach(
                                     (tableName, metrics) -> {
                                         String[] transformInfos =
-                                                new String[metrics.entrySet().size() * 2 + 1];
-                                        transformInfos[0] = "Transform Information  " + tableName;
-                                        int index = 0;
+                                                new String[metrics.entrySet().size() * 2 + 2];
+                                        transformInfos[0] = "Transform Information";
+                                        transformInfos[1] = tableName;
+                                        int index = 1;
                                         for (Map.Entry<String, Object> entry : metrics.entrySet()) {
                                             transformInfos[++index] = entry.getKey();
                                             transformInfos[++index] =
@@ -267,7 +268,8 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                                         }
                                         if (Objects.nonNull(transformInfos)) {
                                             logMessage.append(
-                                                    StringFormatUtils.formatTable(transformInfos));
+                                                    StringFormatUtils.transformFormatTable(
+                                                            transformInfos));
                                         }
                                     });
                 }
