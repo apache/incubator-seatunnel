@@ -19,7 +19,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.starrocks.util;
 
-import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
@@ -32,6 +31,8 @@ import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.datatypes.StarRocksType;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.datatypes.StarRocksTypeConverter;
+
+import org.apache.maven.artifact.versioning.ComparableVersion;
 
 import lombok.extern.slf4j.Slf4j;
 
