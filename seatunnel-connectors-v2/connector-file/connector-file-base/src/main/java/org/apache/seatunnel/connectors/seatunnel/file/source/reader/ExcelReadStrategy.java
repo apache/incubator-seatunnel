@@ -43,25 +43,26 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.read.builder.ExcelReaderBuilder;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
+@Getter
 @Slf4j
 public class ExcelReadStrategy extends AbstractReadStrategy {
 
-    private DateTimeFormatter dateFormatter =
-            DateTimeFormatter.ofPattern(DateUtils.Formatter.YYYY_MM_DD.getValue());
-    private DateTimeFormatter dateTimeFormatter =
-            DateTimeFormatter.ofPattern(DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS.getValue());
-    private DateTimeFormatter timeFormatter =
-            DateTimeFormatter.ofPattern(TimeUtils.Formatter.HH_MM_SS.getValue());;
+    private String dateFormatterPattern = DateUtils.Formatter.YYYY_MM_DD.getValue();
+
+    private String dateTimeFormatterPattern =
+            DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS.getValue();
+
+    private String timeFormatterPattern = TimeUtils.Formatter.HH_MM_SS.getValue();
 
     private int[] indexes;
 
@@ -91,23 +92,24 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
         }
 
         if (pluginConfig.hasPath(BaseSourceConfigOptions.DATE_FORMAT.key())) {
-            String dateFormatString =
+            dateFormatterPattern =
                     pluginConfig.getString(BaseSourceConfigOptions.DATE_FORMAT.key());
-            dateFormatter = DateTimeFormatter.ofPattern(dateFormatString);
         }
         if (pluginConfig.hasPath(BaseSourceConfigOptions.DATETIME_FORMAT.key())) {
-            String datetimeFormatString =
+            dateTimeFormatterPattern =
                     pluginConfig.getString(BaseSourceConfigOptions.DATETIME_FORMAT.key());
-            dateTimeFormatter = DateTimeFormatter.ofPattern(datetimeFormatString);
         }
         if (pluginConfig.hasPath(BaseSourceConfigOptions.TIME_FORMAT.key())) {
-            String timeFormatString =
+            timeFormatterPattern =
                     pluginConfig.getString(BaseSourceConfigOptions.TIME_FORMAT.key());
-            timeFormatter = DateTimeFormatter.ofPattern(timeFormatString);
         }
 
         ExcelCellUtils excelCellUtils =
-                new ExcelCellUtils(pluginConfig, dateFormatter, dateTimeFormatter, timeFormatter);
+                new ExcelCellUtils(
+                        pluginConfig,
+                        dateFormatterPattern,
+                        dateTimeFormatterPattern,
+                        timeFormatterPattern);
 
         if (pluginConfig.hasPath(BaseSourceConfigOptions.EXCEL_ENGINE.key())
                 && pluginConfig

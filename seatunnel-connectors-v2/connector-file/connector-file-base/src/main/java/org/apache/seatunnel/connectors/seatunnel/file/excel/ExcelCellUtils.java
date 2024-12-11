@@ -58,13 +58,13 @@ public class ExcelCellUtils implements Serializable {
 
     public ExcelCellUtils(
             Config pluginConfig,
-            DateTimeFormatter dateFormatter,
-            DateTimeFormatter dateTimeFormatter,
-            DateTimeFormatter timeFormatter) {
+            String dateFormatterPattern,
+            String dateTimeFormatterPattern,
+            String timeFormatterPattern) {
         this.pluginConfig = pluginConfig;
-        this.dateFormatter = dateFormatter;
-        this.dateTimeFormatter = dateTimeFormatter;
-        this.timeFormatter = timeFormatter;
+        this.dateFormatter = DateTimeFormatter.ofPattern(dateFormatterPattern);
+        this.dateTimeFormatter = DateTimeFormatter.ofPattern(dateTimeFormatterPattern);
+        this.timeFormatter = DateTimeFormatter.ofPattern(timeFormatterPattern);
     }
 
     private String getCellValue(ReadCellData cellData) {
