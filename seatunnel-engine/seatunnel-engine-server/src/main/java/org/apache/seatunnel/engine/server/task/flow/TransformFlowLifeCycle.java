@@ -26,6 +26,7 @@ import org.apache.seatunnel.api.transform.SeaTunnelFlatMapTransform;
 import org.apache.seatunnel.api.transform.SeaTunnelMapTransform;
 import org.apache.seatunnel.api.transform.SeaTunnelTransform;
 import org.apache.seatunnel.api.transform.event.TransformCloseEvent;
+import org.apache.seatunnel.api.transform.event.TransformOpenEvent;
 import org.apache.seatunnel.engine.core.dag.actions.TransformChainAction;
 import org.apache.seatunnel.engine.server.checkpoint.ActionStateKey;
 import org.apache.seatunnel.engine.server.checkpoint.ActionSubtaskState;
@@ -78,8 +79,24 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
     }
 
     @Override
+    public void init() throws Exception {
+        this.transformContext = new TransformContext(metricsContext, eventListener);
+        for (SeaTunnelTransform<T> t : transform) {
+            try {
+                t.loadContext(transformContext);
+            } catch (Exception e) {
+                log.error(
+                        "restore transform: {} failed, cause: {}",
+                        t.getPluginName(),
+                        e.getMessage(),
+                        e);
+            }
+        }
+    }
+
+    @Override
     public void open() throws Exception {
-        super.open();
+        transformContext.getEventListener().onEvent(new TransformOpenEvent());
         for (SeaTunnelTransform<T> t : transform) {
             try {
                 t.open();
@@ -193,23 +210,11 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
     }
 
     @Override
-    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {
-        this.transformContext = new TransformContext(metricsContext, eventListener);
-        for (SeaTunnelTransform<T> t : transform) {
-            try {
-                t.loadContext(transformContext);
-            } catch (Exception e) {
-                log.error(
-                        "restore transform: {} failed, cause: {}",
-                        t.getPluginName(),
-                        e.getMessage(),
-                        e);
-            }
-        }
-    }
+    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {}
 
     @Override
     public void close() throws IOException {
+        transformContext.getEventListener().onEvent(new TransformCloseEvent());
         for (SeaTunnelTransform<T> t : transform) {
             try {
                 t.close();
@@ -221,8 +226,6 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
                         e);
             }
         }
-
         super.close();
-        transformContext.getEventListener().onEvent(new TransformCloseEvent());
     }
 }
