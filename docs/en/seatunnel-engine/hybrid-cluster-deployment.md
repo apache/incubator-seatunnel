@@ -165,7 +165,7 @@ The corePoolSize of seatunnel coordinator job's executor cached thread pool
 
 **max-thread-num**
 
-The maximumPoolSize of seatunnel coordinator job's executor cached thread pool
+The max job count can be executed at same time
 
 Example
 
