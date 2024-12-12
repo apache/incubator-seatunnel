@@ -123,7 +123,7 @@ public class SchemaUtils {
                     statement.executeQuery(
                             "SELECT SPLIT_PART(CURRENT_VERSION(), ' ', 1) as version");
             resultSet.next();
-            log.info("starrocks version: {}", resultSet.getString(1))
+            log.info("starrocks version: {}", resultSet.getString(1));
             currentVersion = new ComparableVersion(resultSet.getString(1));
         }
 
