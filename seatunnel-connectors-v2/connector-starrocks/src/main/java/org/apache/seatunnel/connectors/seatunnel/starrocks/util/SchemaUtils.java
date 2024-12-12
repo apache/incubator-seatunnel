@@ -119,12 +119,14 @@ public class SchemaUtils {
         ComparableVersion targetVersion = new ComparableVersion(MIN_VERSION_TABLE_CHANGE_COLUMN);
         ComparableVersion currentVersion;
         try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet =
-                    statement.executeQuery(
-                            "SELECT SPLIT_PART(CURRENT_VERSION(), ' ', 1) as version");
+            ResultSet resultSet = statement.executeQuery("SELECT CURRENT_VERSION() as version");
             resultSet.next();
-            log.info("starrocks version: {}", resultSet.getString(1));
-            currentVersion = new ComparableVersion(resultSet.getString(1));
+            String version = resultSet.getString(1);
+            log.info("starrocks version: {}", version);
+
+            String versionOne = version.split(" ")[0];
+
+            currentVersion = new ComparableVersion(versionOne);
         }
 
         if (currentVersion.compareTo(targetVersion) >= 0) {
