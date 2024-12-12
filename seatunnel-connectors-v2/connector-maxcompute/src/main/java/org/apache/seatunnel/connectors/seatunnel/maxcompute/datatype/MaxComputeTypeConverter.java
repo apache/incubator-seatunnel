@@ -41,7 +41,6 @@ import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.auto.service.AutoService;
-import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -231,8 +230,6 @@ public class MaxComputeTypeConverter implements TypeConverter<BasicTypeDefine<Ty
         }
 
         if (typeDefine.getNativeType() instanceof DecimalTypeInfo) {
-            Preconditions.checkArgument(typeDefine.getPrecision() > 0);
-
             DecimalType decimalType;
             if (((DecimalTypeInfo) typeDefine.getNativeType()).getPrecision() > DEFAULT_PRECISION) {
                 log.warn("{} will probably cause value overflow.", DECIMAL);
@@ -529,7 +526,8 @@ public class MaxComputeTypeConverter implements TypeConverter<BasicTypeDefine<Ty
                                         null,
                                         null,
                                         null));
-                builder.nativeType(TypeInfoFactory.getPrimitiveTypeInfo(OdpsType.ARRAY));
+
+                builder.nativeType(TypeInfoFactory.getArrayTypeInfo(elementDefine.getNativeType()));
                 builder.columnType(String.format("ARRAY<%s>", elementDefine.getColumnType()));
                 builder.dataType(ARRAY);
                 break;
