@@ -252,11 +252,11 @@ public class MaxcomputeTypeMapper implements Serializable {
             case DOUBLE:
             case BIGINT:
             case BOOLEAN:
+            case DECIMAL:
+            case TIMESTAMP_NTZ:
                 return field;
             case BINARY:
                 return new Binary((byte[]) field);
-            case DECIMAL:
-                return null;
             case VARCHAR:
                 return new Varchar((String) field);
             case CHAR:
@@ -271,7 +271,6 @@ public class MaxcomputeTypeMapper implements Serializable {
                 }
                 return String.valueOf(field);
             case TIMESTAMP:
-            case TIMESTAMP_NTZ:
                 return Timestamp.valueOf((LocalDateTime) field);
             case DATETIME:
                 return Date.from(
