@@ -50,6 +50,7 @@ import java.util.List;
 
 import static org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeConfig.PLUGIN_NAME;
 
+/** Refer https://help.aliyun.com/zh/maxcompute/user-guide/maxcompute-v2-0-data-type-edition */
 @Slf4j
 @AutoService(TypeConverter.class)
 public class MaxComputeTypeConverter implements TypeConverter<BasicTypeDefine<TypeInfo>> {
