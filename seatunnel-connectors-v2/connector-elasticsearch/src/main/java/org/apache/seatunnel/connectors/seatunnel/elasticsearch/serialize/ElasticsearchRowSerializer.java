@@ -174,6 +174,7 @@ public class ElasticsearchRowSerializer implements SeaTunnelRowSerializer {
         Map<String, Object> doc = new HashMap<>(fieldNames.length);
         Object[] fields = row.getFields();
         for (int i = 0; i < fieldNames.length; i++) {
+
             // primaryKeys,The fields matched by 'parent' do not need to be written directly
             if (fieldNames[i].equalsIgnoreCase(indexInfo.getParentField())
                     || primaryKeysSkip(indexInfo.getPrimaryKeys(), fieldNames[i])) {
