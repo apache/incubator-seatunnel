@@ -209,6 +209,11 @@ public class IcebergSinkCDCIT extends TestSuiteBase implements TestResource {
     }
 
     @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "Currently SPARK do not support cdc. In addition, currently only the zeta engine supports schema evolution for pr https://github.com/apache/seatunnel/pull/5125.")
     public void testMysqlCdcCheckSchemaChangeE2e(TestContainer container)
             throws IOException, InterruptedException {
         // Clear related content to ensure that multiple operations are not affected

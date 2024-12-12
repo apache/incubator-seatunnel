@@ -42,16 +42,16 @@ It only supports hadoop version **2.9.X+**.
 
 ## Required Jar List
 
-|        jar         |     supported versions      |                                                     maven                                                      |
-|--------------------|-----------------------------|----------------------------------------------------------------------------------------------------------------|
-| hadoop-huaweicloud | support version >= 3.1.1.29 | [Download](https://repo.huaweicloud.com/repository/maven/huaweicloudsdk/org/apache/hadoop/hadoop-huaweicloud/) |
-| esdk-obs-java      | support version >= 3.19.7.3 | [Download](https://repo.huaweicloud.com/repository/maven/huaweicloudsdk/com/huawei/storage/esdk-obs-java/)     |
-| okhttp             | support version >= 3.11.0   | [Download](https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/)                                        |
-| okio               | support version >= 1.14.0   | [Download](https://repo1.maven.org/maven2/com/squareup/okio/okio/)                                             |
+|        jar         |     supported versions      | maven                                                                                                  |
+|--------------------|-----------------------------|--------------------------------------------------------------------------------------------------------|
+| hadoop-huaweicloud | support version >= 3.1.1.29 | [Download](https://repo.huaweicloud.com/artifactory/sdk_public/org/apache/hadoop/hadoop-huaweicloud/)  |
+| esdk-obs-java      | support version >= 3.19.7.3 | [Download](https://repo.huaweicloud.com/artifactory/sdk_public/com/huawei/storage/esdk-obs-java/)      |
+| okhttp             | support version >= 3.11.0   | [Download](https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/)                                |
+| okio               | support version >= 1.14.0   | [Download](https://repo1.maven.org/maven2/com/squareup/okio/okio/)                                     |
 
-> Please download the support list corresponding to 'Maven' and copy them to the '$SEATNUNNEL_HOME/plugins/jdbc/lib/' working directory.
+> Please download the support list corresponding to 'Maven' and copy them to the '$SEATUNNEL_HOME/plugins/jdbc/lib/' working directory.
 >
-> And copy all jars to $SEATNUNNEL_HOME/lib/
+> And copy all jars to $SEATUNNEL_HOME/lib/
 
 ## Options
 
