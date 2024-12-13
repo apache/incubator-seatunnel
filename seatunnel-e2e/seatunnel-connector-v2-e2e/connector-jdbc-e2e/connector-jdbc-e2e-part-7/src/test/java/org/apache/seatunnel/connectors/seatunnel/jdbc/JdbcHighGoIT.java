@@ -46,7 +46,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /** @ Author：SimonChou @ Date：2024-12-12-11:39 @ Description：JdbcHighGoIT */
 public class JdbcHighGoIT extends AbstractJdbcIT {
