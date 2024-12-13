@@ -23,4 +23,4 @@ metadata:
     {{- include "seatunnel.common.labels" . | nindent 4 }}
 data:
   log4j2.properties: |-
-  {{.Files.Get "conf/log4j2.properties" | indent 8 }}
+  {{.Files.Get "conf/log4j2.properties" | indent 4 }}
