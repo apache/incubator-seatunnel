@@ -142,8 +142,7 @@ public class OracleSourceConfigFactory extends JdbcSourceConfigFactory {
             String debeziumSchemaChanges =
                     dbzProperties.getProperty(
                             SCHEMA_CHANGE_KEY, String.valueOf(schemaChangeEnabled));
-            String debeziumLogMiningStrategy =
-                    dbzProperties.getProperty(LOG_MINING_STRATEGY_KEY, LOG_MINING_STRATEGY_DEFAULT);
+            String debeziumLogMiningStrategy = dbzProperties.getProperty(LOG_MINING_STRATEGY_KEY);
             if (Boolean.parseBoolean(debeziumSchemaChanges)
                     && LOG_MINING_STRATEGY_DEFAULT.equals(debeziumLogMiningStrategy)) {
                 throw new IllegalArgumentException(
