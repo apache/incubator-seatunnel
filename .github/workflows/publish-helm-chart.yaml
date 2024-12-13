@@ -37,7 +37,7 @@ jobs:
       - name: Set environment variables
         run: |
             echo "HUB=registry-1.docker.io/duanfangwei" >> $GITHUB_ENV
-            echo "DOCKER_REGISTRY=docker.io/duanfangwei" >> $GITHUB_ENV
+            echo "DOCKER_REGISTRY=docker.io" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USER }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
       - name: Log in to the Container registry
