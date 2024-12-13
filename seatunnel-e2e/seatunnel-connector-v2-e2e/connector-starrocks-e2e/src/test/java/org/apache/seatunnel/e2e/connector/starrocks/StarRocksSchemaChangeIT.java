@@ -314,7 +314,7 @@ public class StarRocksSchemaChangeIT extends TestSuiteBase implements TestResour
             Connection sinkConnection) {
 
         // case1 add columns with cdc data at same time
-        shopDatabase.setTemplateName("drop_columns_validate_schema.sql").createAndInitialize();
+        shopDatabase.setTemplateName("drop_columns_validate_schema").createAndInitialize();
         await().atMost(60000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->

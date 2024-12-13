@@ -39,12 +39,12 @@ So, you can not set this property named `log.mining.continuous.mine` in the debe
 #### For Spark/Flink Engine
 
 > 1. You need to ensure that the [jdbc driver jar package](https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc8) has been placed in directory `${SEATUNNEL_HOME}/plugins/`.
-> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATNUNNEL_HOME/plugins/` directory.
+> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATUNNEL_HOME/plugins/` directory.
 
 #### For SeaTunnel Zeta Engine
 
 > 1. You need to ensure that the [jdbc driver jar package](https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc8) has been placed in directory `${SEATUNNEL_HOME}/lib/`.
-> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATNUNNEL_HOME/lib/` directory.
+> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATUNNEL_HOME/lib/` directory.
 
 ### Enable Oracle Logminer
 
