@@ -70,7 +70,6 @@ public class JdbcHighGoIT extends AbstractJdbcIT {
     private static final String CREATE_SQL =
             "CREATE TABLE IF NOT EXISTS %s (\n"
                     + "  gid                    SERIAL PRIMARY KEY,\n"
-                    + "  uuid_col               UUID,\n"
                     + "  text_col               TEXT,\n"
                     + "  varchar_col            VARCHAR(255),\n"
                     + "  char_col               CHAR(10),\n"
@@ -92,7 +91,6 @@ public class JdbcHighGoIT extends AbstractJdbcIT {
     private static final String[] fieldNames =
             new String[] {
                 "gid",
-                "uuid_col",
                 "text_col",
                 "varchar_col",
                 "char_col",
@@ -246,7 +244,6 @@ public class JdbcHighGoIT extends AbstractJdbcIT {
                     new SeaTunnelRow(
                             new Object[] {
                                 i,
-                                UUID.randomUUID(),
                                 String.valueOf(i),
                                 String.valueOf(i),
                                 String.valueOf(i),
