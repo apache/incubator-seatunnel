@@ -122,7 +122,7 @@ public class SchemaUtils {
             ResultSet resultSet = statement.executeQuery("SELECT CURRENT_VERSION() as version");
             resultSet.next();
             String version = resultSet.getString(1);
-            log.info("starrocks version: {}", version);
+            log.debug("starrocks version: {}", version);
 
             String versionOne = version.split(" ")[0];
 
