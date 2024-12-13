@@ -37,8 +37,7 @@ public class OracleSourceConfigFactory extends JdbcSourceConfigFactory {
 
     private static final String DRIVER_CLASS_NAME = "oracle.jdbc.driver.OracleDriver";
     public static final String SCHEMA_CHANGE_KEY = "include.schema.changes";
-    public static final String LOG_MINING_STRATEGY_KEY = "log.mining.strategy";
-    public static final String LOG_MINING_STRATEGY_DEFAULT = "online_catalog";
+    public static final Boolean SCHEMA_CHANGE_DEFAULT = true;
 
     private List<String> schemaList;
 
@@ -95,15 +94,16 @@ public class OracleSourceConfigFactory extends JdbcSourceConfigFactory {
         props.setProperty("database.history.skip.unparseable.ddl", String.valueOf(true));
         props.setProperty("database.history.refer.ddl", String.valueOf(true));
 
-        // setting debezium capture oracle ddl
-        props.setProperty(SCHEMA_CHANGE_KEY, String.valueOf(schemaChangeEnabled));
-        props.setProperty(
-                LOG_MINING_STRATEGY_KEY,
-                schemaChangeEnabled ? "redo_log_catalog" : LOG_MINING_STRATEGY_DEFAULT);
+        // Some scenarios do not require automatic capture of table structure changes, so the
+        // default setting is true.
+        props.setProperty(SCHEMA_CHANGE_KEY, SCHEMA_CHANGE_DEFAULT.toString());
 
         props.setProperty("connect.timeout.ms", String.valueOf(connectTimeoutMillis));
         // disable tombstones
         props.setProperty("tombstones.on.delete", String.valueOf(false));
+
+        // Optimize logminer latency
+        props.setProperty("log.mining.strategy", "online_catalog");
 
         if (originUrl != null) {
             props.setProperty("database.url", originUrl);
@@ -139,16 +139,6 @@ public class OracleSourceConfigFactory extends JdbcSourceConfigFactory {
 
         // override the user-defined debezium properties
         if (dbzProperties != null) {
-            String debeziumSchemaChanges =
-                    dbzProperties.getProperty(
-                            SCHEMA_CHANGE_KEY, String.valueOf(schemaChangeEnabled));
-            String debeziumLogMiningStrategy =
-                    dbzProperties.getProperty(LOG_MINING_STRATEGY_KEY, LOG_MINING_STRATEGY_DEFAULT);
-            if (Boolean.parseBoolean(debeziumSchemaChanges)
-                    && LOG_MINING_STRATEGY_DEFAULT.equals(debeziumLogMiningStrategy)) {
-                throw new IllegalArgumentException(
-                        "Debezium log mining strategy must be set to redo_log_catalog when schema changes are enabled");
-            }
             props.putAll(dbzProperties);
         }
 
