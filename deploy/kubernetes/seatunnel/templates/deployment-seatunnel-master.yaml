@@ -81,7 +81,7 @@ spec:
              subPath: seatunnel.yaml
            - mountPath: "/opt/seatunnel/config/log4j2.properties"
              name: seatunnel-log4j
-             subPath: seatunnel.yaml
+             subPath: log4j2.properties
       volumes:
         - name: seatunnel-seatunnel
           configMap:
