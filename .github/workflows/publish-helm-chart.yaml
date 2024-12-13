@@ -24,10 +24,6 @@ on:
       - 'docs/**'
       - '**/*.md'
 
-env:
-  DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USER }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
-
 jobs:
   build:
     if: github.repository == 'frommymind/seatunnel'
@@ -41,22 +37,18 @@ jobs:
       - name: Set environment variables
         run: |
             echo "HUB=registry-1.docker.io/duanfangwei/seatunnel" >> $GITHUB_ENV
-            echo "DOCKER_REGISTRY=ghcr.io/duanfangwei/seatunnel" >> $GITHUB_ENV
-            echo "DOCKER_USERNAME=${{ env.DOCKER_USERNAME }}" >> $GITHUB_ENV
-            echo "DOCKER_PASSWORD=${{ env.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
+            echo "DOCKER_REGISTRY=docker.io/duanfangwei" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.DOCKERHUB_USER }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Publish Helm Chart
         working-directory: deploy/kubernetes
         run: |
-          if [[ ${{ env.HUB }} == "ghcr.io/duanfangwei/seatunnel" ]]; then
-            VERSION=0.0.0-$(git rev-parse --short HEAD)
-            sed -i "s/^version: .*/version: $VERSION/" seatunnel/Chart.yaml
-          fi
           helm dep up seatunnel
           helm package seatunnel
           helm push seatunnel-helm-*.tgz oci://${{ env.HUB }}
