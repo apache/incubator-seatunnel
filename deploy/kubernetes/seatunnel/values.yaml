@@ -168,7 +168,7 @@ conf:
         join:
           kubernetes:
             enabled: true
-            service-dns: seatunnel.default.svc.cluster.local'
+            service-dns: seatunnel.default.svc.cluster.local
             service-port: 5801
         port:
           auto-increment: false
