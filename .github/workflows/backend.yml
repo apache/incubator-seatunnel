@@ -393,6 +393,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 0`
           if [ ! -z $sub_modules ]; then
+             echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -423,6 +424,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 1`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -453,6 +455,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 2`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -483,6 +486,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 3`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -512,6 +516,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 4`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -541,6 +546,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 5`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -570,6 +576,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 6`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -600,6 +607,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 7`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
