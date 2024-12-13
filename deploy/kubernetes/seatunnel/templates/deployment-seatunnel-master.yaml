@@ -79,11 +79,17 @@ spec:
            - mountPath: "/opt/seatunnel/config/seatunnel.yaml"
              name: seatunnel-seatunnel
              subPath: seatunnel.yaml
+           - mountPath: "/opt/seatunnel/config/log4j2.properties"
+             name: seatunnel-log4j
+             subPath: seatunnel.yaml
       volumes:
-      - name: seatunnel-seatunnel
-        configMap:
-          name: {{ include "seatunnel.fullname" . }}-seatunnel
-      - name: seatunnel-master
-        configMap:
-          name: {{ include "seatunnel.fullname" . }}-master
+        - name: seatunnel-seatunnel
+          configMap:
+            name: {{ include "seatunnel.fullname" . }}-seatunnel
+        - name: seatunnel-master
+          configMap:
+            name: {{ include "seatunnel.fullname" . }}-master
+        - name: seatunnel-log4j
+          configMap:
+            name: {{ include "seatunnel.fullname" . }}-log4j
 

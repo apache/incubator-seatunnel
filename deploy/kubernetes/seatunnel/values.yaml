@@ -27,7 +27,7 @@ namespace: default
 
 image:
   registry: "apache/seatunnel"
-  tag: "2.3.9"
+  tag: ""
   pullPolicy: "IfNotPresent"
   pullSecret: ""
 
