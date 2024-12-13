@@ -1,0 +1,54 @@
+---
+sidebar_position: 4
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Set Up with Helm
+
+This section provides a quick guide to use SeaTunnel with Helm.
+
+## Prerequisites
+
+We assume that you have one local installation as follow:
+
+- [docker](https://docs.docker.com/)
+- [kubernetes](https://kubernetes.io/)
+- [helm](https://helm.sh/docs/intro/quickstart/)
+
+So that the `kubectl` and `helm` commands are available on your local system.
+
+Take kubernetes [minikube](https://minikube.sigs.k8s.io/docs/start/) as an example, you can start a cluster with the following command:
+
+```bash
+minikube start --kubernetes-version=v1.23.3
+```
+
+## Install
+
+Install with default settings.
+```bash
+# Choose the corresponding version yourself
+export VERSION=2.3.9
+helm pull oci://registry-1.docker.io/apache/seatunnel-helm --version ${VERSION}
+tar -xvf seatunnel-helm-${VERSION}.tgz
+cd seatunnel-helm
+helm install seatunnel .
+```
+
+If you want to install under another namespace.
+First, update `value.yaml`
+```
+## change
+seatunnel.default.svc.cluster.local
+## to
+seatunnel.<your namespace >.svc.cluster.local
+
+helm install seatunnel . -n <your namespace>
+```
+
+## What's More
+
+For now, you have taken a quick look at SeaTunnel, and you can see [connector](/category/connector) to find all sources and sinks SeaTunnel supported.
+Or see [deployment](../deployment.mdx) if you want to submit your application in another kind of your engine cluster.
