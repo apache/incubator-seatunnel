@@ -142,7 +142,7 @@ def get_deleted_modules(files):
 
 
 def get_sub_it_modules(modules, total_num, current_num):
-    modules_arr = list(dict.fromkeys(modules.split(",:")))
+    modules_arr = list(dict.fromkeys(modules.split(",")))
     modules_arr.remove("connector-jdbc-e2e")
     modules_arr.remove("connector-kafka-e2e")
     modules_arr.remove("connector-rocketmq-e2e")
