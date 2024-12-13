@@ -248,7 +248,7 @@ conf:
 ingress:
   enabled: false
   host: "seatunnel.org"
-  path: "/seatunnel"
+  path: "/"
   annotations: {}
   tls:
     enabled: false

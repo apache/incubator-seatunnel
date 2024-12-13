@@ -48,6 +48,28 @@ seatunnel.<your namespace >.svc.cluster.local
 helm install seatunnel . -n <your namespace>
 ```
 
+## Submit Job
+
+The default config doesn't enable ingress, so you need forward the master restapi.
+```bash
+kubectl port-forward -n default svc/seatunnel-master 5801:5801
+```
+Then you can access restapi with "http://127.0.0.1/5801/"
+
+If you want to use ingress, update `value.yaml`
+
+for example:
+```commandline
+ingress:
+  enabled: true
+  host: "<your domain>"
+```
+Then upgrade seatunnel.
+
+Then you can access restapi with `http://<your domain>`
+
+After that you can submit your job by [rest-api](../../seatunnel-engine/rest-api-v2.md)
+
 ## What's More
 
 For now, you have taken a quick look at SeaTunnel, and you can see [connector](../../connector-v2) to find all sources and sinks SeaTunnel supported.

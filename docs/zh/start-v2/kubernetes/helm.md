@@ -48,6 +48,28 @@ seatunnel.<your namespace >.svc.cluster.local
 helm install seatunnel . -n <your namespace>
 ```
 
+## 提交任务
+
+当前默认的配置没有启用ingress，所以需要使用转发命令将master的restapi端口转发出来。
+```bash
+kubectl port-forward -n default svc/seatunnel-master 5801:5801
+```
+然后可以通过地址 "http://127.0.0.1/5801/" 访问master的restapi。
+
+如果想要使用ingress, 需要更新 `value.yaml`
+
+例如:
+```commandline
+ingress:
+  enabled: true
+  host: "<your domain>"
+```
+然后更新seatunnel。
+
+就可以使用域名`http://<your domain>`进行访问了。
+
+后面就可以使用[rest-api](../../seatunnel-engine/rest-api-v2.md)提交任务了。
+
 ## 下一步
 到现在为止，您已经安装好Seatunnel集群了，你可以查看Seatunnel有哪些[连接器](../../connector-v2).
 或者选择其他方式 [部署](../../seatunnel-engine/deployment.md).
