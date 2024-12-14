@@ -69,8 +69,7 @@ public class MySqlIncrementalSourceFactory extends BaseChangeStreamTableSourceFa
                         JdbcSourceOptions.CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_UPPER_BOUND,
                         JdbcSourceOptions.SAMPLE_SHARDING_THRESHOLD,
                         JdbcSourceOptions.INVERSE_SAMPLING_RATE,
-                        JdbcSourceOptions.TABLE_NAMES_CONFIG,
-                        JdbcSourceOptions.SCHEMA_CHANGES_ENABLED)
+                        JdbcSourceOptions.TABLE_NAMES_CONFIG)
                 .optional(MySqlSourceOptions.STARTUP_MODE, MySqlSourceOptions.STOP_MODE)
                 .conditional(
                         MySqlSourceOptions.STARTUP_MODE,
@@ -104,25 +103,15 @@ public class MySqlIncrementalSourceFactory extends BaseChangeStreamTableSourceFa
                             context.getOptions(), context.getClassLoader());
             boolean enableSchemaChange =
                     context.getOptions()
-                            .getOptional(SourceOptions.SCHEMA_CHANGES_ENABLED)
-                            .orElse(
-                                    // TODO remove this after all users used the new schema change
-                                    // option
-                                    context.getOptions()
-                                            .getOptional(SourceOptions.DEBEZIUM_PROPERTIES)
-                                            .map(
-                                                    e ->
-                                                            e.getOrDefault(
-                                                                    MySqlSourceConfigFactory
-                                                                            .SCHEMA_CHANGE_KEY,
-                                                                    SourceOptions
-                                                                            .SCHEMA_CHANGES_ENABLED
-                                                                            .defaultValue()
-                                                                            .toString()))
-                                            .map(Boolean::parseBoolean)
-                                            .orElse(
-                                                    SourceOptions.SCHEMA_CHANGES_ENABLED
-                                                            .defaultValue()));
+                            .getOptional(SourceOptions.DEBEZIUM_PROPERTIES)
+                            .map(
+                                    e ->
+                                            e.getOrDefault(
+                                                    MySqlSourceConfigFactory.SCHEMA_CHANGE_KEY,
+                                                    MySqlSourceConfigFactory.SCHEMA_CHANGE_DEFAULT
+                                                            .toString()))
+                            .map(Boolean::parseBoolean)
+                            .orElse(MySqlSourceConfigFactory.SCHEMA_CHANGE_DEFAULT);
             if (!restoreTables.isEmpty() && enableSchemaChange) {
                 catalogTables = mergeTableStruct(catalogTables, restoreTables);
             }
