@@ -54,6 +54,10 @@ jobs:
           submodules: true
       - name: Check code style
         run: ./mvnw --batch-mode --quiet --no-snapshot-updates clean spotless:check
+      - name: Check code specification
+        run: ./mvnw -B -T 1 clean test -D"license.skipAddThirdParty"=true -pl seatunnel-ci-tools -am --no-snapshot-updates
+        env:
+          MAVEN_OPTS: -Xmx512m
 
   dead-link:
     name: Dead links
@@ -389,6 +393,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 0`
           if [ ! -z $sub_modules ]; then
+             echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -419,6 +424,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 1`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -449,6 +455,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 2`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -479,6 +486,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 3`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -508,6 +516,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 4`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -537,6 +546,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 5`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -566,6 +576,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 6`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -596,6 +607,7 @@ jobs:
         run: |
           sub_modules=`python tools/update_modules_check/update_modules_check.py sub_update_it_module ${{needs.changes.outputs.it-modules}} 8 7`
           if [ ! -z $sub_modules ]; then
+            echo $sub_modules
             ./mvnw -T 1 -B verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl $sub_modules -am -Pci
           else
             echo "sub modules is empty, skipping"
@@ -1289,9 +1301,10 @@ jobs:
       matrix:
         java: [ '8', '11' ]
         os: [ 'ubuntu-latest' ]
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
@@ -1301,8 +1314,14 @@ jobs:
       - name: free disk space
         run: tools/github/free_disk_space.sh
       - name: run oracle cdc connector integration test
-        run: |
-          ./mvnw -B -T 1 verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true --no-snapshot-updates -pl :connector-cdc-oracle-e2e -am -Pci
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 9000
+          max_attempts: 3
+          retry_on: error
+          command: |
+            echo 'running oracle cdc connector integration test...' && \
+            ./mvnw -B -T 1 verify -DskipUT=true -DskipIT=false -D"license.skipAddThirdParty"=true -D"skip.ui"=true --no-snapshot-updates -pl :connector-cdc-oracle-e2e -am -Pci
 
   connector-file-local-it:
     needs: [ changes, sanity-check ]

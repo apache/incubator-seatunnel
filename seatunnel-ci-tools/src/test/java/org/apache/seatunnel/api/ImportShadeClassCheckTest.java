@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.nio.file.StandardOpenOption.READ;
 
@@ -56,11 +58,8 @@ public class ImportShadeClassCheckTest {
 
     @BeforeAll
     public static void beforeAll() {
-        Path directoryPath = Paths.get(System.getProperty("user.dir")).getParent();
-        log.info("work directory parent ===>  " + directoryPath);
-        try {
-            Files.walk(directoryPath)
-                    .filter(path -> path.toString().endsWith(JAVA_FILE_EXTENSION))
+        try (Stream<Path> paths = Files.walk(Paths.get(".."), FileVisitOption.FOLLOW_LINKS)) {
+            paths.filter(path -> path.toString().endsWith(JAVA_FILE_EXTENSION))
                     .forEach(
                             path -> {
                                 try (InputStream inputStream = Files.newInputStream(path, READ)) {
