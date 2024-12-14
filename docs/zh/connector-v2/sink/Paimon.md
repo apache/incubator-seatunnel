@@ -65,7 +65,60 @@ Paimon连接器支持向多文件系统写入数据。目前支持的文件系�
 如果您使用s3文件系统。您可以配置`fs.s3a.access-key `， `fs.s3a.secret-key`， `fs.s3a.endpoint`， `fs.s3a.path.style.access`， `fs.s3a.aws.credentials`。在`paimon.hadoop.conf`选项中设置提供程序的属性。
 除此之外，warehouse应该以`s3a://`开头。
 
+## 模式演变
+Cdc采集支持有限数量的模式更改。目前支持的模式更改包括：
+
+* 添加列。
+
+* 修改列。更具体地说，如果修改列类型，则支持以下更改：
+
+    * 将字符串类型（char、varchar、text）更改为另一种长度更长的字符串类型，
+    * 将二进制类型（binary, varbinary, blob）更改为另一种长度更长的二进制类型，
+    * 将整数类型（tinyint, smallint, int, bigint）更改为另一种范围更大的整数类型，
+    * 将浮点类型（float、double）更改为另一种范围更大的浮点类型，
+
+> 注意:
+> 
+> 如果{oldType}和{newType}属于同一个类型族，但旧类型的精度高于新类型。忽略这个转换。
+
+* 删除列。
+
+* 更改列。
+
 ## 示例
+
+### 模式演变
+```hocon
+env {
+  # You can set engine configuration here
+  parallelism = 5
+  job.mode = "STREAMING"
+  checkpoint.interval = 5000
+  read_limit.bytes_per_second=7000000
+  read_limit.rows_per_second=400
+}
+
+source {
+  MySQL-CDC {
+    server-id = 5652-5657
+    username = "st_user_source"
+    password = "mysqlpw"
+    table-names = ["shop.products"]
+    base-url = "jdbc:mysql://mysql_cdc_e2e:3306/shop"
+    debezium = {
+      include.schema.changes = true
+    }
+  }
+}
+
+sink {
+  Paimon {
+    warehouse = "file:///tmp/paimon"
+    database = "mysql_to_paimon"
+    table = "products"
+  }
+}
+```
 
 ### 单表
 
