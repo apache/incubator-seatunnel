@@ -279,9 +279,7 @@ public class DorisSchemaChangeIT extends AbstractDorisIT implements TestResource
     }
 
     @BeforeAll
-    @Override
-    public void startUp() {
-        super.startUp();
+    public void init() {
         log.info("The second stage: Starting Mysql containers...");
         Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
         log.info("Mysql Containers are started");
