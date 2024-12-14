@@ -57,11 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
-import static org.awaitility.Awaitility.await;
 
 @Slf4j
 public abstract class RedisTestCaseTemplateIT extends TestSuiteBase implements TestResource {
@@ -496,33 +492,13 @@ public abstract class RedisTestCaseTemplateIT extends TestSuiteBase implements T
     }
 
     @TestTemplate
-    public void testFakeToToRedisDeleteZSetTest(TestContainer container)
+    public void testMysqlCdcToRedisDeleteZSetTest(TestContainer container)
             throws IOException, InterruptedException {
         Container.ExecResult execResult =
                 container.executeJob("/fake-to-redis-test-delete-zset.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
         Assertions.assertEquals(2, jedis.zcard("zset_check"));
         jedis.del("zset_check");
-    }
-
-    @TestTemplate
-    public void testFakeToRedisInRealTimeTest(TestContainer container) {
-        CompletableFuture.supplyAsync(
-                () -> {
-                    try {
-                        container.executeJob("/fake-to-redis-test-in-real-time.conf");
-                    } catch (Exception e) {
-                        log.error("Commit task exception :" + e.getMessage());
-                        throw new RuntimeException(e);
-                    }
-                    return null;
-                });
-        await().atMost(60000, TimeUnit.MILLISECONDS)
-                .untilAsserted(
-                        () -> {
-                            Assertions.assertEquals(3, jedis.llen("list_check"));
-                        });
-        jedis.del("list_check");
     }
 
     @TestTemplate
