@@ -118,14 +118,13 @@ public class SchemaUtils {
             throws SQLException {
         ComparableVersion targetVersion = new ComparableVersion(MIN_VERSION_TABLE_CHANGE_COLUMN);
         ComparableVersion currentVersion;
-        try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery("SELECT CURRENT_VERSION() as version");
+        try (Statement statement = connection.createStatement();
+                ResultSet resultSet =
+                        statement.executeQuery("SELECT CURRENT_VERSION() as version")) {
             resultSet.next();
             String version = resultSet.getString(1);
             log.debug("starrocks version: {}", version);
-
             String versionOne = version.split(" ")[0];
-
             currentVersion = new ComparableVersion(versionOne);
         }
 
