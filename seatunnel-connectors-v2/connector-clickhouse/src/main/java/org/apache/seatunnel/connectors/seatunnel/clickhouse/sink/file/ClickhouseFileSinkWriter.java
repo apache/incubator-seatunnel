@@ -33,6 +33,7 @@ import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.ClickhouseProxy
 
 import org.apache.commons.io.FileUtils;
 
+import com.clickhouse.client.ClickHouseRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -105,8 +106,12 @@ public class ClickhouseFileSinkWriter
                                 Collectors.toMap(
                                         Function.identity(),
                                         shard -> {
+                                            ClickHouseRequest<?> request =
+                                                    proxy.getClickhouseConnection(shard);
+
                                             ClickhouseTable shardTable =
-                                                    proxy.getClickhouseTable(
+                                                    proxy.getClickhouseTableForShardNode(
+                                                            request,
                                                             shard.getNode().getDatabase().get(),
                                                             clickhouseTable.getLocalTableName());
                                             return shardTable.getDataPaths();
