@@ -229,8 +229,8 @@ source {
 
 sink {
   Doris {
-    fenodes = "doris_cdc_e2e:8030"
-    username = root
+    fenodes = "doris_e2e:8030"
+    username = "root"
     password = ""
     database = "shop"
     table = "products"

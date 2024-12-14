@@ -1,4 +1,4 @@
- package org.apache.seatunnel.connectors.doris.exception;
+package org.apache.seatunnel.connectors.doris.exception;
 
 import org.apache.seatunnel.common.exception.SeaTunnelErrorCode;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;

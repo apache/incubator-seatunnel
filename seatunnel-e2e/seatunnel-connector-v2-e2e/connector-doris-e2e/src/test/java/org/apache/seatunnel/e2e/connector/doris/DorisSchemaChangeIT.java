@@ -79,7 +79,7 @@ public class DorisSchemaChangeIT extends AbstractDorisIT implements TestResource
     private static final String QUERY_COLUMNS =
             "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s' ORDER by COLUMN_NAME;";
     private static final String PROJECTION_QUERY =
-            "select id,name,description,weight,add_column1,add_column2,add_column`3` from %s.%s order by id;";
+            "select id,name,description,weight,add_column1,add_column2,add_column3 from %s.%s order by id;";
     private static final MySqlContainer MYSQL_CONTAINER = createMySqlContainer(MySqlVersion.V8_0);
     private final UniqueDatabase shopDatabase = new UniqueDatabase(MYSQL_CONTAINER, DATABASE);
 
@@ -208,11 +208,6 @@ public class DorisSchemaChangeIT extends AbstractDorisIT implements TestResource
                                         query(
                                                 String.format(QUERY_COLUMNS, database, sinkTable),
                                                 sinkConnection)));
-        try {
-            TimeUnit.SECONDS.sleep(120);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         await().atMost(60000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () -> {
@@ -295,11 +290,6 @@ public class DorisSchemaChangeIT extends AbstractDorisIT implements TestResource
         initializeJdbcTable();
         try {
             mysqlConnection = getMysqlJdbcConnection();
-            try {
-                TimeUnit.DAYS.sleep(1);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

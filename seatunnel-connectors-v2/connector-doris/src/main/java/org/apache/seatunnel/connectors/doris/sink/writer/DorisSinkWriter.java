@@ -71,7 +71,7 @@ public class DorisSinkWriter
     private final String labelPrefix;
     private final LabelGenerator labelGenerator;
     private final int intervalTime;
-    private final DorisSerializer serializer;
+    private DorisSerializer serializer;
     private final CatalogTable catalogTable;
     private final ScheduledExecutorService scheduledExecutorService;
     private volatile Exception loadException = null;
@@ -157,6 +157,9 @@ public class DorisSinkWriter
     @Override
     public void applySchemaChange(SchemaChangeEvent event) {
         this.tableSchema = tableSchemaChanger.reset(tableSchema).apply(event);
+        SeaTunnelRowType seaTunnelRowType = tableSchema.toPhysicalRowDataType();
+        this.serializer = createSerializer(this.dorisSinkConfig, seaTunnelRowType);
+
         try {
             schemaChangeManager.applySchemaChange(sinkTablePath, event);
         } catch (Exception e) {

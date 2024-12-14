@@ -229,11 +229,11 @@ source {
 
 sink {
   Doris {
-    fenodes = "doris_cdc_e2e:8030"
-    username = root
+    fenodes = "doris_e2e:8030"
+    username = "root"
     password = ""
-    database = "test"
-    table = "e2e_table_sink"
+    database = "shop"
+    table = "products"
     sink.label-prefix = "test-cdc"
     sink.enable-2pc = "true"
     sink.enable-delete = "true"

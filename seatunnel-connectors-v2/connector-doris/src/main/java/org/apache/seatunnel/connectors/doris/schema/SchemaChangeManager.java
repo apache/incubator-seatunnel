@@ -37,6 +37,7 @@ import org.apache.seatunnel.connectors.doris.exception.DorisSchemaChangeExceptio
 import org.apache.seatunnel.connectors.doris.rest.RestService;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -46,6 +47,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -146,7 +148,7 @@ public class SchemaChangeManager implements Serializable {
                         .append("RENAME COLUMN")
                         .append(" ")
                         .append(quoteIdentifier(event.getOldColumn()))
-                        .append(" TO ")
+                        .append(" ")
                         .append(quoteIdentifier(event.getColumn().getName()));
         if (event.getColumn().getComment() != null) {
             sqlBuilder
@@ -161,8 +163,7 @@ public class SchemaChangeManager implements Serializable {
         }
 
         String changeColumnSQL = sqlBuilder.toString();
-        log.info("Executing change column SQL: " + changeColumnSQL);
-        if (!sendHttpPostRequest(changeColumnSQL, tablePath.getDatabaseName())) {
+        if (!execute(changeColumnSQL, tablePath.getDatabaseName())) {
             log.warn("Failed to alter table change column, SQL:" + changeColumnSQL);
         }
     }
@@ -194,8 +195,7 @@ public class SchemaChangeManager implements Serializable {
         }
 
         String modifyColumnSQL = sqlBuilder.toString();
-        log.info("Executing modify column SQL: " + modifyColumnSQL);
-        if (!sendHttpPostRequest(modifyColumnSQL, tablePath.getDatabaseName())) {
+        if (!execute(modifyColumnSQL, tablePath.getDatabaseName())) {
             log.warn("Failed to alter table modify column, SQL:" + modifyColumnSQL);
         }
     }
@@ -233,8 +233,7 @@ public class SchemaChangeManager implements Serializable {
         }
 
         String addColumnSQL = sqlBuilder.toString();
-        log.info("Executing add column SQL: " + addColumnSQL);
-        if (!sendHttpPostRequest(addColumnSQL, tablePath.getDatabaseName())) {
+        if (!execute(addColumnSQL, tablePath.getDatabaseName())) {
             log.warn("Failed to alter table add column, SQL:" + addColumnSQL);
         }
     }
@@ -264,9 +263,35 @@ public class SchemaChangeManager implements Serializable {
                 String.format(
                         "ALTER TABLE %s DROP COLUMN %s",
                         tablePath.getFullName(), quoteIdentifier(event.getColumn()));
-        log.info("Executing drop column SQL: {}", dropColumnSQL);
-        if (!sendHttpPostRequest(dropColumnSQL, tablePath.getDatabaseName())) {
+        if (!execute(dropColumnSQL, tablePath.getDatabaseName())) {
             log.warn("Failed to alter table drop column, SQL:" + dropColumnSQL);
+        }
+    }
+
+    /** execute sql in doris. */
+    public boolean execute(String ddl, String database)
+            throws IOException, IllegalArgumentException {
+        String responseEntity = executeThenReturnResponse(ddl, database);
+        return handleSchemaChange(responseEntity);
+    }
+
+    private String executeThenReturnResponse(String ddl, String database)
+            throws IOException, IllegalArgumentException {
+        if (StringUtils.isEmpty(ddl)) {
+            throw new IllegalArgumentException("ddl can not be null or empty string!");
+        }
+        log.info("Execute SQL: {}", ddl);
+        HttpPost httpPost = buildHttpPost(ddl, database);
+        return handleResponse(httpPost);
+    }
+
+    private boolean handleSchemaChange(String responseEntity) throws JsonProcessingException {
+        Map<String, Object> responseMap = objectMapper.readValue(responseEntity, Map.class);
+        String code = responseMap.getOrDefault("code", "-1").toString();
+        if (code.equals("0")) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -281,7 +306,7 @@ public class SchemaChangeManager implements Serializable {
         String selectColumnSQL =
                 buildColumnExistsQuery(
                         tablePath.getDatabaseName(), tablePath.getTableName(), column);
-        return sendHttpPostRequest(selectColumnSQL, tablePath.getDatabaseName());
+        return sendCheckColumnHttpPostRequest(selectColumnSQL, tablePath.getDatabaseName());
     }
 
     public static String buildColumnExistsQuery(String database, String table, String column) {
@@ -300,7 +325,7 @@ public class SchemaChangeManager implements Serializable {
         return "'" + defaultValue + "'";
     }
 
-    private boolean sendHttpPostRequest(String sql, String database)
+    private boolean sendCheckColumnHttpPostRequest(String sql, String database)
             throws IOException, IllegalArgumentException {
         HttpPost httpPost = buildHttpPost(sql, database);
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
@@ -315,7 +340,7 @@ public class SchemaChangeManager implements Serializable {
                 JsonNode responseNode = objectMapper.readTree(loadResult);
                 String code = responseNode.get("code").asText("-1");
                 if (code.equals("0")) {
-                    JsonNode data = responseNode.get("data");
+                    JsonNode data = responseNode.get("data").get("data");
                     if (!data.isEmpty()) {
                         return true;
                     }
@@ -358,7 +383,12 @@ public class SchemaChangeManager implements Serializable {
             final int statusCode = response.getStatusLine().getStatusCode();
             final String reasonPhrase = response.getStatusLine().getReasonPhrase();
             if (statusCode == 200 && response.getEntity() != null) {
-                return EntityUtils.toString(response.getEntity());
+                String loadResult = EntityUtils.toString(response.getEntity());
+                log.info(
+                        "http post response success. statusCode: {}, loadResult: {}",
+                        statusCode,
+                        loadResult);
+                return loadResult;
             } else {
                 throw new DorisSchemaChangeException(
                         DorisConnectorErrorCode.SCHEMA_CHANGE_FAILED,
