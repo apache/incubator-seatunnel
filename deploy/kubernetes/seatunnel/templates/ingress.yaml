@@ -43,7 +43,7 @@ spec:
             service:
               name: {{ include "seatunnel.fullname" . }}-master
               port:
-                name: 5801
+                number: 5801
             {{- else }}
             serviceName: {{ include "seatunnel.fullname" . }}-master
             servicePort: 5801
