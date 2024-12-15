@@ -23,7 +23,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.psql.PostgresCatal
 
 import java.sql.Connection;
 
-/** @ Author：SimonChou @ Date：2024-12-12-11:17 @ Description：HighGoCatalog */
 public class HighGoCatalog extends PostgresCatalog {
 
     public HighGoCatalog(

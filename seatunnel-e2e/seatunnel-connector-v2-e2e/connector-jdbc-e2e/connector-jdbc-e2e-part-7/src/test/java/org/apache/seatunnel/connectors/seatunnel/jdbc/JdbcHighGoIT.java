@@ -47,7 +47,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/** @ Author：SimonChou @ Date：2024-12-12-11:39 @ Description：JdbcHighGoIT */
 public class JdbcHighGoIT extends AbstractJdbcIT {
     protected static final String HIGHGO_IMAGE = "xuxuclassmate/highgo";
 

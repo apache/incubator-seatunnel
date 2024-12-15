@@ -21,7 +21,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql.Post
 
 import com.google.auto.service.AutoService;
 
-/** @ Author：SimonChou @ Date：2024-12-12-11:29 @ Description：HighGoDialectFactory */
 @AutoService(JdbcDialectFactory.class)
 public class HighGoDialectFactory extends PostgresDialectFactory {
     @Override

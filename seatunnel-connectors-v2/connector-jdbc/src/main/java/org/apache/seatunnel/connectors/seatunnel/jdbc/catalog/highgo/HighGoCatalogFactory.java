@@ -27,7 +27,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseI
 
 import java.util.Optional;
 
-/** @ Author：SimonChou @ Date：2024-12-12-11:20 @ Description：HighGoCatalogFactory */
 public class HighGoCatalogFactory implements CatalogFactory {
 
     @Override
