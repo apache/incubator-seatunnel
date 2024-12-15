@@ -75,7 +75,6 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.DockerLoggerFactory;
 
@@ -104,7 +103,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.awaitility.Awaitility.await;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.given;
 
 @Slf4j
 public class KafkaIT extends TestSuiteBase implements TestResource {
@@ -132,8 +131,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                                         DockerLoggerFactory.getLogger(KAFKA_IMAGE_NAME)));
         Startables.deepStart(Stream.of(kafkaContainer)).join();
         log.info("Kafka container started");
-        Awaitility.given()
-                .ignoreExceptions()
+        given().ignoreExceptions()
                 .atLeast(100, TimeUnit.MILLISECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .atMost(180, TimeUnit.SECONDS)
@@ -789,11 +787,12 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                     }
                     return null;
                 });
-        TimeUnit.MINUTES.sleep(5);
         // wait for data written to kafka
         Long finalEndOffset = endOffset;
-        await().atMost(5, TimeUnit.MINUTES)
-                .pollInterval(5000, TimeUnit.MILLISECONDS)
+        given().pollDelay(30, TimeUnit.SECONDS)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .await()
+                .atMost(5, TimeUnit.MINUTES)
                 .untilAsserted(
                         () ->
                                 Assertions.assertTrue(
