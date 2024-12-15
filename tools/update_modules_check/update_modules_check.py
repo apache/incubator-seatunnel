@@ -142,7 +142,7 @@ def get_deleted_modules(files):
 
 
 def get_sub_it_modules(modules, total_num, current_num):
-    modules_arr = modules.split(",")
+    modules_arr = list(dict.fromkeys(modules.split(",")))
     modules_arr.remove("connector-jdbc-e2e")
     modules_arr.remove("connector-kafka-e2e")
     modules_arr.remove("connector-rocketmq-e2e")
@@ -168,7 +168,7 @@ def get_sub_update_it_modules(modules, total_num, current_num):
     # :connector-jdbc-e2e-common,:connector-jdbc-e2e-part-1 --> connector-jdbc-e2e-common,:connector-jdbc-e2e-part-1
     modules = modules[1:]
     # connector-jdbc-e2e-common,:connector-jdbc-e2e-part-1 --> [connector-jdbc-e2e-common, connector-jdbc-e2e-part-1]
-    module_list = modules.split(",:")
+    module_list = list(dict.fromkeys(modules.split(",:")))
     if "connector-kudu-e2e" in module_list:
         module_list.remove("connector-kudu-e2e")
     if "connector-amazonsqs-e2e" in module_list:
