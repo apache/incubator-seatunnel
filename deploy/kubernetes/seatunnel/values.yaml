@@ -21,9 +21,6 @@
 
 timezone: "Asia/Shanghai"
 
-# the value of 'service-dns' depends on this value, if you try to install
-# in another namespace, muster update that value in this file too.
-namespace: default
 
 image:
   registry: "apache/seatunnel"
@@ -45,7 +42,7 @@ master:
   ## Clients such as tools and libraries can retrieve this metadata.
   annotations:
     prometheus.io/path: /hazelcast/rest/instance/metrics
-    prometheus.io/port: "8080"
+    prometheus.io/port: "5801"
     prometheus.io/scrape: "true"
     prometheus.io/role: "seatunnel-master"
   ## Affinity is a group of affinity scheduling rules. If specified, the pod's scheduling constraints.
@@ -108,7 +105,7 @@ worker:
   ## Add enable prometheus scrape for metrics collection.
   annotations:
     prometheus.io/path: /hazelcast/rest/instance/metrics
-    prometheus.io/port: "8080"
+    prometheus.io/port: "5801"
     prometheus.io/scrape: "true"
     prometheus.io/role: "seatunnel-worker"
   ## Affinity is a group of affinity scheduling rules. If specified, the pod's scheduling constraints.

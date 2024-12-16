@@ -61,8 +61,10 @@ spec:
           image: {{ include "seatunnel.image.fullname.master" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 8080
+            - containerPort: 5801
               name: "hazelcast-port"
+            - containerPort: 8080
+              name: "master-port"
           command: ["/bin/sh","-c","/opt/seatunnel/bin/seatunnel-cluster.sh -r master"]
           {{- if .Values.master.resources }}
           resources:

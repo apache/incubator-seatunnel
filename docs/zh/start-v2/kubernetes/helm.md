@@ -38,13 +38,7 @@ helm install seatunnel .
 ```
 
 如果您需要使用其他命名空间进行安装。
-首先，需要更新 `value.yaml`
 ```
-## 修改
-seatunnel.default.svc.cluster.local
-## 为
-seatunnel.<your namespace >.svc.cluster.local
-
 helm install seatunnel . -n <your namespace>
 ```
 

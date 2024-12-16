@@ -12,10 +12,10 @@ hazelcast:
       kubernetes:
         enabled: true
         service-dns: {{ include "seatunnel.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
-        service-port: 8080
+        service-port: 5801
     port:
       auto-increment: false
-      port: 8080
+      port: 5801
   properties:
     hazelcast.invocation.max.retry.count: 20
     hazelcast.tcp.join.port.try.count: 30

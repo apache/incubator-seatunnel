@@ -26,7 +26,7 @@ metadata:
 spec:
   clusterIP: "None"
   ports:
-    - name: "hazelcast-port"
+    - name: "master-port"
       port: 8080
       targetPort: 8080
       protocol: TCP

@@ -36,15 +36,8 @@ tar -xvf seatunnel-helm-${VERSION}.tgz
 cd seatunnel-helm
 helm install seatunnel .
 ```
-
-If you want to install under another namespace.
-First, update `value.yaml`
-```
-## change
-seatunnel.default.svc.cluster.local
-## to
-seatunnel.<your namespace >.svc.cluster.local
-
+Install with another namespace.
+```bash
 helm install seatunnel . -n <your namespace>
 ```
 

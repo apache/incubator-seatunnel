@@ -24,4 +24,4 @@ hazelcast-client:
       cluster-connect-timeout-millis: 3000
   network:
     cluster-members:
-      - {{ include "seatunnel.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8080
+      - {{ include "seatunnel.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:5801
