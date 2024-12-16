@@ -28,10 +28,10 @@ Access seatunnel UI URL by:
 
 {{- else if eq .Values.master.service.type "ClusterIP" }}
 
-  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ template "seatunnel.fullname" . }}-master 5801:5801
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ template "seatunnel.fullname" . }}-master 8080:8080
 
-  seatunnel restapi URL for running jobs: http://127.0.0.1:5801/running-jobs
-  seatunnel restapi URL for system monitoring information: http://127.0.0.1:5801/system-monitoring-information
+  seatunnel restapi URL for running jobs: http://127.0.0.1:8080/running-jobs
+  seatunnel restapi URL for system monitoring information: http://127.0.0.1:8080/system-monitoring-information
   
   For more restapi please refer to https://seatunnel.apache.org/docs/{{ .Chart.AppVersion }}/seatunnel-engine/rest-api-v2
 
@@ -50,10 +50,10 @@ Access seatunnel UI URL by:
         You can watch the status of by running 'kubectl get svc {{ template "seatunnel.fullname" . }}-master -n {{ .Release.Namespace }} -w'
 
   SERVICE_IP=$(kubectl get svc {{ template "seatunnel.fullname" . }}-master -n {{ .Release.Namespace }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  echo http://$SERVICE_IP:5801/running-jobs
+  echo http://$SERVICE_IP:8080/running-jobs
 
-  seatunnel resetapi URL for running jobs: http://$SERVICE_IP:5801/running-jobs
-  seatunnel resetapi URL for system monitoring information: http://$SERVICE_IP:5801/system-monitoring-information
+  seatunnel resetapi URL for running jobs: http://$SERVICE_IP:8080/running-jobs
+  seatunnel resetapi URL for system monitoring information: http://$SERVICE_IP:8080/system-monitoring-information
 
   For more restapi please refer to https://seatunnel.apache.org/docs/{{ .Chart.AppVersion }}/seatunnel-engine/rest-api-v2
 {{- end }}
@@ -62,5 +62,5 @@ Or you can just go into master pod, and use local curl command.
 
 MASTER_POD=$(kubectl get po -l  'app.kubernetes.io/name=seatunnel-master' | sed '1d' | awk '{print $1}' | head -n1)
 kubectl -n {{ .Release.Namespace }} exec -it $MASTER_POD -- /bin/bash
-curl http://127.0.0.1:5801/running-jobs
-curl http://127.0.0.1:5801/system-monitoring-information
+curl http://127.0.0.1:8080/running-jobs
+curl http://127.0.0.1:8080/system-monitoring-information

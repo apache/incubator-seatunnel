@@ -43,10 +43,10 @@ spec:
             service:
               name: {{ include "seatunnel.fullname" . }}-master
               port:
-                number: 5801
+                number: 8080
             {{- else }}
             serviceName: {{ include "seatunnel.fullname" . }}-master
-            servicePort: 5801
+            servicePort: 8080
             {{- end }}
           {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
           pathType: Prefix

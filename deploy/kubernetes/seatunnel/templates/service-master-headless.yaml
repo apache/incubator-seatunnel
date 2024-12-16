@@ -27,8 +27,8 @@ spec:
   clusterIP: "None"
   ports:
     - name: "hazelcast-port"
-      port: 5801
-      targetPort: 5801
+      port: 8080
+      targetPort: 8080
       protocol: TCP
   selector:
     {{- include "seatunnel.master.labels" . | nindent 4 }}
