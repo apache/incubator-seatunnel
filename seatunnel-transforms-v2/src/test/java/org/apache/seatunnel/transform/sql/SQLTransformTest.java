@@ -166,12 +166,13 @@ public class SQLTransformTest {
                 ReadonlyConfig.fromMap(
                         Collections.singletonMap(
                                 "query",
-                                "select id, trim(`apply`) as `apply` from test where `apply` = 'a'"));
+                                "select `id`, trim(`apply`) as `apply` from test where `apply` = 'a'"));
         SQLTransform sqlTransform = new SQLTransform(config, table);
         TableSchema tableSchema = sqlTransform.transformTableSchema();
         List<SeaTunnelRow> result =
                 sqlTransform.transformRow(
                         new SeaTunnelRow(new Object[] {Integer.valueOf(1), String.valueOf("a")}));
+        Assertions.assertEquals("id", tableSchema.getFieldNames()[0]);
         Assertions.assertEquals("apply", tableSchema.getFieldNames()[1]);
         Assertions.assertEquals("a", result.get(0).getField(1));
         result =

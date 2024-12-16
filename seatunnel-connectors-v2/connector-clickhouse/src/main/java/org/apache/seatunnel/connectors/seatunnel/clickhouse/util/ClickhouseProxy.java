@@ -192,7 +192,8 @@ public class ClickhouseProxy {
             String database,
             int port,
             String username,
-            String password) {
+            String password,
+            Map<String, String> options) {
         String sql =
                 "select shard_num,shard_weight,replica_num,host_name,host_address,port from system.clusters where cluster = '"
                         + clusterName
@@ -213,7 +214,8 @@ public class ClickhouseProxy {
                                                 port,
                                                 database,
                                                 username,
-                                                password));
+                                                password,
+                                                options));
                             });
             return shardList;
         } catch (ClickHouseException e) {
@@ -396,7 +398,6 @@ public class ClickhouseProxy {
     }
 
     public boolean isExistsData(String tableName) throws ExecutionException, InterruptedException {
-        // 定义查询数据的SQL语句
         String queryDataSql = "SELECT count(*) FROM " + tableName;
         try (ClickHouseResponse response = clickhouseRequest.query(queryDataSql).executeAndWait()) {
             return response.firstRecord().getValue(0).asInteger() > 0;

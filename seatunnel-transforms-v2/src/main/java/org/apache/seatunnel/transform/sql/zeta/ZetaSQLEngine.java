@@ -183,7 +183,7 @@ public class ZetaSQLEngine implements SQLEngine {
         for (SelectItem selectItem : selectItems) {
             if (selectItem.getExpression() instanceof AllColumns) {
                 for (int i = 0; i < inputRowType.getFieldNames().length; i++) {
-                    fieldNames[idx] = inputRowType.getFieldName(i);
+                    fieldNames[idx] = cleanEscape(inputRowType.getFieldName(i));
                     seaTunnelDataTypes[idx] = inputRowType.getFieldType(i);
                     if (inputColumnsMapping != null) {
                         inputColumnsMapping.set(idx, inputRowType.getFieldName(i));
@@ -194,16 +194,12 @@ public class ZetaSQLEngine implements SQLEngine {
                 Expression expression = selectItem.getExpression();
                 if (selectItem.getAlias() != null) {
                     String aliasName = selectItem.getAlias().getName();
-                    if (aliasName.startsWith(ESCAPE_IDENTIFIER)
-                            && aliasName.endsWith(ESCAPE_IDENTIFIER)) {
-                        aliasName = aliasName.substring(1, aliasName.length() - 1);
-                    }
-                    fieldNames[idx] = aliasName;
+                    fieldNames[idx] = cleanEscape(aliasName);
                 } else {
                     if (expression instanceof Column) {
-                        fieldNames[idx] = ((Column) expression).getColumnName();
+                        fieldNames[idx] = cleanEscape(((Column) expression).getColumnName());
                     } else {
-                        fieldNames[idx] = expression.toString();
+                        fieldNames[idx] = cleanEscape(expression.toString());
                     }
                 }
 
@@ -223,6 +219,13 @@ public class ZetaSQLEngine implements SQLEngine {
         }
         return zetaSQLFunction.lateralViewMapping(
                 fieldNames, seaTunnelDataTypes, lateralViews, inputColumnsMapping);
+    }
+
+    private static String cleanEscape(String columnName) {
+        if (columnName.startsWith(ESCAPE_IDENTIFIER) && columnName.endsWith(ESCAPE_IDENTIFIER)) {
+            columnName = columnName.substring(1, columnName.length() - 1);
+        }
+        return columnName;
     }
 
     @Override
