@@ -23,13 +23,13 @@ metadata:
     {{- include "seatunnel.master.labels" . | nindent 4 }}
 data:
   hazelcast-master.yaml: |-
-  {{.Files.Get "conf/hazelcast-master.yaml" | nindent 4 }}
+  {{ tpl (.Files.Get "conf/hazelcast-master.yaml") $ | nindent 4 }}
   hazelcast-worker.yaml: |-
-  {{.Files.Get "conf/hazelcast-worker.yaml" | nindent 4 }}
+  {{ tpl (.Files.Get "conf/hazelcast-worker.yaml") $ | nindent 4 }}
   hazelcast-client.yaml: |-
-  {{.Files.Get "conf/hazelcast-client.yaml" | nindent 4 }}
+  {{ tpl (.Files.Get "conf/hazelcast-client.yaml") $ | nindent 4 }}
   seatunnel.yaml: |-
-  {{.Files.Get "conf/seatunnel.yaml" | nindent 4 }}
+  {{ tpl (.Files.Get "conf/seatunnel.yaml") $ | nindent 4 }}
   log4j2.properties: |-
-  {{.Files.Get "conf/log4j2.properties" | nindent 4 }}
+  {{ tpl (.Files.Get "conf/log4j2.properties") $ | nindent 4 }}
 

@@ -11,7 +11,7 @@ hazelcast:
     join:
       kubernetes:
         enabled: true
-        service-dns: {{ include "seatunnel.fullname" . }}.{{ .Release.NameSpace }}.svc.cluster.local
+        service-dns: {{ include "seatunnel.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
         service-port: 5801
     port:
       auto-increment: false
