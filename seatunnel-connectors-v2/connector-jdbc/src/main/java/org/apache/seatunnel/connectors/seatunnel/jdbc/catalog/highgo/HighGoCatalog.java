@@ -16,12 +16,8 @@
  */
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.highgo;
 
-import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
-
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.psql.PostgresCatalog;
-
-import java.sql.Connection;
 
 public class HighGoCatalog extends PostgresCatalog {
 
@@ -32,10 +28,5 @@ public class HighGoCatalog extends PostgresCatalog {
             JdbcUrlUtil.UrlInfo urlInfo,
             String defaultSchema) {
         super(catalogName, username, pwd, urlInfo, defaultSchema);
-    }
-
-    @VisibleForTesting
-    public void setConnection(String url, Connection connection) {
-        this.connectionMap.put(url, connection);
     }
 }
