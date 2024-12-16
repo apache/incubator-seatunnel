@@ -74,22 +74,19 @@ spec:
           {{- end }}
           volumeMounts:
            - mountPath: "/opt/seatunnel/config/hazelcast-master.yaml"
-             name: seatunnel-master
+             name: seatunnel-configs
              subPath: hazelcast-master.yaml
+           - mountPath: "/opt/seatunnel/config/hazelcast-client.yaml"
+             name: seatunnel-configs
+             subPath: hazelcast-client.yaml
            - mountPath: "/opt/seatunnel/config/seatunnel.yaml"
-             name: seatunnel-seatunnel
+             name: seatunnel-configs
              subPath: seatunnel.yaml
            - mountPath: "/opt/seatunnel/config/log4j2.properties"
-             name: seatunnel-log4j
+             name: seatunnel-configs
              subPath: log4j2.properties
       volumes:
-        - name: seatunnel-seatunnel
+        - name: seatunnel-configs
           configMap:
-            name: {{ include "seatunnel.fullname" . }}-seatunnel
-        - name: seatunnel-master
-          configMap:
-            name: {{ include "seatunnel.fullname" . }}-master
-        - name: seatunnel-log4j
-          configMap:
-            name: {{ include "seatunnel.fullname" . }}-log4j
+            name: {{ include "seatunnel.fullname" . }}-configs
 

@@ -17,12 +17,19 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "seatunnel.fullname" . }}-master
+  name: {{ include "seatunnel.fullname" . }}-configs
   labels:
-    app.kubernetes.io/name: {{ include "seatunnel.fullname" . }}-master
+    app.kubernetes.io/name: {{ include "seatunnel.fullname" . }}-configs
     {{- include "seatunnel.master.labels" . | nindent 4 }}
 data:
   hazelcast-master.yaml: |-
-  {{- if .Values.conf.master }}
-    {{- toYaml .Values.conf.master | nindent 4 }}
-  {{- end }}
+  {{.Files.Get "conf/hazelcast-master.yaml" | nindent 4 }}
+  hazelcast-worker.yaml: |-
+  {{.Files.Get "conf/hazelcast-worker.yaml" | nindent 4 }}
+  hazelcast-client.yaml: |-
+  {{.Files.Get "conf/hazelcast-client.yaml" | nindent 4 }}
+  seatunnel.yaml: |-
+  {{.Files.Get "conf/seatunnel.yaml" | nindent 4 }}
+  log4j2.properties: |-
+  {{.Files.Get "conf/log4j2.properties" | nindent 4 }}
+

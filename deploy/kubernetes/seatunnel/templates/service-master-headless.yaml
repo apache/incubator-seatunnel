@@ -14,13 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+---
+# use for access seatunnel from outside system via rest api
 apiVersion: v1
-kind: ConfigMap
+kind: Service
 metadata:
-  name: {{ include "seatunnel.fullname" . }}-log4j
+  name: {{ include "seatunnel.fullname" . }}-master
   labels:
-    app.kubernetes.io/name: {{ include "seatunnel.fullname" . }}-log4j
-    {{- include "seatunnel.common.labels" . | nindent 4 }}
-data:
-  log4j2.properties: |-
-  {{.Files.Get "conf/log4j2.properties" | nindent 4 }}
+    {{- include "seatunnel.master.labels" . | nindent 4 }}
+  namespace: {{ .Values.namespace }}
+spec:
+  clusterIP: "None"
+  ports:
+    - name: "hazelcast-port"
+      port: 5801
+      targetPort: 5801
+      protocol: TCP
+  selector:
+    {{- include "seatunnel.master.labels" . | nindent 4 }}
+---
