@@ -75,13 +75,11 @@ MASTER_POD=$(kubectl get po -l  'app.kubernetes.io/name=seatunnel-master' | sed 
 # 进入master pod
 kubectl -n default exec -it $MASTER_POD -- /bin/bash
 # 执行 restapi
-curl http://127.0.0.1:5801/hazelcast/rest/maps/running-jobs
-curl http://127.0.0.1:5801/hazelcast/rest/maps/system-monitoring-information
+curl http://127.0.0.1:5801/running-jobs
+curl http://127.0.0.1:5801/system-monitoring-information
 ```
 
-
-
-后面就可以使用[rest-api](../../seatunnel-engine/rest-api-v2.md)提交任务了。
+后面就可以使用[rest-api-v2](../../seatunnel-engine/rest-api-v2.md)提交任务了。
 
 ## 下一步
 到现在为止，您已经安装好Seatunnel集群了，你可以查看Seatunnel有哪些[连接器](../../connector-v2).

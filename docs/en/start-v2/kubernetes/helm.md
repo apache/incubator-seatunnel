@@ -75,11 +75,11 @@ MASTER_POD=$(kubectl get po -l  'app.kubernetes.io/name=seatunnel-master' | sed 
 # go into master pod container.
 kubectl -n default exec -it $MASTER_POD -- /bin/bash
 
-curl http://127.0.0.1:5801/hazelcast/rest/maps/running-jobs
-curl http://127.0.0.1:5801/hazelcast/rest/maps/system-monitoring-information
+curl http://127.0.0.1:5801/running-jobs
+curl http://127.0.0.1:5801/system-monitoring-information
 ```
 
-After that you can submit your job by [rest-api](../../seatunnel-engine/rest-api-v2.md)
+After that you can submit your job by [rest-api-v2](../../seatunnel-engine/rest-api-v2.md)
 
 ## What's More
 
