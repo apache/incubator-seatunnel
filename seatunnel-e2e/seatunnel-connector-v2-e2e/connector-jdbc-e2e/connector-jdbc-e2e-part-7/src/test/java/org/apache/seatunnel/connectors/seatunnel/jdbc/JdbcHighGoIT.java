@@ -304,8 +304,6 @@ public class JdbcHighGoIT extends AbstractJdbcIT {
                         jdbcCase.getPassword(),
                         JdbcUrlUtil.getUrlInfo(jdbcUrl),
                         SCHEMA);
-        // set connection
-        ((HighGoCatalog) catalog).setConnection(jdbcUrl, connection);
         catalog.open();
     }
 }
