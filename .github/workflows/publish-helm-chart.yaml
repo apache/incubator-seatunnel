@@ -27,6 +27,8 @@ on:
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USER }}
   DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+  DOCKER_REGISTRY: docker.io
+  HUB: registry-1.docker.io/apache
 
 jobs:
   build:
@@ -38,12 +40,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Set environment variables
-        run: |
-            echo "HUB=registry-1.docker.io/apache" >> $GITHUB_ENV
-            echo "DOCKER_REGISTRY=docker.io" >> $GITHUB_ENV
-            echo "DOCKER_USERNAME=${{ env.DOCKER_USERNAME }}" >> $GITHUB_ENV
-            echo "DOCKER_PASSWORD=${{ env.DOCKER_PASSWORD }}" >> $GITHUB_ENV
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
