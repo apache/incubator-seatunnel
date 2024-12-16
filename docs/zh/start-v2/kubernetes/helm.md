@@ -68,6 +68,19 @@ ingress:
 
 就可以使用域名`http://<your domain>`进行访问了。
 
+或者您可以直接进入master的POD执行curl命令。.
+```commandline
+# 获取其中一个master pod
+MASTER_POD=$(kubectl get po -l  'app.kubernetes.io/name=seatunnel-master' | sed '1d' | awk '{print $1}' | head -n1)
+# 进入master pod
+kubectl -n default exec -it $MASTER_POD -- /bin/bash
+# 执行 restapi
+curl http://127.0.0.1:5801/hazelcast/rest/maps/running-jobs
+curl http://127.0.0.1:5801/hazelcast/rest/maps/system-monitoring-information
+```
+
+
+
 后面就可以使用[rest-api](../../seatunnel-engine/rest-api-v2.md)提交任务了。
 
 ## 下一步
