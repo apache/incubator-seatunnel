@@ -22,7 +22,6 @@ import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.MySqlContainer;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.MySqlVersion;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.UniqueDatabase;
-import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
@@ -64,7 +63,7 @@ import static org.awaitility.Awaitility.await;
         type = {EngineType.SPARK, EngineType.FLINK},
         disabledReason =
                 "Currently SPARK do not support cdc. In addition, currently only the zeta engine supports schema evolution for pr https://github.com/apache/seatunnel/pull/5125.")
-public class DorisSchemaChangeIT extends AbstractDorisIT implements TestResource {
+public class DorisSchemaChangeIT extends AbstractDorisIT {
     private static final String DATABASE = "shop";
     private static final String SOURCE_TABLE = "products";
     private static final String MYSQL_HOST = "mysql_cdc_e2e";
@@ -294,8 +293,7 @@ public class DorisSchemaChangeIT extends AbstractDorisIT implements TestResource
     }
 
     @AfterAll
-    @Override
-    public void tearDown() throws SQLException {
+    public void close() throws SQLException {
         if (MYSQL_CONTAINER != null) {
             MYSQL_CONTAINER.close();
         }
