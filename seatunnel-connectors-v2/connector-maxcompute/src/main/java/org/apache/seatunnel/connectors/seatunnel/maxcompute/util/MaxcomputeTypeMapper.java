@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.maxcompute.util;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.MapType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
@@ -89,7 +90,7 @@ public class MaxcomputeTypeMapper implements Serializable {
     }
 
     public static SeaTunnelRowType getSeaTunnelRowType(Config pluginConfig) {
-        Table table = MaxcomputeUtil.getTable(pluginConfig);
+        Table table = MaxcomputeUtil.getTable(ReadonlyConfig.fromConfig(pluginConfig));
         TableSchema tableSchema = table.getSchema();
         ArrayList<SeaTunnelDataType<?>> seaTunnelDataTypes = new ArrayList<>();
         ArrayList<String> fieldNames = new ArrayList<>();
@@ -251,16 +252,17 @@ public class MaxcomputeTypeMapper implements Serializable {
             case DOUBLE:
             case BIGINT:
             case BOOLEAN:
+            case DECIMAL:
+            case TIMESTAMP_NTZ:
                 return field;
             case BINARY:
                 return new Binary((byte[]) field);
-            case DECIMAL:
-                return null;
             case VARCHAR:
                 return new Varchar((String) field);
             case CHAR:
                 return new Char((String) field);
             case STRING:
+            case JSON:
                 if (field instanceof byte[]) {
                     return new String((byte[]) field);
                 }

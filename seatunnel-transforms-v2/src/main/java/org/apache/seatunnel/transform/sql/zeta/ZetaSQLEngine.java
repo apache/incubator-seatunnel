@@ -128,7 +128,8 @@ public class ZetaSQLEngine implements SQLEngine {
                 }
                 String tableName = table.getName();
                 if (!inputTableName.equalsIgnoreCase(tableName)
-                        && !tableName.equalsIgnoreCase(catalogTableName)) {
+                        && !tableName.equalsIgnoreCase(catalogTableName)
+                        && !"DUAL".equalsIgnoreCase(tableName)) {
                     log.warn(
                             "SQL table name {} is not equal to input table name {} or catalog table name {}",
                             tableName,

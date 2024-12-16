@@ -189,8 +189,8 @@ public class OracleCDCWithSchemaChangeIT extends AbstractOracleCDCIT implements 
     @TestTemplate
     public void testOracleCdc2MysqlWithSchemaEvolutionCase(TestContainer container)
             throws Exception {
-        dropTable(ORACLE_CONTAINER.getJdbcUrl(), SCEHMA_NAME + "." + SOURCE_TABLE1);
-        dropTable(ORACLE_CONTAINER.getJdbcUrl(), SCEHMA_NAME + "." + SOURCE_TABLE1 + "_SINK");
+        dropTable(ORACLE_CONTAINER.getJdbcUrl(), SCEHMA_NAME, SOURCE_TABLE1);
+        dropTable(ORACLE_CONTAINER.getJdbcUrl(), SCEHMA_NAME, SOURCE_TABLE1 + "_SINK");
         createAndInitialize("full_types", ADMIN_USER, ADMIN_PWD);
         CompletableFuture.runAsync(
                 () -> {
