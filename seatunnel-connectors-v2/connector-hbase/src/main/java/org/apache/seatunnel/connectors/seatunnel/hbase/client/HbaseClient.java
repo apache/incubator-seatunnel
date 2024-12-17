@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
-import org.apache.hadoop.hbase.NotServingRegionException;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.BufferedMutator;
@@ -39,7 +38,6 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
@@ -57,7 +55,6 @@ import static org.apache.seatunnel.connectors.seatunnel.hbase.exception.HbaseCon
 @Slf4j
 public class HbaseClient {
 
-    private static final long RETRY_DELAY_MS = 1000;
     private final Connection connection;
     private final Admin admin;
     private final BufferedMutator hbaseMutator;
@@ -76,9 +73,9 @@ public class HbaseClient {
 
             BufferedMutatorParams bufferedMutatorParams =
                     new BufferedMutatorParams(
-                            TableName.valueOf(
-                                    hbaseParameters.getNamespace(),
-                                    hbaseParameters.getTable()))
+                                    TableName.valueOf(
+                                            hbaseParameters.getNamespace(),
+                                            hbaseParameters.getTable()))
                             .pool(HTable.getDefaultExecutor(hbaseConfiguration))
                             .writeBufferSize(hbaseParameters.getWriteBufferSize());
             hbaseMutator = connection.getBufferedMutator(bufferedMutatorParams);
