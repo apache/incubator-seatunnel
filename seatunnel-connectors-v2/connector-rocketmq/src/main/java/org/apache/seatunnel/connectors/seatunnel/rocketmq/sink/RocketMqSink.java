@@ -74,6 +74,9 @@ public class RocketMqSink extends AbstractSimpleSink<SeaTunnelRow, Void> {
         }
         producerMetadata = new ProducerMetadata();
         producerMetadata.setTopic(config.getString(ProducerConfig.TOPIC.key()));
+        if (config.hasPath(ProducerConfig.TAG.key())) {
+            producerMetadata.setTag(config.getString(ProducerConfig.TAG.key()));
+        }
         RocketMqBaseConfiguration.Builder baseConfigurationBuilder =
                 RocketMqBaseConfiguration.newBuilder()
                         .producer()

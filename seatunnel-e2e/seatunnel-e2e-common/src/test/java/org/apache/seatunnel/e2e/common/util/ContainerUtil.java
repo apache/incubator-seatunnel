@@ -56,6 +56,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import static org.apache.seatunnel.e2e.common.container.TestContainerId.FLINK_1_18;
+import static org.apache.seatunnel.e2e.common.container.TestContainerId.SPARK_3_3;
+
 @Slf4j
 public final class ContainerUtil {
 
@@ -317,7 +320,9 @@ public final class ContainerUtil {
                         .filter(container -> container.identifier().isTestInPR())
                         .filter(
                                 container -> {
-                                    if (testAllContainer) {
+                                    if (testAllContainer
+                                            || container.identifier().equals(FLINK_1_18)
+                                            || container.identifier().equals(SPARK_3_3)) {
                                         return true;
                                     }
                                     if (testZetaContainer) {

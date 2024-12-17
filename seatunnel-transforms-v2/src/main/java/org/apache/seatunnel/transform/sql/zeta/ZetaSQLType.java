@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.transform.sql.zeta;
 
+import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.DecimalType;
 import org.apache.seatunnel.api.table.type.LocalTimeType;
@@ -446,6 +447,9 @@ public class ZetaSQLType {
             case ZetaSQLFunction.TRUNC:
             case ZetaSQLFunction.TRUNCATE:
                 return BasicType.DOUBLE_TYPE;
+            case ZetaSQLFunction.ARRAY:
+            case ZetaSQLFunction.SPLIT:
+                return ArrayType.STRING_ARRAY_TYPE;
             case ZetaSQLFunction.NOW:
             case ZetaSQLFunction.DATE_TRUNC:
                 return LocalTimeType.LOCAL_DATE_TIME_TYPE;

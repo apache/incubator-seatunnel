@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.e2e.common.container.seatunnel;
 
+import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.seatunnel.common.utils.FileUtils;
@@ -39,13 +41,12 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerLoggerFactory;
 import org.testcontainers.utility.MountableFile;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
 import groovy.lang.Tuple2;
 import lombok.NoArgsConstructor;
@@ -86,7 +87,21 @@ public class SeaTunnelContainer extends AbstractTestContainer {
         server = createSeaTunnelServer();
     }
 
+    /**
+     * Start up the seatunnel server with the given network.
+     *
+     * @param NETWORK the network to use
+     */
+    public void startUp(Network NETWORK) throws Exception {
+        server = createSeaTunnelServer(NETWORK);
+    }
+
     private GenericContainer<?> createSeaTunnelServer() throws IOException, InterruptedException {
+        return createSeaTunnelServer(NETWORK);
+    }
+
+    private GenericContainer<?> createSeaTunnelServer(Network NETWORK)
+            throws IOException, InterruptedException {
         GenericContainer<?> server =
                 new GenericContainer<>(getDockerImage())
                         .withNetwork(NETWORK)
@@ -439,7 +454,7 @@ public class SeaTunnelContainer extends AbstractTestContainer {
     }
 
     /** The thread should be recycled but not, we should fix it in the future. */
-    private boolean isIssueWeAlreadyKnow(String threadName) {
+    protected boolean isIssueWeAlreadyKnow(String threadName) {
         // ClickHouse com.clickhouse.client.ClickHouseClientBuilder
         return threadName.startsWith("ClickHouseClientWorker")
                 // InfluxDB okio.AsyncTimeout$Watchdog
@@ -497,7 +512,11 @@ public class SeaTunnelContainer extends AbstractTestContainer {
 
     @Override
     public String getJobStatus(String jobId) {
-        HttpGet get = new HttpGet("http://" + server.getHost() + ":8080/job-info/" + jobId);
+        HttpGet get =
+                new HttpGet(
+                        String.format(
+                                "http://%s:%d/job-info/%s",
+                                server.getHost(), server.getMappedPort(8080), jobId));
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             CloseableHttpResponse response = client.execute(get);
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -522,5 +541,10 @@ public class SeaTunnelContainer extends AbstractTestContainer {
     public void copyFileToContainer(String path, String targetPath) {
         ContainerUtil.copyFileIntoContainers(
                 ContainerUtil.getResourcesFile(path).toPath(), targetPath, server);
+    }
+
+    @Override
+    public void copyAbsolutePathToContainer(String path, String targetPath) {
+        ContainerUtil.copyFileIntoContainers(Paths.get(path), targetPath, server);
     }
 }

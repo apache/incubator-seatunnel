@@ -17,6 +17,12 @@
 
 package org.apache.seatunnel.e2e.connector.cdc.sqlserver;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
+import org.apache.seatunnel.common.utils.SeaTunnelException;
+import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfigFactory;
+import org.apache.seatunnel.connectors.seatunnel.cdc.sqlserver.config.SqlServerSourceConfigFactory;
+import org.apache.seatunnel.connectors.seatunnel.cdc.sqlserver.source.SqlServerDialect;
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
@@ -31,6 +37,7 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.MSSQLServerContainer;
@@ -38,7 +45,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerLoggerFactory;
 
-import com.google.common.collect.Lists;
+import io.debezium.jdbc.JdbcConnection;
+import io.debezium.relational.TableId;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -52,6 +60,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -343,6 +352,33 @@ public class SqlServerCDCIT extends TestSuiteBase implements TestResource {
             Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testDialectCheckDisabledCDCTable() throws SQLException {
+        initializeSqlServerTable("column_type_test");
+        JdbcSourceConfigFactory factory =
+                new SqlServerSourceConfigFactory()
+                        .hostname(MSSQL_SERVER_CONTAINER.getHost())
+                        .port(PORT)
+                        .username("sa")
+                        .password("Password!")
+                        .databaseList("column_type_test");
+        SqlServerDialect dialect =
+                new SqlServerDialect(
+                        (SqlServerSourceConfigFactory) factory, Collections.emptyList());
+        try (JdbcConnection connection = dialect.openJdbcConnection(factory.create(0))) {
+            SeaTunnelException exception =
+                    Assertions.assertThrows(
+                            SeaTunnelException.class,
+                            () ->
+                                    dialect.checkAllTablesEnabledCapture(
+                                            connection,
+                                            Collections.singletonList(TableId.parse(SINK_TABLE))));
+            Assertions.assertEquals(
+                    "Table column_type_test.dbo.full_types_sink is not enabled for capture",
+                    exception.getMessage());
         }
     }
 

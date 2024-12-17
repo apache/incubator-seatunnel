@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oceanbas
 
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
+import org.apache.seatunnel.api.table.converter.TypeConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.converter.JdbcRowConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
@@ -71,6 +72,12 @@ public class OceanBaseMysqlDialect implements JdbcDialect {
     @Override
     public JdbcRowConverter getRowConverter() {
         return new OceanBaseMysqlJdbcRowConverter();
+    }
+
+    @Override
+    public TypeConverter<BasicTypeDefine> getTypeConverter() {
+        TypeConverter typeConverter = OceanBaseMySqlTypeConverter.INSTANCE;
+        return typeConverter;
     }
 
     @Override
@@ -231,13 +238,9 @@ public class OceanBaseMysqlDialect implements JdbcDialect {
     }
 
     @Override
-    public String decorateWithComment(
-            String tableName, String basicSql, BasicTypeDefine typeBasicTypeDefine) {
+    public boolean supportDefaultValue(BasicTypeDefine typeBasicTypeDefine) {
         OceanBaseMysqlType nativeType = (OceanBaseMysqlType) typeBasicTypeDefine.getNativeType();
-        if (NOT_SUPPORTED_DEFAULT_VALUES.contains(nativeType)) {
-            return basicSql;
-        }
-        return JdbcDialect.super.decorateWithComment(tableName, basicSql, typeBasicTypeDefine);
+        return !(NOT_SUPPORTED_DEFAULT_VALUES.contains(nativeType));
     }
 
     @Override

@@ -17,7 +17,9 @@
 
 package org.apache.seatunnel.e2e.transform;
 
+import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
+import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
@@ -39,5 +41,17 @@ public class TestFilterRowKindIT extends TestSuiteBase {
         Container.ExecResult execResult3 =
                 container.executeJob("/filter_row_kind_include_insert.conf");
         Assertions.assertEquals(0, execResult3.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK},
+            disabledReason = "Currently SPARK do not multi table transform")
+    @TestTemplate
+    public void testFilterRowKindMultiTable(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob("/filter_row_kind_exclude_insert_multi_table.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
     }
 }

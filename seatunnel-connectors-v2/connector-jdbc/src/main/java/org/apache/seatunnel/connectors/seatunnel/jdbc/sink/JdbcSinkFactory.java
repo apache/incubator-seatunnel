@@ -108,7 +108,7 @@ public class JdbcSinkFactory implements TableSinkFactory {
         TableIdentifier tableId = catalogTable.getTableId();
         String sourceDatabaseName = tableId.getDatabaseName();
         String sourceSchemaName = tableId.getSchemaName();
-        String sourceTableName = tableId.getTableName();
+        String pluginInputIdentifier = tableId.getTableName();
         // get sink table relevant information
         String sinkDatabaseName = optionalDatabase.orElse(REPLACE_DATABASE_NAME_KEY);
         String sinkTableNameBefore = optionalTable.get();
@@ -152,8 +152,8 @@ public class JdbcSinkFactory implements TableSinkFactory {
             finalSchemaName = null;
         }
         String finalTableName = sinkTableName;
-        if (StringUtils.isNotEmpty(sourceTableName)) {
-            finalTableName = tempTableName.replace(REPLACE_TABLE_NAME_KEY, sourceTableName);
+        if (StringUtils.isNotEmpty(pluginInputIdentifier)) {
+            finalTableName = tempTableName.replace(REPLACE_TABLE_NAME_KEY, pluginInputIdentifier);
         }
 
         // rebuild TableIdentifier and catalogTable

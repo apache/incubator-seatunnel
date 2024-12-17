@@ -39,12 +39,12 @@ So, you can not set this property named `log.mining.continuous.mine` in the debe
 #### For Spark/Flink Engine
 
 > 1. You need to ensure that the [jdbc driver jar package](https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc8) has been placed in directory `${SEATUNNEL_HOME}/plugins/`.
-> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATNUNNEL_HOME/plugins/` directory.
+> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATUNNEL_HOME/plugins/` directory.
 
 #### For SeaTunnel Zeta Engine
 
 > 1. You need to ensure that the [jdbc driver jar package](https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc8) has been placed in directory `${SEATUNNEL_HOME}/lib/`.
-> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATNUNNEL_HOME/lib/` directory.
+> 2. To support the i18n character set, copy the `orai18n.jar` to the `$SEATUNNEL_HOME/lib/` directory.
 
 ### Enable Oracle Logminer
 
@@ -220,7 +220,7 @@ exit;
 
 ## Source Options
 
-|                      Name                      |   Type   | Required | Default |                                                                                                                                                                                                                                                                                                     Description                                                                                                                                                                                                                                                                                                      |
+|                      Name                      |   Type   | Required | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 |------------------------------------------------|----------|----------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | base-url                                       | String   | Yes      | -       | The URL of the JDBC connection. Refer to a case: `idbc:oracle:thin:datasource01:1523:xe`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | username                                       | String   | Yes      | -       | Name of the database to use when connecting to the database server.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -228,7 +228,7 @@ exit;
 | database-names                                 | List     | No       | -       | Database name of the database to monitor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | schema-names                                   | List     | No       | -       | Schema name of the database to monitor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | table-names                                    | List     | Yes      | -       | Table name of the database to monitor. The table name needs to include the database name, for example: `database_name.table_name`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| table-names-config                             | List     | No       | -       | Table config list. for example: [{"table": "db1.schema1.table1","primaryKeys":["key1"]}]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| table-names-config                             | List     | No       | -       | Table config list. for example: [{"table": "db1.schema1.table1","primaryKeys": ["key1"],"snapshotSplitColumn": "key2"}]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | startup.mode                                   | Enum     | No       | INITIAL | Optional startup mode for Oracle CDC consumer, valid enumerations are `initial`, `earliest`, `latest` and `specific`. <br/> `initial`: Synchronize historical data at startup, and then synchronize incremental data.<br/> `earliest`: Startup from the earliest offset possible.<br/> `latest`: Startup from the latest offset.<br/> `specific`: Startup from user-supplied specific offsets.                                                                                                                                                                                                                       |
 | startup.specific-offset.file                   | String   | No       | -       | Start from the specified binlog file name. **Note, This option is required when the `startup.mode` option used `specific`.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | startup.specific-offset.pos                    | Long     | No       | -       | Start from the specified binlog file position. **Note, This option is required when the `startup.mode` option used `specific`.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -249,6 +249,7 @@ exit;
 | use_select_count                               | Boolean  | No       | false   | Use select count for table count rather then other methods in full stage.In this scenario, select count directly is used when it is faster to update statistics using sql from analysis table                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | skip_analyze                                   | Boolean  | No       | false   | Skip the analysis of table count in full stage.In this scenario, you schedule analysis table sql to update related table statistics periodically or your table data does not change frequently                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | format                                         | Enum     | No       | DEFAULT | Optional output format for Oracle CDC, valid enumerations are `DEFAULT`、`COMPATIBLE_DEBEZIUM_JSON`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| schema-changes.enabled                         | Boolean  | No       | false   | Schema evolution is disabled by default. Now we only support `add column`、`drop column`、`rename column` and `modify column`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | debezium                                       | Config   | No       | -       | Pass-through [Debezium's properties](https://github.com/debezium/debezium/blob/v1.9.8.Final/documentation/modules/ROOT/pages/connectors/oracle.adoc#connector-properties) to Debezium Embedded Engine which is used to capture data changes from Oracle server.                                                                                                                                                                                                                                                                                                                                                      |
 | common-options                                 |          | no       | -       | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
@@ -262,7 +263,7 @@ exit;
 source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   Oracle-CDC {
-    result_table_name = "customers"
+    plugin_output = "customers"
     username = "system"
     password = "oracle"
     database-names = ["XE"]
@@ -280,7 +281,7 @@ source {
 > source {
 > # This is a example source plugin **only for test and demonstrate the feature source plugin**
 > Oracle-CDC {
-> result_table_name = "customers"
+> plugin_output = "customers"
 > use_select_count = true 
 > username = "system"
 > password = "oracle"
@@ -299,7 +300,7 @@ source {
 > source {
 > # This is a example source plugin **only for test and demonstrate the feature source plugin**
 > Oracle-CDC {
-> result_table_name = "customers"
+> plugin_output = "customers"
 > skip_analyze = true 
 > username = "system"
 > password = "oracle"
@@ -318,7 +319,7 @@ source {
 
 source {
   Oracle-CDC {
-    result_table_name = "customers"
+    plugin_output = "customers"
     base-url = "jdbc:oracle:thin:system/oracle@oracle-host:1521:xe"
     source.reader.close.timeout = 120000
     username = "system"

@@ -26,7 +26,8 @@ import org.apache.seatunnel.api.table.factory.TableTransformFactory;
 import org.apache.seatunnel.api.table.factory.TableTransformFactoryContext;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
-import org.apache.seatunnel.api.transform.SeaTunnelMultiRowTransform;
+import org.apache.seatunnel.api.transform.SeaTunnelFlatMapTransform;
+import org.apache.seatunnel.api.transform.SeaTunnelMapTransform;
 import org.apache.seatunnel.api.transform.SeaTunnelTransform;
 import org.apache.seatunnel.core.starter.exception.TaskExecuteException;
 import org.apache.seatunnel.core.starter.execution.PluginUtil;
@@ -58,7 +59,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.apache.seatunnel.api.common.CommonOptions.RESULT_TABLE_NAME;
+import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_OUTPUT;
 
 @Slf4j
 public class TransformExecuteProcessor
@@ -134,16 +135,14 @@ public class TransformExecuteProcessor
 
                 Dataset<Row> inputDataset = sparkTransform(transform, dataset);
                 registerInputTempView(pluginConfig, inputDataset);
-                String resultTableName =
-                        pluginConfig.hasPath(RESULT_TABLE_NAME.key())
-                                ? pluginConfig.getString(RESULT_TABLE_NAME.key())
-                                : null;
+                String pluginOutputIdentifier =
+                        ReadonlyConfig.fromConfig(pluginConfig).get(PLUGIN_OUTPUT);
                 outputTables.put(
-                        resultTableName,
+                        pluginOutputIdentifier,
                         new DatasetTableInfo(
                                 inputDataset,
                                 Collections.singletonList(transform.getProducedCatalogTable()),
-                                resultTableName));
+                                pluginOutputIdentifier));
             } catch (Exception e) {
                 throw new TaskExecuteException(
                         String.format(
@@ -192,17 +191,17 @@ public class TransformExecuteProcessor
             List<Row> rows = new ArrayList<>();
 
             SeaTunnelRow seaTunnelRow = inputRowConverter.unpack((GenericRowWithSchema) row);
-            if (transform instanceof SeaTunnelMultiRowTransform) {
+            if (transform instanceof SeaTunnelFlatMapTransform) {
                 List<SeaTunnelRow> seaTunnelRows =
-                        ((SeaTunnelMultiRowTransform<SeaTunnelRow>) transform)
-                                .flatMap(seaTunnelRow);
+                        ((SeaTunnelFlatMapTransform<SeaTunnelRow>) transform).flatMap(seaTunnelRow);
                 if (CollectionUtils.isNotEmpty(seaTunnelRows)) {
                     for (SeaTunnelRow seaTunnelRowTransform : seaTunnelRows) {
                         rows.add(outputRowConverter.parcel(seaTunnelRowTransform));
                     }
                 }
-            } else {
-                SeaTunnelRow seaTunnelRowTransform = transform.map(seaTunnelRow);
+            } else if (transform instanceof SeaTunnelMapTransform) {
+                SeaTunnelRow seaTunnelRowTransform =
+                        ((SeaTunnelMapTransform<SeaTunnelRow>) transform).map(seaTunnelRow);
                 if (seaTunnelRowTransform != null) {
                     rows.add(outputRowConverter.parcel(seaTunnelRowTransform));
                 }

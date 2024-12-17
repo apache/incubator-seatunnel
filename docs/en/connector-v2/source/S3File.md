@@ -220,6 +220,7 @@ If you assign file type to `parquet` `orc`, schema option not required, connecto
 | compress_codec                  | string  | no       | none                                                  |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | archive_compress_codec          | string  | no       | none                                                  |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | encoding                        | string  | no       | UTF-8                                                 |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| null_format                     | string  | no       | -                                                     | Only used when file_format_type is text. null_format to define which strings can be represented as null. e.g: `\N`                                                                                                                                                                                                                                                                                         |
 | file_filter_pattern             | string  | no       |                                                       | Filter pattern, which used for filtering files.                                                                                                                                                                                                                                                                                                                                                            |
 | common-options                  |         | no       | -                                                     | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details.                                                                                                                                                                                                                                                                                         |
 
@@ -294,12 +295,15 @@ The compress codec of files and the details that supported as the following show
 
 The compress codec of archive files and the details that supported as the following shown:
 
-| archive_compress_codec | file_format        | archive_compress_suffix |
-|------------------------|--------------------|-------------------------|
+| archive_compress_codec | file_format | archive_compress_suffix |
+|------------------------|------------|-------------------------|
 | ZIP                    | txt,json,excel,xml | .zip                    |
 | TAR                    | txt,json,excel,xml | .tar                    |
 | TAR_GZ                 | txt,json,excel,xml | .tar.gz                 |
+| GZ                     | txt,json,excel,xml | .gz                     |
 | NONE                   | all                | .*                      |
+
+Note: gz compressed excel file needs to compress the original file or specify the file suffix, such as e2e.xls ->e2e_test.xls.gz
 
 ### encoding [string]
 

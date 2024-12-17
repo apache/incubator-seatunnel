@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.server;
 
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.apache.seatunnel.api.common.metrics.JobMetrics;
 import org.apache.seatunnel.api.common.metrics.RawJobMetrics;
 import org.apache.seatunnel.api.event.EventHandler;
@@ -65,7 +67,6 @@ import org.apache.seatunnel.engine.server.telemetry.metrics.entity.ThreadPoolSta
 import org.apache.seatunnel.engine.server.utils.NodeEngineUtil;
 import org.apache.seatunnel.engine.server.utils.PeekBlockingQueue;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hazelcast.cluster.Address;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstanceNotActiveException;
@@ -499,7 +500,7 @@ public class CoordinatorService {
                         jobId,
                         jobInfo.getJobImmutableInformation(),
                         nodeEngine,
-                        executorService,
+                        MDCTracer.tracing(jobId, executorService),
                         getResourceManager(),
                         getJobHistoryService(),
                         runningJobStateIMap,
@@ -633,7 +634,8 @@ public class CoordinatorService {
                 () -> {
                     try {
                         if (!isStartWithSavePoint
-                                && getJobHistoryService().getJobMetrics(jobId) != null) {
+                                && getJobHistoryService().getJobMetrics(jobId)
+                                        != JobMetrics.empty()) {
                             throw new JobException(
                                     String.format(
                                             "The job id %s has already been submitted and is not starting with a savepoint.",
@@ -688,6 +690,14 @@ public class CoordinatorService {
                                                     "The job with id '"
                                                             + jobId
                                                             + "' save point failed");
+                                        }
+                                        try {
+                                            waitForJobComplete(jobId).get();
+                                        } catch (Throwable e) {
+                                            logger.warning(
+                                                    String.format(
+                                                            "The job with id '%s' waiting state complete failed",
+                                                            jobId));
                                         }
                                         return null;
                                     },
@@ -771,7 +781,7 @@ public class CoordinatorService {
         }
         JobMetrics jobMetrics = JobMetricsUtil.toJobMetrics(runningJobMaster.getCurrJobMetrics());
         JobMetrics jobMetricsImap = jobHistoryService.getJobMetrics(jobId);
-        return jobMetricsImap != null ? jobMetricsImap.merge(jobMetrics) : jobMetrics;
+        return jobMetricsImap != JobMetrics.empty() ? jobMetricsImap.merge(jobMetrics) : jobMetrics;
     }
 
     public Map<Long, JobMetrics> getRunningJobMetrics() {
@@ -823,7 +833,7 @@ public class CoordinatorService {
         longJobMetricsMap.forEach(
                 (jobId, jobMetrics) -> {
                     JobMetrics jobMetricsImap = jobHistoryService.getJobMetrics(jobId);
-                    if (jobMetricsImap != null) {
+                    if (jobMetricsImap != JobMetrics.empty()) {
                         longJobMetricsMap.put(jobId, jobMetricsImap.merge(jobMetrics));
                     }
                 });

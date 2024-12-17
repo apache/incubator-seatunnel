@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.easysearch.source;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.PrepareFailException;
@@ -38,7 +39,6 @@ import org.apache.seatunnel.connectors.seatunnel.easysearch.config.SourceConfig;
 import org.apache.commons.collections4.CollectionUtils;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Arrays;

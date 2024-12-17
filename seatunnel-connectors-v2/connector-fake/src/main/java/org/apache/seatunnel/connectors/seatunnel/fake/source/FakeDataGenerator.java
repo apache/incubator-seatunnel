@@ -22,6 +22,7 @@ import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
 
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -40,8 +41,6 @@ import org.apache.seatunnel.connectors.seatunnel.fake.config.FakeConfig;
 import org.apache.seatunnel.connectors.seatunnel.fake.exception.FakeConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.fake.utils.FakeDataRandomUtils;
 import org.apache.seatunnel.format.json.JsonDeserializationSchema;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.lang.reflect.Array;

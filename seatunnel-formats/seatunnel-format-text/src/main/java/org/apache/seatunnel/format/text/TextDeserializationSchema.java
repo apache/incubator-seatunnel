@@ -63,6 +63,7 @@ public class TextDeserializationSchema implements DeserializationSchema<SeaTunne
     private final SeaTunnelRowType seaTunnelRowType;
     private final String[] separators;
     private final String encoding;
+    private final String nullFormat;
     private final TextLineSplitor splitor;
     private final CatalogTable catalogTable;
     private final DateUtils.Formatter dateFormatter;

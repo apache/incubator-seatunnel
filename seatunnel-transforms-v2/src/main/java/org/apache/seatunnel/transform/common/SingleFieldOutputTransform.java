@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class SingleFieldOutputTransform extends AbstractCatalogSupportTransform {
+public abstract class SingleFieldOutputTransform extends AbstractCatalogSupportMapTransform {
 
     private int fieldIndex;
     private SeaTunnelRowContainerGenerator rowContainerGenerator;

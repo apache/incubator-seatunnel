@@ -18,6 +18,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.iris;
 
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
@@ -40,7 +42,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.iris.Iris
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
@@ -51,7 +52,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class IrisCatalog extends AbstractJdbcCatalog {

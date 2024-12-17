@@ -79,7 +79,7 @@ Sink插件常用参数，请参考 [Sink常用选项](../sink-common-options.md)
 ```bash
 sink {
     Typesense {
-        source_table_name = "typesense_test_table"
+        plugin_input = "typesense_test_table"
         hosts = ["localhost:8108"]
         collection = "typesense_to_typesense_sink_with_query"
         max_retry_count = 3

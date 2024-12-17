@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.clickhouse.sink.file;
 
+import org.apache.seatunnel.shade.com.google.common.collect.ImmutableMap;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
@@ -46,7 +47,6 @@ import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.ClickhouseUtil;
 
 import com.clickhouse.client.ClickHouseNode;
 import com.google.auto.service.AutoService;
-import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.util.ArrayList;

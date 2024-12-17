@@ -39,7 +39,7 @@ TiDB-CDC连接器允许从 TiDB 数据库读取快照数据和增量数据。本
 
 > 1. 你需要确保 [jdbc 驱动 jar 包]（https:/mvnrepository.com/artifact/mysql/mysql-connector-java） 和 [tikv-client-java jar 包]（https:/mvnrepository.com/artifact/org.tikv/tikv-client-java/3.2.0） 已经放在目录 `${SEATUNNEL_HOME}/lib/` .
 
-请下载Mysql驱动和tikv-java-client并将其放在`${SEATUNNEL_HOME}/lib/`目录中。例如：cp mysql-connector-java-xxx.jar`$SEATNUNNEL_HOME/lib/`
+请下载Mysql驱动和tikv-java-client并将其放在`${SEATUNNEL_HOME}/lib/`目录中。例如：cp mysql-connector-java-xxx.jar`$SEATUNNEL_HOME/lib/`
 
 ## 数据类型映射
 
@@ -89,7 +89,7 @@ env {
 
 source {
   TiDB-CDC {
-    result_table_name = "products_tidb_cdc"
+    plugin_output = "products_tidb_cdc"
     base-url = "jdbc:mysql://tidb0:4000/inventory"
     driver = "com.mysql.cj.jdbc.Driver"
     tikv.grpc.timeout_in_ms = 20000
@@ -106,7 +106,7 @@ transform {
 
 sink {
   jdbc {
-    source_table_name = "products_tidb_cdc"
+    plugin_input = "products_tidb_cdc"
     url = "jdbc:mysql://tidb0:4000/inventory"
     driver = "com.mysql.cj.jdbc.Driver"
     user = "root"

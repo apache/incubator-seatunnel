@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.core.starter.seatunnel.command;
 
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.apache.seatunnel.common.utils.DateTimeUtils;
 import org.apache.seatunnel.common.utils.StringFormatUtils;
 import org.apache.seatunnel.core.starter.command.Command;
@@ -42,7 +44,6 @@ import org.apache.seatunnel.engine.server.SeaTunnelNodeContext;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.impl.HazelcastInstanceFactory;

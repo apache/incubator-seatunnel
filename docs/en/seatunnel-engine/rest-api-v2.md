@@ -384,15 +384,18 @@ When we can't get the job info, the response will be:
 
 #### Parameters
 
-> |         name         |   type   | data type |            description            |
+> | name                 |   type   | data type |            description            |
 > |----------------------|----------|-----------|-----------------------------------|
 > | jobId                | optional | string    | job id                            |
 > | jobName              | optional | string    | job name                          |
 > | isStartWithSavePoint | optional | string    | if job is started with save point |
+> | format               | optional | string    | config format, support json and hocon, default json |
 
 #### Body
 
-```json
+You can choose json or hocon to pass request body.
+The json format example:
+``` json
 {
     "env": {
         "job.mode": "batch"
@@ -400,7 +403,7 @@ When we can't get the job info, the response will be:
     "source": [
         {
             "plugin_name": "FakeSource",
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -416,11 +419,42 @@ When we can't get the job info, the response will be:
     "sink": [
         {
             "plugin_name": "Console",
-            "source_table_name": ["fake"]
+            "plugin_input": ["fake"]
         }
     ]
 }
 ```
+The hocon format example:
+``` hocon
+env {
+  job.mode = "batch"
+}
+
+source {
+  FakeSource {
+    plugin_output = "fake"
+    row.num = 100
+    schema = {
+      fields {
+        name = "string"
+        age = "int"
+        card = "int"
+      }
+    }
+  }
+}
+
+transform {
+}
+
+sink {
+  Console {
+    plugin_input = "fake"
+  }
+}
+
+```
+
 
 #### Responses
 
@@ -463,7 +497,7 @@ When we can't get the job info, the response will be:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -479,7 +513,7 @@ When we can't get the job info, the response will be:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   },
@@ -494,7 +528,7 @@ When we can't get the job info, the response will be:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -510,7 +544,7 @@ When we can't get the job info, the response will be:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   }
@@ -619,7 +653,7 @@ For more information about customize encryption, please refer to the documentati
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -659,7 +693,7 @@ For more information about customize encryption, please refer to the documentati
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",

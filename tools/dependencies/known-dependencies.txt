@@ -2,7 +2,7 @@ commons-codec-1.13.jar
 commons-collections4-4.4.jar
 commons-compress-1.20.jar
 commons-io-2.11.0.jar
-commons-lang3-3.5.jar
+commons-lang3-3.8.jar
 commons-csv-1.10.0.jar
 config-1.3.3.jar
 disruptor-3.4.4.jar
@@ -70,3 +70,13 @@ jetty-util-9.4.56.v20240826.jar
 jetty-util-ajax-9.4.56.v20240826.jar
 javax.servlet-api-3.1.0.jar
 seatunnel-jetty9-9.4.56-2.3.9-SNAPSHOT-optional.jar
+arrow-format-15.0.1.jar
+arrow-memory-core-15.0.1.jar
+arrow-memory-netty-15.0.1.jar
+arrow-vector-15.0.1.jar
+eclipse-collections-11.1.0.jar
+eclipse-collections-api-11.1.0.jar
+flatbuffers-java-23.5.26.jar
+netty-buffer-4.1.104.Final.jar
+netty-common-4.1.104.Final.jar
+seatunnel-arrow-2.3.9-SNAPSHOT-optional.jar

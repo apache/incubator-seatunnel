@@ -20,6 +20,7 @@ package org.apache.seatunnel.transform.dynamiccompile;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
+import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowAccessor;
 import org.apache.seatunnel.common.utils.FileUtils;
 import org.apache.seatunnel.common.utils.ReflectionUtils;
@@ -30,6 +31,7 @@ import org.apache.seatunnel.transform.dynamiccompile.parse.JavaClassParse;
 import org.apache.seatunnel.transform.exception.TransformException;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import static org.apache.seatunnel.transform.dynamiccompile.CompileTransformErrorCode.COMPILE_TRANSFORM_ERROR_CODE;
 
@@ -41,6 +43,8 @@ public class DynamicCompileTransform extends MultipleFieldOutputTransform {
     public static final String getInlineOutputFieldValues = "getInlineOutputFieldValues";
 
     private final String sourceCode;
+
+    private final boolean compatibilityMode;
 
     private final CompilePattern compilePattern;
 
@@ -68,6 +72,9 @@ public class DynamicCompileTransform extends MultipleFieldOutputTransform {
                                     readonlyConfig.get(
                                             DynamicCompileTransformConfig.ABSOLUTE_PATH)));
         }
+        compatibilityMode =
+                sourceCode.contains(
+                        org.apache.seatunnel.transform.common.SeaTunnelRowAccessor.class.getName());
     }
 
     @Override
@@ -98,12 +105,22 @@ public class DynamicCompileTransform extends MultipleFieldOutputTransform {
         try {
             result =
                     ReflectionUtils.invoke(
-                            getCompileLanguageInstance(), getInlineOutputFieldValues, inputRow);
-
+                            getCompileLanguageInstance(),
+                            getInlineOutputFieldValues,
+                            getCompatibilityAccessor(inputRow));
         } catch (Exception e) {
             throw new TransformException(COMPILE_TRANSFORM_ERROR_CODE, e.getMessage());
         }
         return (Object[]) result;
+    }
+
+    private Object getCompatibilityAccessor(SeaTunnelRowAccessor inputRow) {
+        if (compatibilityMode) {
+            Optional<Object> field = ReflectionUtils.getField(inputRow, "row");
+            SeaTunnelRow row = (SeaTunnelRow) field.get();
+            return new org.apache.seatunnel.transform.common.SeaTunnelRowAccessor(row);
+        }
+        return inputRow;
     }
 
     private Object getCompileLanguageInstance()

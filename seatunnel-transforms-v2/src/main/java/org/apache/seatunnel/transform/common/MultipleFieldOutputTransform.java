@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class MultipleFieldOutputTransform extends AbstractCatalogSupportTransform {
+public abstract class MultipleFieldOutputTransform extends AbstractCatalogSupportMapTransform {
 
     private static final String[] TYPE_ARRAY_STRING = new String[0];
 

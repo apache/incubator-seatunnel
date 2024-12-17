@@ -25,8 +25,8 @@ Write data through jdbc. Support Batch mode and Streaming mode, support concurre
 
 ## Database Dependency
 
-> Please download the support list corresponding to 'Maven' and copy it to the '$SEATNUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
-> For example: cp oceanbase-client-xxx.jar $SEATNUNNEL_HOME/plugins/jdbc/lib/
+> Please download the support list corresponding to 'Maven' and copy it to the '$SEATUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
+> For example: cp oceanbase-client-xxx.jar $SEATUNNEL_HOME/plugins/jdbc/lib/
 
 ## Data Type Mapping
 
@@ -111,7 +111,7 @@ source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   FakeSource {
     parallelism = 1
-    result_table_name = "fake"
+    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

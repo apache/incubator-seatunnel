@@ -39,9 +39,9 @@ semantics (using XA transaction guarantee).
 
 ## Database Dependency
 
-> Please download the support list corresponding to 'Maven' and copy it to the '$SEATNUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
-> For example Oracle datasource: cp ojdbc8-xxxxxx.jar $SEATNUNNEL_HOME/lib/<br/>
-> To support the i18n character set, copy the orai18n.jar to the $SEATNUNNEL_HOME/lib/ directory.
+> Please download the support list corresponding to 'Maven' and copy it to the '$SEATUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
+> For example Oracle datasource: cp ojdbc8-xxxxxx.jar $SEATUNNEL_HOME/lib/<br/>
+> To support the i18n character set, copy the orai18n.jar to the $SEATUNNEL_HOME/lib/ directory.
 
 ## Data Type Mapping
 
@@ -110,7 +110,7 @@ env {
 source {
   FakeSource {
     parallelism = 1
-    result_table_name = "fake"
+    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

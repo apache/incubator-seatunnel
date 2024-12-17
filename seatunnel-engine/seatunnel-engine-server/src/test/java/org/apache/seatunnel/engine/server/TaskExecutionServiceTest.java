@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.server;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
 import org.apache.seatunnel.engine.server.execution.BlockTask;
 import org.apache.seatunnel.engine.server.execution.ExceptionTestTask;
@@ -38,7 +40,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Lists;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.internal.serialization.Data;
 import lombok.NonNull;

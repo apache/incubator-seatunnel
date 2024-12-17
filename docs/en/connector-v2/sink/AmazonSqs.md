@@ -70,7 +70,7 @@ source {
         }
       }
     }
-    result_table_name = "fake"
+    plugin_output = "fake"
   }
 }
 

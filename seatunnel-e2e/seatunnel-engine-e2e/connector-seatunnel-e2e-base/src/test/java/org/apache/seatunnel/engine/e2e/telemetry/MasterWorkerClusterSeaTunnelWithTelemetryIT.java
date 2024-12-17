@@ -615,7 +615,7 @@ public class MasterWorkerClusterSeaTunnelWithTelemetryIT extends SeaTunnelContai
                         + "    \"source\": [\n"
                         + "        {\n"
                         + "            \"plugin_name\": \"FakeSource\",\n"
-                        + "            \"result_table_name\": \"fake\",\n"
+                        + "            \"plugin_output\": \"fake\",\n"
                         + "            \"row.num\": 100,\n"
                         + "            \"schema\": {\n"
                         + "                \"fields\": {\n"
@@ -631,7 +631,7 @@ public class MasterWorkerClusterSeaTunnelWithTelemetryIT extends SeaTunnelContai
                         + "    \"sink\": [\n"
                         + "        {\n"
                         + "            \"plugin_name\": \"Console\",\n"
-                        + "            \"source_table_name\": [\"fake\"]\n"
+                        + "            \"plugin_input\": [\"fake\"]\n"
                         + "        }\n"
                         + "    ]\n"
                         + "}";

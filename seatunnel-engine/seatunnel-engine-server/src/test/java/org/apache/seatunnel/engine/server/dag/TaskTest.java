@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.server.dag;
 
+import org.apache.seatunnel.shade.com.google.common.collect.ImmutableMap;
+import org.apache.seatunnel.shade.com.google.common.collect.Sets;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
@@ -53,8 +55,6 @@ import org.apache.seatunnel.engine.server.dag.physical.PlanUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.hazelcast.map.IMap;
 
 import java.net.MalformedURLException;

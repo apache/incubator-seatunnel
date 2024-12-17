@@ -17,10 +17,12 @@
 
 package org.apache.seatunnel.core.starter.flink.execution;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.CommonOptions;
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
 import org.apache.seatunnel.api.table.factory.TableSourceFactory;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -36,7 +38,6 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URL;
@@ -46,7 +47,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_NAME;
-import static org.apache.seatunnel.api.common.CommonOptions.RESULT_TABLE_NAME;
+import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_OUTPUT;
 
 @Slf4j
 @SuppressWarnings("unchecked,rawtypes")
@@ -86,9 +87,7 @@ public class SourceExecuteProcessor extends FlinkAbstractPluginExecuteProcessor<
                     new DataStreamTableInfo(
                             sourceStream,
                             sourceTableInfo.getCatalogTables(),
-                            pluginConfig.hasPath(RESULT_TABLE_NAME.key())
-                                    ? pluginConfig.getString(RESULT_TABLE_NAME.key())
-                                    : null));
+                            ReadonlyConfig.fromConfig(pluginConfig).get(PLUGIN_OUTPUT)));
         }
         return sources;
     }

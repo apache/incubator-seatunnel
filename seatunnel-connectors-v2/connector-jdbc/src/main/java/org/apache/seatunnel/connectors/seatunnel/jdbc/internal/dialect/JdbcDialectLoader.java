@@ -61,24 +61,17 @@ public final class JdbcDialectLoader {
                             JdbcDialectFactory.class.getName()));
         }
 
-        final List<JdbcDialectFactory> matchingFactories =
+        List<JdbcDialectFactory> matchingFactories =
                 foundFactories.stream().filter(f -> f.acceptsURL(url)).collect(Collectors.toList());
 
-        if (matchingFactories.isEmpty()) {
-            throw new JdbcConnectorException(
-                    JdbcConnectorErrorCode.NO_SUITABLE_DIALECT_FACTORY,
-                    String.format(
-                            "Could not find any jdbc dialect factory that can handle url '%s' that implements '%s' in the classpath.\n\n"
-                                    + "Available factories are:\n\n"
-                                    + "%s",
-                            url,
-                            JdbcDialectFactory.class.getName(),
-                            foundFactories.stream()
-                                    .map(f -> f.getClass().getName())
-                                    .distinct()
-                                    .sorted()
-                                    .collect(Collectors.joining("\n"))));
+        // filter out generic dialect factory
+        if (matchingFactories.size() > 1) {
+            matchingFactories =
+                    matchingFactories.stream()
+                            .filter(f -> !(f instanceof GenericDialectFactory))
+                            .collect(Collectors.toList());
         }
+
         if (matchingFactories.size() > 1) {
             throw new JdbcConnectorException(
                     JdbcConnectorErrorCode.NO_SUITABLE_DIALECT_FACTORY,

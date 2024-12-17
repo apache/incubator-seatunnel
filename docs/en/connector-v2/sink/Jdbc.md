@@ -226,7 +226,7 @@ In the case of is_exactly_once = "true", Xa transactions are used. This requires
 
 there are some reference value for params above.
 
-|    datasource     |                    driver                    |                                url                                 | xa_data_source_class_name                          | maven                                                                                                                         |
+| datasource        |                    driver                    | url                                                                | xa_data_source_class_name                          | maven                                                                                                                         |
 |-------------------|----------------------------------------------|--------------------------------------------------------------------|----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | MySQL             | com.mysql.cj.jdbc.Driver                     | jdbc:mysql://localhost:3306/test                                   | com.mysql.cj.jdbc.MysqlXADataSource                | https://mvnrepository.com/artifact/mysql/mysql-connector-java                                                                 |
 | PostgreSQL        | org.postgresql.Driver                        | jdbc:postgresql://localhost:5432/postgres                          | org.postgresql.xa.PGXADataSource                   | https://mvnrepository.com/artifact/org.postgresql/postgresql                                                                  |
@@ -249,6 +249,7 @@ there are some reference value for params above.
 | xugu              | com.xugu.cloudjdbc.Driver                    | jdbc:xugu://localhost:5138                                         | /                                                  | https://repo1.maven.org/maven2/com/xugudb/xugu-jdbc/12.2.0/xugu-jdbc-12.2.0.jar                                               |
 | InterSystems IRIS | com.intersystems.jdbc.IRISDriver             | jdbc:IRIS://localhost:1972/%SYS                                    | /                                                  | https://raw.githubusercontent.com/intersystems-community/iris-driver-distribution/main/JDBC/JDK18/intersystems-jdbc-3.8.4.jar |
 | opengauss         | org.opengauss.Driver                         | jdbc:opengauss://localhost:5432/postgres                           | /                                                  | https://repo1.maven.org/maven2/org/opengauss/opengauss-jdbc/5.1.0-og/opengauss-jdbc-5.1.0-og.jar                              |
+| Highgo            | com.highgo.jdbc.Driver                       | jdbc:highgo://localhost:5866/highgo                                | /                                                  | https://repo1.maven.org/maven2/com/highgo/HgdbJdbc/6.2.3/HgdbJdbc-6.2.3.jar                                                   |
 
 ## Example
 

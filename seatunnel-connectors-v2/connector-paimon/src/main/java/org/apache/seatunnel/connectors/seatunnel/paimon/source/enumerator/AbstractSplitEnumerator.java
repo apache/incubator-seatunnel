@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.paimon.source.enumerator;
 
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.apache.seatunnel.api.source.SourceSplitEnumerator;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.paimon.source.PaimonSourceSplit;
@@ -27,7 +29,6 @@ import org.apache.paimon.table.source.EndOfScanException;
 import org.apache.paimon.table.source.StreamTableScan;
 import org.apache.paimon.table.source.TableScan;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

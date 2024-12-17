@@ -889,7 +889,7 @@ public class RestApiIT {
                                                         + "                    \"age\": \"int\"\n"
                                                         + "                }\n"
                                                         + "            },\n"
-                                                        + "            \"result_table_name\": \"fake\",\n"
+                                                        + "            \"plugin_output\": \"fake\",\n"
                                                         + "            \"parallelism\": 1,\n"
                                                         + "            \"hostname\": \"127.0.0.1\",\n"
                                                         + "            \"username\": \"seatunnel\",\n"
@@ -918,9 +918,7 @@ public class RestApiIT {
                                                                 + RestConstant.ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body(
-                                                        "source[0].result_table_name",
-                                                        equalTo("fake"))
+                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",
@@ -937,9 +935,7 @@ public class RestApiIT {
                                                                 + RestConstant.ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body(
-                                                        "source[0].result_table_name",
-                                                        equalTo("fake"))
+                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",

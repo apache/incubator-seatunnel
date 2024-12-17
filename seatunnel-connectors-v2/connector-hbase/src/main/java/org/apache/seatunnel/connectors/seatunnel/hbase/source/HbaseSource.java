@@ -18,6 +18,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.hbase.source;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode;
@@ -37,8 +38,6 @@ import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.connectors.seatunnel.hbase.config.HbaseParameters;
 import org.apache.seatunnel.connectors.seatunnel.hbase.constant.HbaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.hbase.exception.HbaseConnectorException;
-
-import com.google.common.collect.Lists;
 
 import java.util.List;
 

@@ -30,7 +30,7 @@ import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
-import org.apache.seatunnel.transform.common.AbstractCatalogMultiRowTransform;
+import org.apache.seatunnel.transform.common.AbstractCatalogSupportFlatMapTransform;
 import org.apache.seatunnel.transform.sql.SQLEngineFactory.EngineType;
 
 import lombok.NonNull;
@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 import static org.apache.seatunnel.transform.sql.SQLEngineFactory.EngineType.ZETA;
 
 @Slf4j
-public class SQLTransform extends AbstractCatalogMultiRowTransform {
+public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
     public static final String PLUGIN_NAME = "Sql";
 
     public static final Option<String> KEY_QUERY =
@@ -75,9 +75,9 @@ public class SQLTransform extends AbstractCatalogMultiRowTransform {
             this.engineType = ZETA;
         }
 
-        List<String> sourceTableNames = config.get(CommonOptions.SOURCE_TABLE_NAME);
-        if (sourceTableNames != null && !sourceTableNames.isEmpty()) {
-            this.inputTableName = sourceTableNames.get(0);
+        List<String> pluginInputIdentifiers = config.get(CommonOptions.PLUGIN_INPUT);
+        if (pluginInputIdentifiers != null && !pluginInputIdentifiers.isEmpty()) {
+            this.inputTableName = pluginInputIdentifiers.get(0);
         } else {
             this.inputTableName = catalogTable.getTableId().getTableName();
         }

@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.transform.sql.zeta;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
@@ -29,7 +31,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -127,7 +128,8 @@ public class ZetaSQLEngine implements SQLEngine {
                 }
                 String tableName = table.getName();
                 if (!inputTableName.equalsIgnoreCase(tableName)
-                        && !tableName.equalsIgnoreCase(catalogTableName)) {
+                        && !tableName.equalsIgnoreCase(catalogTableName)
+                        && !"DUAL".equalsIgnoreCase(tableName)) {
                     log.warn(
                             "SQL table name {} is not equal to input table name {} or catalog table name {}",
                             tableName,
@@ -182,7 +184,7 @@ public class ZetaSQLEngine implements SQLEngine {
         for (SelectItem selectItem : selectItems) {
             if (selectItem.getExpression() instanceof AllColumns) {
                 for (int i = 0; i < inputRowType.getFieldNames().length; i++) {
-                    fieldNames[idx] = inputRowType.getFieldName(i);
+                    fieldNames[idx] = cleanEscape(inputRowType.getFieldName(i));
                     seaTunnelDataTypes[idx] = inputRowType.getFieldType(i);
                     if (inputColumnsMapping != null) {
                         inputColumnsMapping.set(idx, inputRowType.getFieldName(i));
@@ -193,16 +195,12 @@ public class ZetaSQLEngine implements SQLEngine {
                 Expression expression = selectItem.getExpression();
                 if (selectItem.getAlias() != null) {
                     String aliasName = selectItem.getAlias().getName();
-                    if (aliasName.startsWith(ESCAPE_IDENTIFIER)
-                            && aliasName.endsWith(ESCAPE_IDENTIFIER)) {
-                        aliasName = aliasName.substring(1, aliasName.length() - 1);
-                    }
-                    fieldNames[idx] = aliasName;
+                    fieldNames[idx] = cleanEscape(aliasName);
                 } else {
                     if (expression instanceof Column) {
-                        fieldNames[idx] = ((Column) expression).getColumnName();
+                        fieldNames[idx] = cleanEscape(((Column) expression).getColumnName());
                     } else {
-                        fieldNames[idx] = expression.toString();
+                        fieldNames[idx] = cleanEscape(expression.toString());
                     }
                 }
 
@@ -222,6 +220,13 @@ public class ZetaSQLEngine implements SQLEngine {
         }
         return zetaSQLFunction.lateralViewMapping(
                 fieldNames, seaTunnelDataTypes, lateralViews, inputColumnsMapping);
+    }
+
+    private static String cleanEscape(String columnName) {
+        if (columnName.startsWith(ESCAPE_IDENTIFIER) && columnName.endsWith(ESCAPE_IDENTIFIER)) {
+            columnName = columnName.substring(1, columnName.length() - 1);
+        }
+        return columnName;
     }
 
     @Override

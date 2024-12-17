@@ -385,6 +385,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
         // wait for data written to sink
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
                                 Assertions.assertTrue(
@@ -411,20 +412,13 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
         changeSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
 
         // stream stage
-        await().atMost(60000, TimeUnit.MILLISECONDS)
+        await().atMost(300000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
-                                Assertions.assertAll(
-                                        () ->
-                                                Assertions.assertIterableEquals(
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE,
-                                                                        SOURCE_TABLE_1)),
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE2,
-                                                                        SOURCE_TABLE_1)))));
+                                Assertions.assertIterableEquals(
+                                        query(getSourceQuerySQL(MYSQL_DATABASE, SOURCE_TABLE_1)),
+                                        query(getSourceQuerySQL(MYSQL_DATABASE2, SOURCE_TABLE_1))));
         await().atMost(60000, TimeUnit.MILLISECONDS)
                 .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .until(() -> getConnectionStatus("st_user_source").size() == 1);
@@ -452,6 +446,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
         // stream stage
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
                                 Assertions.assertAll(

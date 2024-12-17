@@ -27,6 +27,8 @@ public class RestConstant {
 
     public static final String IS_STOP_WITH_SAVE_POINT = "isStopWithSavePoint";
 
+    public static final String CONFIG_FORMAT = "format";
+
     public static final String JOB_STATUS = "jobStatus";
 
     public static final String CREATE_TIME = "createTime";
@@ -44,6 +46,8 @@ public class RestConstant {
     public static final String ERROR_MSG = "errorMsg";
 
     public static final String METRICS = "metrics";
+
+    public static final String HOCON = "hocon";
 
     public static final String TABLE_SOURCE_RECEIVED_COUNT = "TableSourceReceivedCount";
     public static final String TABLE_SINK_WRITE_COUNT = "TableSinkWriteCount";

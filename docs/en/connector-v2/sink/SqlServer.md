@@ -43,8 +43,8 @@ semantics (using XA transaction guarantee).
 
 ## Database dependency
 
-> Please download the support list corresponding to 'Maven' and copy it to the '$SEATNUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
-> For example SQL Server datasource: cp mssql-jdbc-xxx.jar $SEATNUNNEL_HOME/plugins/jdbc/lib/
+> Please download the support list corresponding to 'Maven' and copy it to the '$SEATUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
+> For example SQL Server datasource: cp mssql-jdbc-xxx.jar $SEATUNNEL_HOME/plugins/jdbc/lib/
 
 ## Data Type Mapping
 
@@ -147,7 +147,7 @@ sink {
 
 ```
 Jdbc {
-  source_table_name = "customers"
+  plugin_input = "customers"
   driver = com.microsoft.sqlserver.jdbc.SQLServerDriver
   url = "jdbc:sqlserver://localhost:1433;databaseName=column_type_test"
   user = SA

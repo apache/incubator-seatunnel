@@ -31,7 +31,7 @@ import lombok.Getter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 public class JsonSerializationSchema implements SerializationSchema {
 

@@ -24,8 +24,6 @@ import org.apache.seatunnel.transform.exception.TransformException;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import com.google.common.collect.Lists;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
@@ -70,11 +68,13 @@ public class SystemFunction {
         return v1;
     }
 
-    public static Object array(List<Object> args) {
+    public static String[] array(List<Object> args) {
         if (CollectionUtils.isNotEmpty(args)) {
-            return args.toArray();
+            return args.stream()
+                    .map(obj -> obj == null ? null : obj.toString())
+                    .toArray(String[]::new);
         }
-        return Lists.newArrayList();
+        return new String[0];
     }
 
     public static Object castAs(Object arg, SeaTunnelDataType<?> type) {
