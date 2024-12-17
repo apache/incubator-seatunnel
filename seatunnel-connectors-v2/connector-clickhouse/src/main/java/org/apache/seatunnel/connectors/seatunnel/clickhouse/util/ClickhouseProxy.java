@@ -398,7 +398,6 @@ public class ClickhouseProxy {
     }
 
     public boolean isExistsData(String tableName) throws ExecutionException, InterruptedException {
-        // 定义查询数据的SQL语句
         String queryDataSql = "SELECT count(*) FROM " + tableName;
         try (ClickHouseResponse response = clickhouseRequest.query(queryDataSql).executeAndWait()) {
             return response.firstRecord().getValue(0).asInteger() > 0;

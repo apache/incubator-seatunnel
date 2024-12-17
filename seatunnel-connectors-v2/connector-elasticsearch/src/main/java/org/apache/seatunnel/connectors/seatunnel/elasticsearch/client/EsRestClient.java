@@ -225,13 +225,16 @@ public class EsRestClient implements Closeable {
                 throw new ElasticsearchConnectorException(
                         ElasticsearchConnectorErrorCode.BULK_RESPONSE_ERROR,
                         String.format(
-                                "bulk es response status code=%d,request boy=%s",
-                                response.getStatusLine().getStatusCode(), requestBody));
+                                "bulk es response status=%s,request body(truncate)=%s",
+                                response,
+                                requestBody.substring(0, Math.min(1000, requestBody.length()))));
             }
         } catch (IOException e) {
             throw new ElasticsearchConnectorException(
                     ElasticsearchConnectorErrorCode.BULK_RESPONSE_ERROR,
-                    String.format("bulk es error,request boy=%s", requestBody),
+                    String.format(
+                            "bulk es error,request body(truncate)=%s",
+                            requestBody.substring(0, Math.min(1000, requestBody.length()))),
                     e);
         }
     }
@@ -332,13 +335,13 @@ public class EsRestClient implements Closeable {
                 throw new ElasticsearchConnectorException(
                         ElasticsearchConnectorErrorCode.SCROLL_REQUEST_ERROR,
                         String.format(
-                                "POST %s response status code=%d,request boy=%s",
+                                "POST %s response status code=%d,request body=%s",
                                 endpoint, response.getStatusLine().getStatusCode(), requestBody));
             }
         } catch (IOException e) {
             throw new ElasticsearchConnectorException(
                     ElasticsearchConnectorErrorCode.SCROLL_REQUEST_ERROR,
-                    String.format("POST %s error,request boy=%s", endpoint, requestBody),
+                    String.format("POST %s error,request body=%s", endpoint, requestBody),
                     e);
         }
     }
