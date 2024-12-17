@@ -18,6 +18,8 @@
 package org.apache.seatunnel.transform.replace;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+
+import org.apache.seatunnel.api.table.catalog.*;
 import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableChangeColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableDropColumnEvent;
@@ -84,20 +86,10 @@ public class ReplaceTransformTest {
     @Test
     public void testRepalceTransformSchangeChange() {
         AlterTableAddColumnEvent addColumnEvent =
-                AlterTableAddColumnEvent.add(
+                AlterTableAddColumnEvent.addAfter(
                         DEFAULT_TABLE.getTableId(),
-                        PhysicalColumn.of("f4", BasicType.LONG_TYPE, null, null, true, null, null));
-        AlterTableModifyColumnEvent modifyColumnEvent =
-                AlterTableModifyColumnEvent.modify(
-                        DEFAULT_TABLE.getTableId(),
-                        PhysicalColumn.of("f4", BasicType.INT_TYPE, null, null, true, null, null));
-        AlterTableChangeColumnEvent changeColumnEvent =
-                AlterTableChangeColumnEvent.change(
-                        DEFAULT_TABLE.getTableId(),
-                        "f4",
-                        PhysicalColumn.of("f5", BasicType.INT_TYPE, null, null, true, null, null));
-        AlterTableDropColumnEvent dropColumnEvent =
-                new AlterTableDropColumnEvent(DEFAULT_TABLE.getTableId(), "f5");
+                        PhysicalColumn.of("f4", BasicType.LONG_TYPE, null, null, true, null, null),
+                        "f1");
 
         Map map = new HashMap<>();
         map.put("replace_field", "f2");
@@ -109,6 +101,13 @@ public class ReplaceTransformTest {
         ReplaceTransform replaceTransform = new ReplaceTransform(readonlyConfig, DEFAULT_TABLE);
 
         replaceTransform.mapSchemaChangeEvent(addColumnEvent);
+
+        Assertions.assertEquals(2, replaceTransform.getFieldIndex());
+
+
+        AlterTableDropColumnEvent dropColumnEvent =
+                new AlterTableDropColumnEvent(DEFAULT_TABLE.getTableId(), "f4");
+        replaceTransform.mapSchemaChangeEvent(dropColumnEvent);
 
         Assertions.assertEquals(1, replaceTransform.getFieldIndex());
     }
