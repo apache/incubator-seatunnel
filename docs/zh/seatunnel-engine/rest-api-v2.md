@@ -855,7 +855,7 @@ sink {
 
 <details>
  <summary>
-    <code>GET</code> <code><b>/metrics</b></code><br>
+    <code>GET</code> <code><b>/metrics</b></code>  
     <code>GET</code> <code><b>/openmetrics</b></code>
 </summary>
 你需要先打开`Telemetry`才能获取集群指标信息。否则将返回空信息。

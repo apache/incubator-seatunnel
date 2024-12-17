@@ -851,7 +851,7 @@ To get the content of a log file: `http://localhost:5801/log/job-898380162133917
 
 <details>
  <summary>
-    <code>GET</code> <code><b>/metrics</b></code><br>
+    <code>GET</code> <code><b>/metrics</b></code>  
     <code>GET</code> <code><b>/openmetrics</b></code>
 </summary>
 
