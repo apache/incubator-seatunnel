@@ -98,14 +98,15 @@ public class DorisSinkWriter
 
     private void initializeLoad() {
 
-        String[] feNodes = dorisSinkConfig.getFrontends().split(",");
-        int feNodesNum = feNodes.length;
+        List<String> feNodes = Arrays.asList(dorisSinkConfig.getFrontends().split(","));
+        Collections.shuffle(feNodes);
+        int feNodesNum = feNodes.size();
 
         for (int i = 0; i < feNodesNum; i++) {
             try {
                 this.dorisStreamLoad =
                         new DorisStreamLoad(
-                                feNodes[i],
+                                feNodes.get(i),
                                 catalogTable.getTablePath(),
                                 dorisSinkConfig,
                                 labelGenerator,
@@ -121,7 +122,7 @@ public class DorisSinkWriter
                 }
                 log.error(
                         "stream load error for feNode: {} with exception: {}",
-                        feNodes[i],
+                        feNodes.get(i),
                         e.getMessage());
             }
         }

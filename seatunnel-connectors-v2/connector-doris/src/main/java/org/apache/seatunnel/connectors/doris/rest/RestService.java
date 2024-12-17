@@ -55,7 +55,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -287,14 +289,16 @@ public class RestService implements Serializable {
         stringEntity.setContentEncoding("UTF-8");
         stringEntity.setContentType("application/json");
 
-        String[] feNodes = dorisSourceConfig.getFrontends().split(",");
-        int feNodesNum = feNodes.length;
+        List<String> feNodes = Arrays.asList(dorisSourceConfig.getFrontends().split(","));
+        Collections.shuffle(feNodes);
+        int feNodesNum = feNodes.size();
         String resStr = null;
 
         for (int i = 0; i < feNodesNum; i++) {
             try {
                 HttpPost httpPost =
-                        new HttpPost(getUriStr(feNodes[i], dorisSourceTable, logger) + QUERY_PLAN);
+                        new HttpPost(
+                                getUriStr(feNodes.get(i), dorisSourceTable, logger) + QUERY_PLAN);
                 httpPost.setEntity(stringEntity);
                 resStr = send(dorisSourceConfig, httpPost, logger);
                 break;
