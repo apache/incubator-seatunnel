@@ -307,10 +307,13 @@ public class KafkaSourceSplitEnumerator
         }
         log.info("Discovered topics: {}", topics);
         Collection<TopicPartition> partitions =
-                adminClient.describeTopics(topics).all().get().values().stream()
+                adminClient.describeTopics(topics).allTopicNames().get().values().stream()
                         .flatMap(
                                 t ->
                                         t.partitions().stream()
+                                                .filter(
+                                                        partitionInfo ->
+                                                                partitionInfo.leader() != null)
                                                 .map(
                                                         p ->
                                                                 new TopicPartition(
