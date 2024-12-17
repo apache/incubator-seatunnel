@@ -76,35 +76,11 @@ public class HbaseClient {
 
             BufferedMutatorParams bufferedMutatorParams =
                     new BufferedMutatorParams(
-                                    TableName.valueOf(
-                                            hbaseParameters.getNamespace(),
-                                            hbaseParameters.getTable()))
+                            TableName.valueOf(
+                                    hbaseParameters.getNamespace(),
+                                    hbaseParameters.getTable()))
                             .pool(HTable.getDefaultExecutor(hbaseConfiguration))
-                            .writeBufferSize(hbaseParameters.getWriteBufferSize())
-                            .listener(
-                                    (e, mutator) -> {
-                                        for (int i = 0; i < e.getNumExceptions(); i++) {
-                                            Row row = e.getRow(i);
-                                            log.error("Failed to sent put {}.", row);
-                                            if (mutator != null
-                                                    && e.getCause()
-                                                            instanceof NotServingRegionException) {
-                                                log.info(
-                                                        "Retrying put {} after {} ms...",
-                                                        row,
-                                                        RETRY_DELAY_MS);
-                                                try {
-                                                    Thread.sleep(RETRY_DELAY_MS);
-                                                    mutator.mutate((Put) row);
-                                                } catch (IOException | InterruptedException ex) {
-                                                    log.error(
-                                                            "Unexpected exception during put {}.",
-                                                            row,
-                                                            e);
-                                                }
-                                            }
-                                        }
-                                    });
+                            .writeBufferSize(hbaseParameters.getWriteBufferSize());
             hbaseMutator = connection.getBufferedMutator(bufferedMutatorParams);
         } catch (IOException e) {
             throw new HbaseConnectorException(
