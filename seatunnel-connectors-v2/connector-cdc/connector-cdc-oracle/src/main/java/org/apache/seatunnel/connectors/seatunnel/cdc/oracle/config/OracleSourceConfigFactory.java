@@ -21,6 +21,7 @@ import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfigFactory;
 import org.apache.seatunnel.connectors.cdc.debezium.EmbeddedDatabaseHistory;
 
 import io.debezium.connector.oracle.OracleConnector;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Properties;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 /** A factory to initialize {@link OracleSourceConfig}. */
+@Slf4j
 public class OracleSourceConfigFactory extends JdbcSourceConfigFactory {
 
     private static final long serialVersionUID = 1L;
@@ -142,8 +144,7 @@ public class OracleSourceConfigFactory extends JdbcSourceConfigFactory {
             String debeziumSchemaChanges =
                     dbzProperties.getProperty(
                             SCHEMA_CHANGE_KEY, String.valueOf(schemaChangeEnabled));
-            String debeziumLogMiningStrategy =
-                    dbzProperties.getProperty(LOG_MINING_STRATEGY_KEY, LOG_MINING_STRATEGY_DEFAULT);
+            String debeziumLogMiningStrategy = dbzProperties.getProperty(LOG_MINING_STRATEGY_KEY);
             if (Boolean.parseBoolean(debeziumSchemaChanges)
                     && LOG_MINING_STRATEGY_DEFAULT.equals(debeziumLogMiningStrategy)) {
                 throw new IllegalArgumentException(

@@ -300,7 +300,7 @@ transform {
     sql {
       plugin_input = "fake_test_table"
       plugin_output = "sql"
-      query = "select * from fake_test_table where name = 'abc' "
+      query = "select * from dual where name = 'abc' "
     }
 
 }
