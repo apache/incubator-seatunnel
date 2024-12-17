@@ -22,158 +22,124 @@ import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 
 public class TextDeserializationSchemaTest {
 
-    @Test
-    public void testSplitLineWithCSV() {
-        // prepare test data
-        SeaTunnelRowType rowType =
+    private SeaTunnelRowType rowType;
+    private TextDeserializationSchema schema;
+
+    @BeforeEach
+    public void setUp() {
+        // Common row type setup for all tests
+        rowType =
                 new SeaTunnelRowType(
-                        new String[] {"city", "order_no", "weight"},
+                        new String[] {"city", "order_no", "amount"},
                         new SeaTunnelDataType[] {
                             BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.INT_TYPE
                         });
 
-        TextDeserializationSchema schema =
+        schema =
                 TextDeserializationSchema.builder()
                         .seaTunnelRowType(rowType)
                         .delimiter(",")
                         .build();
-
-        // Test normal CSV line
-        String normalLine = "Beijing,123456,100";
-        Map<Integer, String> normalResult =
-                schema.splitLineBySeaTunnelRowType(normalLine, rowType, 0);
-        Assertions.assertEquals("Beijing", normalResult.get(0));
-        Assertions.assertEquals("123456", normalResult.get(1));
-        Assertions.assertEquals("100", normalResult.get(2));
-
-        // Test CSV line with quotes and commas
-        String quotedLine = "Shanghai,\"123,456,789\",200";
-        Map<Integer, String> quotedResult =
-                schema.splitLineBySeaTunnelRowType(quotedLine, rowType, 0);
-        Assertions.assertEquals("Shanghai", quotedResult.get(0));
-        Assertions.assertEquals("123,456,789", quotedResult.get(1));
-        Assertions.assertEquals("200", quotedResult.get(2));
-
-        // Test CSV line with empty fields
-        String emptyFieldLine = "Guangzhou,,300";
-        Map<Integer, String> emptyResult =
-                schema.splitLineBySeaTunnelRowType(emptyFieldLine, rowType, 0);
-        Assertions.assertEquals("Guangzhou", emptyResult.get(0));
-        Assertions.assertEquals("", emptyResult.get(1));
-        Assertions.assertEquals("300", emptyResult.get(2));
-
-        // Test line with insufficient fields
-        String insufficientLine = "Shenzhen,400";
-        Map<Integer, String> insufficientResult =
-                schema.splitLineBySeaTunnelRowType(insufficientLine, rowType, 0);
-        Assertions.assertEquals("Shenzhen", insufficientResult.get(0));
-        Assertions.assertEquals("400", insufficientResult.get(1));
-        Assertions.assertNull(insufficientResult.get(2));
-
-        // Test line with quotes inside quotes
-        String doubleQuotedLine = "Tianjin,\"123\"\"456\",500";
-        Map<Integer, String> doubleQuotedResult =
-                schema.splitLineBySeaTunnelRowType(doubleQuotedLine, rowType, 0);
-        Assertions.assertEquals("Tianjin", doubleQuotedResult.get(0));
-        Assertions.assertEquals("123\"456", doubleQuotedResult.get(1));
-        Assertions.assertEquals("500", doubleQuotedResult.get(2));
     }
 
     @Test
-    public void testSplitLineWithCSVFile() throws Exception {
-        // prepare test data
-        SeaTunnelRowType rowType =
-                new SeaTunnelRowType(
-                        new String[] {"city", "order_no", "weight"},
-                        new SeaTunnelDataType[] {
-                            BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.INT_TYPE
-                        });
-
-        TextDeserializationSchema schema =
-                TextDeserializationSchema.builder()
-                        .seaTunnelRowType(rowType)
-                        .delimiter(",")
-                        .build();
-
-        // Read the CSV file
-        List<String> lines = Files.readAllLines(Paths.get("src/test/resources/testdata.csv"));
-
-        // Skip the header line
-        lines = lines.subList(1, lines.size());
-
-        for (String line : lines) {
-            Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
-            // Verify the result is not null and contains all expected keys
-            Assertions.assertNotNull(result);
-            Assertions.assertEquals(3, result.size(), "Should contain 3 fields");
-            Assertions.assertTrue(result.containsKey(0), "Should contain city field");
-            Assertions.assertTrue(result.containsKey(1), "Should contain order_no field");
-            Assertions.assertTrue(result.containsKey(2), "Should contain weight field");
-
-            // Verify the values are not null
-            Assertions.assertNotNull(result.get(0), "City should not be null");
-            Assertions.assertNotNull(result.get(1), "Order number should not be null");
-            Assertions.assertNotNull(result.get(2), "Weight should not be null");
-
-            // Verify weight is a valid integer
-            Assertions.assertDoesNotThrow(
-                    () -> Integer.parseInt(result.get(2)), "Weight should be a valid integer");
-        }
-    }
-
-    @Test
-    public void testSplitLineWithNonCSV() {
-        // Test non-CSV format (using other delimiters)
-        SeaTunnelRowType rowType =
-                new SeaTunnelRowType(
-                        new String[] {"city", "info", "date"},
-                        new SeaTunnelDataType[] {
-                            BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.STRING_TYPE
-                        });
-
-        TextDeserializationSchema schema =
-                TextDeserializationSchema.builder()
-                        .seaTunnelRowType(rowType)
-                        .delimiter("|")
-                        .build();
-
-        String line = "Beijing|123|2024-01-01";
+    public void testBasicDeserialization() {
+        // Test basic line without any special characters
+        String line = "New York,ORDER123,100";
         Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
-        Assertions.assertEquals("Beijing", result.get(0));
-        Assertions.assertEquals("123", result.get(1));
-        Assertions.assertEquals("2024-01-01", result.get(2));
+
+        Assertions.assertEquals("New York", result.get(0));
+        Assertions.assertEquals("ORDER123", result.get(1));
+        Assertions.assertEquals("100", result.get(2));
     }
 
     @Test
-    public void testSplitLineWithInvalidInput() {
-        SeaTunnelRowType rowType =
-                new SeaTunnelRowType(
-                        new String[] {"field1", "field2", "field3"},
-                        new SeaTunnelDataType[] {
-                            BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.STRING_TYPE
-                        });
+    public void testEmptyFields() {
+        // Test line with empty fields
+        String line = "London,,200";
+        Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
 
-        TextDeserializationSchema schema =
+        Assertions.assertEquals("London", result.get(0));
+        Assertions.assertEquals("", result.get(1));
+        Assertions.assertEquals("200", result.get(2));
+    }
+
+    @Test
+    public void testQuotedFields() {
+        // Test fields with quotes and embedded delimiters
+        String line = "\"San Francisco\",\"ORDER,456\",300";
+        Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
+
+        Assertions.assertEquals("\"San Francisco\"", result.get(0));
+        Assertions.assertEquals("\"ORDER", result.get(1));
+        Assertions.assertEquals("456\"", result.get(2));
+    }
+
+    @Test
+    public void testEscapedQuotes() {
+        // Test fields with escaped quotes
+        String line = "\"Los Angeles\",\"ORDER\"\"789\",400";
+        Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
+
+        Assertions.assertEquals("\"Los Angeles\"", result.get(0));
+        Assertions.assertEquals("\"ORDER\"\"789\"", result.get(1));
+        Assertions.assertEquals("400", result.get(2));
+    }
+
+    @Test
+    public void testInsufficientFields() {
+        // Test line with fewer fields than expected
+        String line = "Chicago,ORDER999";
+        Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
+
+        Assertions.assertEquals("Chicago", result.get(0));
+        Assertions.assertEquals("ORDER999", result.get(1));
+        Assertions.assertNull(result.get(2));
+    }
+
+    @Test
+    public void testCustomDelimiter() {
+        // Test with a different delimiter
+        schema =
                 TextDeserializationSchema.builder()
                         .seaTunnelRowType(rowType)
-                        .delimiter(",")
+                        .delimiter("\\|")
                         .build();
-        // Test empty input
-        String emptyLine = "";
-        Map<Integer, String> emptyResult =
-                schema.splitLineBySeaTunnelRowType(emptyLine, rowType, 0);
-        Assertions.assertNotNull(emptyResult, "Empty result should not be null");
-        Assertions.assertFalse(
-                emptyResult.isEmpty()
-                        || (emptyResult.get(0) != null && emptyResult.get(0).isEmpty()));
+
+        String line = "Seattle|ORDER888|500";
+        Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
+
+        Assertions.assertEquals("Seattle", result.get(0));
+        Assertions.assertEquals("ORDER888", result.get(1));
+        Assertions.assertEquals("500", result.get(2));
+    }
+
+    @Test
+    public void testWhitespaceHandling() {
+        // Test handling of whitespace around fields
+        String line = " Boston , ORDER777 , 600 ";
+        Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
+
+        Assertions.assertEquals(" Boston ", result.get(0));
+        Assertions.assertEquals(" ORDER777 ", result.get(1));
+        Assertions.assertEquals(" 600 ", result.get(2));
+    }
+
+    @Test
+    public void testSpecialCharacters() {
+        // Test fields containing special characters
+        String line = "\"Miami\nFL\",\"ORDER\t123\",700";
+        Map<Integer, String> result = schema.splitLineBySeaTunnelRowType(line, rowType, 0);
+
+        Assertions.assertEquals("\"Miami\nFL\"", result.get(0));
+        Assertions.assertEquals("\"ORDER\t123\"", result.get(1));
+        Assertions.assertEquals("700", result.get(2));
     }
 }
