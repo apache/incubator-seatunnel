@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.server.task.flow;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
@@ -25,8 +27,6 @@ import org.apache.seatunnel.api.transform.Collector;
 import org.apache.seatunnel.api.transform.SeaTunnelFlatMapTransform;
 import org.apache.seatunnel.api.transform.SeaTunnelMapTransform;
 import org.apache.seatunnel.api.transform.SeaTunnelTransform;
-import org.apache.seatunnel.api.transform.event.TransformCloseEvent;
-import org.apache.seatunnel.api.transform.event.TransformOpenEvent;
 import org.apache.seatunnel.engine.core.dag.actions.TransformChainAction;
 import org.apache.seatunnel.engine.server.checkpoint.ActionStateKey;
 import org.apache.seatunnel.engine.server.checkpoint.ActionSubtaskState;
@@ -36,10 +36,6 @@ import org.apache.seatunnel.engine.server.execution.TaskLocation;
 import org.apache.seatunnel.engine.server.task.SeaTunnelTask;
 import org.apache.seatunnel.engine.server.task.context.TransformContext;
 import org.apache.seatunnel.engine.server.task.record.Barrier;
-
-import org.apache.commons.collections4.CollectionUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,16 +53,12 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
 
     private final Collector<Record<?>> collector;
 
-    private EventListener eventListener;
-
-    private SeaTunnelTransform.Context transformContext;
 
     private MetricsContext metricsContext;
 
     public TransformFlowLifeCycle(
             TransformChainAction<T> action,
             SeaTunnelTask runningTask,
-            TaskLocation taskLocation,
             Collector<Record<?>> collector,
             CompletableFuture<Void> completableFuture,
             MetricsContext metricsContext) {
@@ -75,30 +67,16 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         this.transform = action.getTransforms();
         this.collector = collector;
         this.metricsContext = metricsContext;
-        this.eventListener = new JobEventListener(taskLocation, runningTask.getExecutionContext());
-    }
-
-    @Override
-    public void init() throws Exception {
-        this.transformContext = new TransformContext(metricsContext, eventListener);
-        for (SeaTunnelTransform<T> t : transform) {
-            try {
-                t.loadContext(transformContext);
-            } catch (Exception e) {
-                log.error(
-                        "restore transform: {} failed, cause: {}",
-                        t.getPluginName(),
-                        e.getMessage(),
-                        e);
-            }
-        }
     }
 
     @Override
     public void open() throws Exception {
-        transformContext.getEventListener().onEvent(new TransformOpenEvent());
+        int index = 0;
         for (SeaTunnelTransform<T> t : transform) {
             try {
+                String transformName = "Transform:" + ++index;
+                TransformContext transformContext = new TransformContext(metricsContext, transformName);
+                t.loadContext(transformContext);
                 t.open();
             } catch (Exception e) {
                 log.error(
@@ -210,11 +188,11 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
     }
 
     @Override
-    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {}
+    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {
+    }
 
     @Override
     public void close() throws IOException {
-        transformContext.getEventListener().onEvent(new TransformCloseEvent());
         for (SeaTunnelTransform<T> t : transform) {
             try {
                 t.close();

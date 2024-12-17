@@ -158,13 +158,11 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
     protected String getTransformMetricName() {
         StringBuilder metricName = new StringBuilder();
         metricName
-                .append(MetricNames.TRANSFORM_COUNT)
+                .append(MetricNames.TRANSFORM_OUTPUT_COUNT)
                 .append("#")
-                .append(inputCatalogTable.getTablePath().getFullName())
+                .append(context.getTransformName())
                 .append("#")
-                .append(inputTableName)
-                .append("->")
-                .append(outTableName);
+                .append(inputTableName);
         return metricName.toString();
     }
 }

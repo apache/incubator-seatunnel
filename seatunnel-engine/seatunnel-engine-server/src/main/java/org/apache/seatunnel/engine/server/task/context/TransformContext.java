@@ -18,18 +18,17 @@
 package org.apache.seatunnel.engine.server.task.context;
 
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
-import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.transform.SeaTunnelTransform;
 
 public class TransformContext implements SeaTunnelTransform.Context {
 
     private static final long serialVersionUID = -3082515319043725121L;
     private final MetricsContext metricsContext;
-    private final EventListener eventListener;
+    private final String transformName;
 
-    public TransformContext(MetricsContext metricsContext, EventListener eventListener) {
+    public TransformContext(MetricsContext metricsContext, String transformName) {
         this.metricsContext = metricsContext;
-        this.eventListener = eventListener;
+        this.transformName = transformName;
     }
 
     @Override
@@ -38,7 +37,7 @@ public class TransformContext implements SeaTunnelTransform.Context {
     }
 
     @Override
-    public EventListener getEventListener() {
-        return eventListener;
+    public String getTransformName() {
+        return transformName;
     }
 }

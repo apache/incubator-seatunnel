@@ -89,7 +89,7 @@ import static org.apache.seatunnel.api.common.metrics.MetricNames.SOURCE_RECEIVE
 import static org.apache.seatunnel.api.common.metrics.MetricNames.SOURCE_RECEIVED_BYTES_PER_SECONDS;
 import static org.apache.seatunnel.api.common.metrics.MetricNames.SOURCE_RECEIVED_COUNT;
 import static org.apache.seatunnel.api.common.metrics.MetricNames.SOURCE_RECEIVED_QPS;
-import static org.apache.seatunnel.api.common.metrics.MetricNames.TRANSFORM_COUNT;
+import static org.apache.seatunnel.api.common.metrics.MetricNames.TRANSFORM_OUTPUT_COUNT;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.TABLE_SINK_WRITE_BYTES;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.TABLE_SINK_WRITE_BYTES_PER_SECONDS;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.TABLE_SINK_WRITE_COUNT;
@@ -336,9 +336,9 @@ public abstract class BaseService {
             Map<String, Map<String, Map<String, JsonNode>>> transformMetricsMaps,
             String metricName,
             JsonNode jobMetricsStr) {
-        if (metricName.contains(TRANSFORM_COUNT)) {
+        if (metricName.contains(TRANSFORM_OUTPUT_COUNT)) {
             processTransformMetric(
-                    transformMetricsMaps, TRANSFORM_COUNT, metricName, jobMetricsStr);
+                    transformMetricsMaps, TRANSFORM_OUTPUT_COUNT, metricName, jobMetricsStr);
         }
     }
 

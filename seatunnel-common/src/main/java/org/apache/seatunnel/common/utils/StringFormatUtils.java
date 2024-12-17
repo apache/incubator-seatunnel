@@ -17,8 +17,6 @@
 
 package org.apache.seatunnel.common.utils;
 
-import lombok.SneakyThrows;
-
 import java.util.Collections;
 
 public class StringFormatUtils {
@@ -37,30 +35,6 @@ public class StringFormatUtils {
                         + "***********************************************"
                         + "\n"
                         + String.join("", Collections.nCopies(blankNum, " "))
-                        + "%s"
-                        + "\n"
-                        + "***********************************************"
-                        + "\n"
-                        + String.join("", Collections.nCopies(kvNum, "%-26s: %19s\n"))
-                        + "***********************************************\n";
-        return String.format(template, objects);
-    }
-
-    @SneakyThrows
-    public static String transformFormatTable(Object... objects) {
-        String title = objects[0].toString();
-        String tableName = objects[1].toString();
-        int blankNum = (NUM - title.length()) / 2;
-        int tableBlankNum = (NUM - tableName.length()) / 2;
-        int kvNum = (objects.length - 2) / 2;
-        String template =
-                "\n"
-                        + "***********************************************"
-                        + "\n"
-                        + String.join("", Collections.nCopies(blankNum, " "))
-                        + "%s"
-                        + "\n"
-                        + "originTable:"
                         + "%s"
                         + "\n"
                         + "***********************************************"
