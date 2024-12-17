@@ -18,12 +18,14 @@
 package org.apache.seatunnel.transform.replace;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
-
-import org.apache.seatunnel.api.table.catalog.*;
+import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.catalog.ConstraintKey;
+import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
+import org.apache.seatunnel.api.table.catalog.PrimaryKey;
+import org.apache.seatunnel.api.table.catalog.TableIdentifier;
+import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableChangeColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableDropColumnEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableModifyColumnEvent;
 import org.apache.seatunnel.api.table.type.BasicType;
 
 import org.junit.jupiter.api.Assertions;
@@ -103,7 +105,6 @@ public class ReplaceTransformTest {
         replaceTransform.mapSchemaChangeEvent(addColumnEvent);
 
         Assertions.assertEquals(2, replaceTransform.getFieldIndex());
-
 
         AlterTableDropColumnEvent dropColumnEvent =
                 new AlterTableDropColumnEvent(DEFAULT_TABLE.getTableId(), "f4");
