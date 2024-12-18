@@ -147,6 +147,7 @@ public class SFTPFileSystem extends FileSystem {
             getFileStatus(channel, file);
             return true;
         } catch (FileNotFoundException fnfe) {
+            LOG.debug("File does not exist: " + file, fnfe);
             return false;
         } catch (IOException ioe) {
             throw new IOException(E_FILE_STATUS, ioe);
@@ -284,6 +285,7 @@ public class SFTPFileSystem extends FileSystem {
                 try {
                     final String previousCwd = client.pwd();
                     client.cd(parentDir);
+                    LOG.debug("Creating directory " + pathName);
                     client.mkdir(pathName);
                     client.cd(previousCwd);
                 } catch (SftpException e) {
@@ -293,6 +295,11 @@ public class SFTPFileSystem extends FileSystem {
             }
         } else if (isFile(client, absolute)) {
             throw new IOException(String.format(E_DIR_CREATE_FROMFILE, absolute));
+        } else {
+            LOG.debug("Skipping creation of existing directory " + file);
+        }
+        if (!created) {
+            LOG.debug("Failed to create " + file);
         }
         return created;
     }

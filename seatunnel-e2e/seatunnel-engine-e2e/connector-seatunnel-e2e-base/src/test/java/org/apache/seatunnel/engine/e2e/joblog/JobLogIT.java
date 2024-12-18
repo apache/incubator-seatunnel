@@ -19,7 +19,7 @@ package org.apache.seatunnel.engine.e2e.joblog;
 
 import org.apache.seatunnel.common.constants.JobMode;
 import org.apache.seatunnel.e2e.common.util.ContainerUtil;
-import org.apache.seatunnel.engine.e2e.SeaTunnelContainer;
+import org.apache.seatunnel.engine.e2e.SeaTunnelEngineContainer;
 import org.apache.seatunnel.engine.server.rest.RestConstant;
 
 import org.awaitility.Awaitility;
@@ -53,7 +53,7 @@ import static io.restassured.RestAssured.given;
 import static org.apache.seatunnel.e2e.common.util.ContainerUtil.PROJECT_ROOT_PATH;
 import static org.hamcrest.Matchers.equalTo;
 
-public class JobLogIT extends SeaTunnelContainer {
+public class JobLogIT extends SeaTunnelEngineContainer {
 
     private static final String CUSTOM_JOB_NAME = "test-job-log-file";
     private static final String CUSTOM_JOB_NAME2 = "test-job-log-file2";
