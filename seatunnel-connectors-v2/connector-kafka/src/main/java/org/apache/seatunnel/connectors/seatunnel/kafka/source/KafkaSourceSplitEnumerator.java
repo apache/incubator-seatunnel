@@ -311,13 +311,17 @@ public class KafkaSourceSplitEnumerator
                         .flatMap(
                                 t ->
                                         t.partitions().stream()
-                                                .filter(partitionInfo -> {
-                                                    if (partitionInfo.leader() == null) {
-                                                        log.warn("Partition {} of topic {} has no leader.", partitionInfo.partition(), t.name());
-                                                        return false;
-                                                    }
-                                                    return true;
-                                                })
+                                                .filter(
+                                                        partitionInfo -> {
+                                                            if (partitionInfo.leader() == null) {
+                                                                log.warn(
+                                                                        "Partition {} of topic {} has no leader.",
+                                                                        partitionInfo.partition(),
+                                                                        t.name());
+                                                                return false;
+                                                            }
+                                                            return true;
+                                                        })
                                                 .map(
                                                         p ->
                                                                 new TopicPartition(
