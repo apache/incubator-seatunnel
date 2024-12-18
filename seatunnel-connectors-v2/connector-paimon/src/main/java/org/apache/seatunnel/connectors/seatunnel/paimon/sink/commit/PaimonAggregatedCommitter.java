@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.paimon.sink.commit;
 
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkAggregatedCommitter;
 import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonHadoopConfiguration;
@@ -55,13 +56,17 @@ public class PaimonAggregatedCommitter
 
     private final JobContext jobContext;
 
+    private final ReadonlyConfig envConfig;
+
     public PaimonAggregatedCommitter(
             Table table,
             JobContext jobContext,
+            ReadonlyConfig envConfig,
             PaimonHadoopConfiguration paimonHadoopConfiguration) {
         this.jobContext = jobContext;
+        this.envConfig = envConfig;
         this.tableWriteBuilder =
-                JobContextUtil.isBatchJob(jobContext)
+                JobContextUtil.isCheckpointNotEnabledInBatchMode(jobContext, envConfig)
                         ? table.newBatchWriteBuilder()
                         : table.newStreamWriteBuilder();
         PaimonSecurityContext.shouldEnableKerberos(paimonHadoopConfiguration);
@@ -73,7 +78,8 @@ public class PaimonAggregatedCommitter
         try (TableCommit tableCommit = tableWriteBuilder.newCommit()) {
             PaimonSecurityContext.runSecured(
                     () -> {
-                        if (JobContextUtil.isBatchJob(jobContext)) {
+                        if (JobContextUtil.isCheckpointNotEnabledInBatchMode(
+                                jobContext, envConfig)) {
                             log.debug("Trying to commit states batch mode");
                             List<CommitMessage> fileCommittables =
                                     aggregatedCommitInfo.stream()

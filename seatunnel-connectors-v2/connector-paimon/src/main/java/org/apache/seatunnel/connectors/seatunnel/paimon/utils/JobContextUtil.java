@@ -18,6 +18,8 @@
 package org.apache.seatunnel.connectors.seatunnel.paimon.utils;
 
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.env.EnvCommonOptions;
 import org.apache.seatunnel.common.constants.JobMode;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JobContextUtil {
 
-    public static boolean isBatchJob(JobContext jobContext) {
-        return jobContext.getJobMode().equals(JobMode.BATCH);
+    public static boolean isCheckpointNotEnabledInBatchMode(
+            JobContext jobContext, ReadonlyConfig envConfig) {
+        return jobContext.getJobMode().equals(JobMode.BATCH)
+                && !envConfig.getOptional(EnvCommonOptions.CHECKPOINT_INTERVAL).isPresent();
     }
 }

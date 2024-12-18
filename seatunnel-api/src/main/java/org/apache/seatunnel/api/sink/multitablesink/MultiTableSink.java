@@ -18,6 +18,7 @@
 package org.apache.seatunnel.api.sink.multitablesink;
 
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DefaultSerializer;
 import org.apache.seatunnel.api.serialization.Serializer;
 import org.apache.seatunnel.api.sink.SeaTunnelSink;
@@ -184,8 +185,8 @@ public class MultiTableSink
     }
 
     @Override
-    public void setJobContext(JobContext jobContext) {
-        sinks.values().forEach(sink -> sink.setJobContext(jobContext));
+    public void setJobConfigContext(JobContext jobContext, ReadonlyConfig envConfig) {
+        sinks.values().forEach(sink -> sink.setJobConfigContext(jobContext, envConfig));
     }
 
     @Override

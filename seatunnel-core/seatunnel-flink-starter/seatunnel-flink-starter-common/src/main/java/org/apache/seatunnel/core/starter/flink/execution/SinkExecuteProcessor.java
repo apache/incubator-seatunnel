@@ -118,7 +118,7 @@ public class SinkExecuteProcessor
                                             PLUGIN_TYPE,
                                             sinkConfig.getString(PLUGIN_NAME.key())),
                                     sinkConfig);
-                    fallBackSink.setJobContext(jobContext);
+                    fallBackSink.setJobConfigContext(jobContext, envReadonlyConfig);
                     SeaTunnelRowType sourceType = catalogTable.getSeaTunnelRowType();
                     fallBackSink.setTypeInfo(sourceType);
                     handleSaveMode(fallBackSink);
@@ -139,7 +139,7 @@ public class SinkExecuteProcessor
                     ConfigValidator.of(context.getOptions()).validate(factory.get().optionRule());
                     seaTunnelSink =
                             ((TableSinkFactory) factory.get()).createSink(context).createSink();
-                    seaTunnelSink.setJobContext(jobContext);
+                    seaTunnelSink.setJobConfigContext(jobContext, envReadonlyConfig);
                     handleSaveMode(seaTunnelSink);
                     TableIdentifier tableId = catalogTable.getTableId();
                     String tableIdName = tableId.toTablePath().toString();

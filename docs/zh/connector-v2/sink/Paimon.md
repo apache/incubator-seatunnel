@@ -46,6 +46,11 @@ libfb303-xxx.jar
 | paimon.hadoop.conf          | Map  | 否    | -                            | Hadoop配置文件属性信息                                                                                        |
 | paimon.hadoop.conf-path     | 字符串  | 否    | -                            | Hadoop配置文件目录，用于加载'core-site.xml', 'hdfs-site.xml', 'hive-site.xml'文件配置                                |
 
+## 批模式下的checkpoint
+
+当您在批处理模式下将`checkpoint.interval`设置为大于0的值时，在写入一定数量的记录后checkpoint触发时，paimon连接器将把数据提交到paimon表。此时，写入的数据是可见的。
+但是，如果您没有在批处理模式下设置`checkpoint.interval`，则在写入所有记录之后，paimon sink连接器将提交数据。到批任务完成之前，写入的数据都是不可见的。
+
 ## 更新日志
 你必须配置`changelog-producer=input`来启用paimon表的changelog产生模式。如果你使用了paimon sink的自动建表功能，你可以在`paimon.table.write-props`中指定这个属性。
 

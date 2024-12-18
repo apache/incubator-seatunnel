@@ -18,11 +18,27 @@
 package org.apache.seatunnel.api.source;
 
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 
 /** This interface defines the runtime environment of the SeaTunnel job. */
 public interface SeaTunnelJobAware {
 
+    /**
+     * @deprecated instead by {@link SeaTunnelJobAware#setJobConfigContext(JobContext,
+     *     ReadonlyConfig)}
+     */
+    @Deprecated
     default void setJobContext(JobContext jobContext) {
         // nothing
+    }
+
+    /**
+     * Set the job config.
+     *
+     * @param jobContext job context(jobId, jobMode)
+     * @param envConfig environment options
+     */
+    default void setJobConfigContext(JobContext jobContext, ReadonlyConfig envConfig) {
+        setJobContext(jobContext);
     }
 }

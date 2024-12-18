@@ -18,6 +18,7 @@
 package org.apache.seatunnel.engine.common.config;
 
 import org.apache.seatunnel.api.common.JobContext;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.env.EnvCommonOptions;
 import org.apache.seatunnel.engine.common.serializeable.ConfigDataSerializerHook;
 
@@ -59,5 +60,9 @@ public class JobConfig implements IdentifiedDataSerializable {
         this.name = in.readString();
         this.jobContext = in.readObject();
         this.envOptions = in.readObject();
+    }
+
+    public ReadonlyConfig getEnvConfig() {
+        return ReadonlyConfig.fromMap(envOptions);
     }
 }
