@@ -302,11 +302,15 @@ public class RestService implements Serializable {
                 httpPost.setEntity(stringEntity);
                 resStr = send(dorisSourceConfig, httpPost, logger);
                 break;
-            } catch (DorisConnectorException e) {
+            } catch (Exception e) {
                 if (i == feNodesNum - 1) {
                     throw new DorisConnectorException(
                             DorisConnectorErrorCode.REST_SERVICE_FAILED, e);
                 }
+                log.error(
+                        "Find partition error for feNode: {} with exception: {}",
+                        feNodes.get(i),
+                        e.getMessage());
             }
         }
 
