@@ -38,7 +38,6 @@ import org.apache.seatunnel.connectors.doris.config.DorisSinkConfig;
 import org.apache.seatunnel.connectors.doris.datatype.DorisTypeConverterV2;
 import org.apache.seatunnel.connectors.doris.exception.DorisConnectorErrorCode;
 import org.apache.seatunnel.connectors.doris.exception.DorisSchemaChangeException;
-import org.apache.seatunnel.connectors.doris.rest.RestService;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +55,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -363,11 +365,9 @@ public class SchemaChangeManager implements Serializable {
             throws IllegalArgumentException, IOException {
         Map<String, String> param = new HashMap<>();
         param.put("stmt", ddl);
-        String requestUrl =
-                String.format(
-                        SCHEMA_CHANGE_API,
-                        RestService.randomEndpoint(dorisSinkConfig.getFrontends(), log),
-                        database);
+        List<String> feNodes = Arrays.asList(dorisSinkConfig.getFrontends().split(","));
+        Collections.shuffle(feNodes);
+        String requestUrl = String.format(SCHEMA_CHANGE_API, feNodes.get(0), database);
         HttpPost httpPost = new HttpPost(requestUrl);
         httpPost.setHeader(HttpHeaders.AUTHORIZATION, authHeader());
         httpPost.setHeader(
