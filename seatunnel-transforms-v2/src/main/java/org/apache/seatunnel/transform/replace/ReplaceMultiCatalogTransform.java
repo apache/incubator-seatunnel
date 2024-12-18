@@ -41,10 +41,9 @@ public class ReplaceMultiCatalogTransform extends AbstractMultiCatalogMapTransfo
 
     @Override
     public SchemaChangeEvent mapSchemaChangeEvent(SchemaChangeEvent event) {
-        ((SeaTunnelMapTransform<SeaTunnelRow>) transformMap.get(event.tablePath().toString()))
+        return ((SeaTunnelMapTransform<SeaTunnelRow>)
+                        transformMap.get(event.tablePath().toString()))
                 .mapSchemaChangeEvent(event);
-
-        return event;
     }
 
     @Override
