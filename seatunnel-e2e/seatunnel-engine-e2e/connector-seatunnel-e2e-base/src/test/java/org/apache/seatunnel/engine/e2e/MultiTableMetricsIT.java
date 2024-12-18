@@ -134,22 +134,22 @@ public class MultiTableMetricsIT {
                                             "metrics.TableSinkWriteBytes.'fake.public.table2'",
                                             equalTo(String.valueOf(dataSize * 5)))
                                     .body(
-                                            "metrics.TransformCount.'fake.table1'.'fake1->fake3'",
+                                            "metrics.TransformOutputCount.'transform1'.'fake1'",
                                             equalTo("10"))
                                     .body(
-                                            "metrics.TransformCount.'fake.table1'.'fake3->fake4'",
+                                            "metrics.TransformOutputCount.'transform2'.'fake3'",
                                             equalTo("10"))
                                     .body(
-                                            "metrics.TransformCount.'fake.table1'.'fake4->fake5'",
+                                            "metrics.TransformOutputCount.'transform3'.'fake4'",
                                             equalTo("10"))
                                     .body(
-                                            "metrics.TransformCount.'fake.public.table2'.'fake2->fake6'",
+                                            "metrics.TransformOutputCount.'transform1'.'fake2'",
                                             equalTo("5"))
                                     .body(
-                                            "metrics.TransformCount.'fake.public.table2'.'fake6->fake7'",
+                                            "metrics.TransformOutputCount.'transform2'.'fake6'",
                                             equalTo("5"))
                                     .body(
-                                            "metrics.TransformCount.'fake.public.table2'.'fake7->fake8'",
+                                            "metrics.TransformOutputCount.'transform3'.'fake7'",
                                             equalTo("5"));
                             Assertions.assertTrue(
                                     Double.parseDouble(response.path("metrics.SourceReceivedQPS"))
@@ -199,27 +199,27 @@ public class MultiTableMetricsIT {
                                                     > 0
                                             && Double.parseDouble(
                                                             response.path(
-                                                                    "metrics.TransformCount.'fake.table1'.'fake1->fake3'"))
+                                                                    "metrics.TransformOutputCount.'transform1'.'fake1'"))
                                                     > 0
                                             && Double.parseDouble(
                                                             response.path(
-                                                                    "metrics.TransformCount.'fake.table1'.'fake3->fake4'"))
+                                                                    "metrics.TransformOutputCount.'transform2'.'fake3'"))
                                                     > 0
                                             && Double.parseDouble(
                                                             response.path(
-                                                                    "metrics.TransformCount.'fake.table1'.'fake4->fake5'"))
+                                                                    "metrics.TransformOutputCount.'transform3'.'fake4'"))
                                                     > 0
                                             && Double.parseDouble(
                                                             response.path(
-                                                                    "metrics.TransformCount.'fake.public.table2'.'fake2->fake6'"))
+                                                                    "metrics.TransformOutputCount.'transform1'.'fake2'"))
                                                     > 0
                                             && Double.parseDouble(
                                                             response.path(
-                                                                    "metrics.TransformCount.'fake.public.table2'.'fake6->fake7'"))
+                                                                    "metrics.TransformOutputCount.'transform2'.'fake6'"))
                                                     > 0
                                             && Double.parseDouble(
                                                             response.path(
-                                                                    "metrics.TransformCount.'fake.public.table2'.'fake7->fake8'"))
+                                                                    "metrics.TransformOutputCount.'transform3'.'fake7'"))
                                                     > 0);
                         });
     }

@@ -17,10 +17,7 @@
 
 package org.apache.seatunnel.engine.server.task.flow;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
-import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.api.table.type.Record;
 import org.apache.seatunnel.api.transform.Collector;
@@ -31,11 +28,13 @@ import org.apache.seatunnel.engine.core.dag.actions.TransformChainAction;
 import org.apache.seatunnel.engine.server.checkpoint.ActionStateKey;
 import org.apache.seatunnel.engine.server.checkpoint.ActionSubtaskState;
 import org.apache.seatunnel.engine.server.checkpoint.CheckpointBarrier;
-import org.apache.seatunnel.engine.server.event.JobEventListener;
-import org.apache.seatunnel.engine.server.execution.TaskLocation;
 import org.apache.seatunnel.engine.server.task.SeaTunnelTask;
 import org.apache.seatunnel.engine.server.task.context.TransformContext;
 import org.apache.seatunnel.engine.server.task.record.Barrier;
+
+import org.apache.commons.collections4.CollectionUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,7 +51,6 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
     private final List<SeaTunnelTransform<T>> transform;
 
     private final Collector<Record<?>> collector;
-
 
     private MetricsContext metricsContext;
 
@@ -75,7 +73,8 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         for (SeaTunnelTransform<T> t : transform) {
             try {
                 String transformName = "Transform:" + ++index;
-                TransformContext transformContext = new TransformContext(metricsContext, transformName);
+                TransformContext transformContext =
+                        new TransformContext(metricsContext, transformName);
                 t.loadContext(transformContext);
                 t.open();
             } catch (Exception e) {
@@ -188,8 +187,7 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
     }
 
     @Override
-    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {
-    }
+    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {}
 
     @Override
     public void close() throws IOException {
