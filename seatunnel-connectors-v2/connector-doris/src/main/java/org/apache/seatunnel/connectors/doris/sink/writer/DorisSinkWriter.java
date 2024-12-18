@@ -114,21 +114,36 @@ public class DorisSinkWriter
     }
 
     private void initializeLoad() {
-        String backend = RestService.randomEndpoint(dorisSinkConfig.getFrontends(), log);
-        try {
-            this.dorisStreamLoad =
-                    new DorisStreamLoad(
-                            backend,
-                            catalogTable.getTablePath(),
-                            dorisSinkConfig,
-                            labelGenerator,
-                            new HttpUtil().getHttpClient());
-            if (dorisSinkConfig.getEnable2PC()) {
-                dorisStreamLoad.abortPreCommit(labelPrefix, lastCheckpointId + 1);
+
+        List<String> feNodes = Arrays.asList(dorisSinkConfig.getFrontends().split(","));
+        Collections.shuffle(feNodes);
+        int feNodesNum = feNodes.size();
+
+        for (int i = 0; i < feNodesNum; i++) {
+            try {
+                this.dorisStreamLoad =
+                        new DorisStreamLoad(
+                                feNodes.get(i),
+                                catalogTable.getTablePath(),
+                                dorisSinkConfig,
+                                labelGenerator,
+                                new HttpUtil().getHttpClient());
+                if (dorisSinkConfig.getEnable2PC()) {
+                    dorisStreamLoad.abortPreCommit(labelPrefix, lastCheckpointId + 1);
+                }
+                break;
+            } catch (Exception e) {
+                if (i == feNodesNum - 1) {
+                    throw new DorisConnectorException(
+                            DorisConnectorErrorCode.STREAM_LOAD_FAILED, e);
+                }
+                log.error(
+                        "stream load error for feNode: {} with exception: {}",
+                        feNodes.get(i),
+                        e.getMessage());
             }
-        } catch (Exception e) {
-            throw new DorisConnectorException(DorisConnectorErrorCode.STREAM_LOAD_FAILED, e);
         }
+
         startLoad(labelGenerator.generateLabel(lastCheckpointId + 1));
         // when uploading data in streaming mode, we need to regularly detect whether there are
         // exceptions.
