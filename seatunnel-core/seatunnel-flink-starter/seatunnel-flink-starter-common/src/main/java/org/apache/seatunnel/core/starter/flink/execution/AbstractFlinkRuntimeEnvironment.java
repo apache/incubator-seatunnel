@@ -164,8 +164,11 @@ public abstract class AbstractFlinkRuntimeEnvironment implements RuntimeEnvironm
 
     protected void createStreamEnvironment() {
         Configuration configuration = new Configuration();
+        configuration.setString("rest.flamegraph.enabled","true");
         EnvironmentUtil.initConfiguration(config, configuration);
-        environment = StreamExecutionEnvironment.getExecutionEnvironment(configuration);
+//        configuration.setInteger("rest.port", 18081);
+//        environment = StreamExecutionEnvironment.getExecutionEnvironment(configuration);
+        environment = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
         setTimeCharacteristic();
         setCheckpoint();
 

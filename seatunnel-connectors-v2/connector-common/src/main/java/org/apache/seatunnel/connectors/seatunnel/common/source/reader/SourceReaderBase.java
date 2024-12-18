@@ -169,6 +169,7 @@ public abstract class SourceReaderBase<E, T, SplitT extends SourceSplit, SplitSt
         if (recordsWithSplitId == null || !moveToNextSplit(recordsWithSplitId, output)) {
             try {
                 log.trace("Current fetch is finished.");
+//                System.out.println("Current fetch is finished111.");
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 throw new SeaTunnelException(e);

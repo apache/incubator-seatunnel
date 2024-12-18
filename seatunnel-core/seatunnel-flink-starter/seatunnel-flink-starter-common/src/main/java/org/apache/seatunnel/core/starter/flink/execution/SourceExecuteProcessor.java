@@ -41,6 +41,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -66,6 +67,10 @@ public class SourceExecuteProcessor extends FlinkAbstractPluginExecuteProcessor<
     public List<DataStreamTableInfo> execute(List<DataStreamTableInfo> upstreamDataStreams) {
         StreamExecutionEnvironment executionEnvironment =
                 flinkRuntimeEnvironment.getStreamExecutionEnvironment();
+
+        // 配置 Source 相关参数
+        executionEnvironment.getConfig().setAutoWatermarkInterval(300);
+
         List<DataStreamTableInfo> sources = new ArrayList<>();
         for (int i = 0; i < plugins.size(); i++) {
             SourceTableInfo sourceTableInfo = plugins.get(i);
@@ -76,8 +81,13 @@ public class SourceExecuteProcessor extends FlinkAbstractPluginExecuteProcessor<
             DataStreamSource<SeaTunnelRow> sourceStream =
                     executionEnvironment.fromSource(
                             flinkSource,
-                            WatermarkStrategy.noWatermarks(),
+                            WatermarkStrategy
+                                    .<SeaTunnelRow>forBoundedOutOfOrderness(Duration.ofMillis(300))
+                                    .withIdleness(Duration.ofSeconds(1)),
                             String.format("%s-Source", internalSource.getPluginName()));
+
+            // 设置合适的缓冲区超时时间
+            sourceStream.setBufferTimeout(50);
 
             if (pluginConfig.hasPath(CommonOptions.PARALLELISM.key())) {
                 int parallelism = pluginConfig.getInt(CommonOptions.PARALLELISM.key());

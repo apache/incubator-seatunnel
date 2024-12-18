@@ -74,16 +74,35 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
         }
     }
 
+    private volatile CompletableFuture<Void> availabilityFuture;
+    private static final long DEFAULT_WAIT_TIME_MILLIS = 200L;
+
+
     @Override
     public InputStatus pollNext(ReaderOutput<SeaTunnelRow> output) throws Exception {
         if (!((FlinkSourceReaderContext) context).isSendNoMoreElementEvent()) {
+            try {
             sourceReader.pollNext(flinkRowCollector.withReaderOutput(output));
+                if (flinkRowCollector.isEmptyThisPollNext()) {
+                    synchronized (this) {
+                        if (availabilityFuture == null || availabilityFuture.isDone()) {
+                            availabilityFuture = new CompletableFuture<>();
+                            scheduleComplete(availabilityFuture);
+                        }
+                    }
+                    return InputStatus.NOTHING_AVAILABLE;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         } else {
             // reduce CPU idle
             Thread.sleep(1000L);
         }
         return inputStatus;
     }
+
+
 
     @Override
     public List<SplitWrapper<SplitT>> snapshotState(long checkpointId) {
@@ -97,7 +116,8 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
 
     @Override
     public CompletableFuture<Void> isAvailable() {
-        return CompletableFuture.completedFuture(null);
+        CompletableFuture<Void> future = availabilityFuture;
+        return future != null ? future : CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -123,6 +143,10 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
 
     @Override
     public void close() throws Exception {
+        CompletableFuture<Void> future = availabilityFuture;
+        if (future != null && !future.isDone()) {
+            future.complete(null);
+        }
         sourceReader.close();
         context.getEventListener().onEvent(new ReaderCloseEvent());
     }
@@ -135,5 +159,17 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
     @Override
     public void notifyCheckpointAborted(long checkpointId) throws Exception {
         sourceReader.notifyCheckpointAborted(checkpointId);
+    }
+
+    private void scheduleComplete(CompletableFuture<Void> future) {
+        new Thread(() -> {
+            try {
+                Thread.sleep(DEFAULT_WAIT_TIME_MILLIS);
+                future.complete(null);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                future.complete(null);
+            }
+        }).start();
     }
 }
