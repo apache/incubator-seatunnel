@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +61,14 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
     private volatile CompletableFuture<Void> availabilityFuture;
 
     private static final long DEFAULT_WAIT_TIME_MILLIS = 1000L;
+
+    private final ScheduledExecutorService scheduledExecutor =
+            Executors.newSingleThreadScheduledExecutor(
+                    r -> {
+                        Thread thread = new Thread(r, "source-reader-scheduler");
+                        thread.setDaemon(true);
+                        return thread;
+                    });
 
     public FlinkSourceReader(
             org.apache.seatunnel.api.source.SourceReader<SeaTunnelRow, SplitT> sourceReader,
@@ -144,6 +155,7 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
         }
         sourceReader.close();
         context.getEventListener().onEvent(new ReaderCloseEvent());
+        scheduledExecutor.shutdown();
     }
 
     @Override
@@ -157,16 +169,7 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
     }
 
     private void scheduleComplete(CompletableFuture<Void> future) {
-        new Thread(
-                        () -> {
-                            try {
-                                Thread.sleep(DEFAULT_WAIT_TIME_MILLIS);
-                                future.complete(null);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                future.complete(null);
-                            }
-                        })
-                .start();
+        scheduledExecutor.schedule(
+                () -> future.complete(null), DEFAULT_WAIT_TIME_MILLIS, TimeUnit.MILLISECONDS);
     }
 }
