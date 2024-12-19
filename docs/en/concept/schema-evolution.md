@@ -225,9 +225,7 @@ source {
     password = "mysqlpw"
     table-names = ["shop.products"]
     base-url = "jdbc:mysql://mysql_cdc_e2e:3306/shop"
-    debezium = {
-      include.schema.changes = true
-    }
+    schema-changes.enabled = true
   }
 }
 
