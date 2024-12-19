@@ -8,6 +8,11 @@ seatunnel:
     classloader-cache-mode: true
     slot-service:
       dynamic-slot: true
+    http:
+      enable-http: true
+      port: 8080
+      enable-dynamic-port: false
+      port-range: 100
     checkpoint:
       interval: 300000
       timeout: 10000
