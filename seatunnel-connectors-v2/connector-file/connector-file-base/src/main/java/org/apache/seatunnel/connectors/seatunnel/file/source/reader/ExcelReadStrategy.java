@@ -39,6 +39,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -203,6 +204,9 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             case BOOLEAN:
                 return cell.getBooleanCellValue();
             case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getLocalDateTimeCellValue();
+                }
                 return formatter.formatCellValue(cell);
             case BLANK:
                 return "";
