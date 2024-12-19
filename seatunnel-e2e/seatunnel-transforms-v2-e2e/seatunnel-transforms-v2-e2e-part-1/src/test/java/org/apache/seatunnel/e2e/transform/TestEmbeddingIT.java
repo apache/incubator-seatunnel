@@ -18,9 +18,7 @@
 package org.apache.seatunnel.e2e.transform;
 
 import org.apache.seatunnel.e2e.common.TestResource;
-import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
-import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -41,10 +39,6 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@DisabledOnContainer(
-        value = {},
-        type = {EngineType.SPARK},
-        disabledReason = "Currently SPARK not support adapt")
 public class TestEmbeddingIT extends TestSuiteBase implements TestResource {
     private static final String TMP_DIR = "/tmp";
     private GenericContainer<?> mockserverContainer;
@@ -93,10 +87,6 @@ public class TestEmbeddingIT extends TestSuiteBase implements TestResource {
         Assertions.assertEquals(0, execResult.getExitCode());
     }
 
-    @DisabledOnContainer(
-            value = {},
-            type = {EngineType.SPARK},
-            disabledReason = "Currently SPARK do not multi table transform")
     @TestTemplate
     public void testEmbeddingMultiTable(TestContainer container)
             throws IOException, InterruptedException {
