@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.maxcompute.source;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.source.Boundedness;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.source.SourceReader;
@@ -67,7 +68,8 @@ public class MaxcomputeSourceReader implements SourceReader<SeaTunnelRow, Maxcom
                 source -> {
                     try {
                         TableTunnel.DownloadSession session =
-                                MaxcomputeUtil.getDownloadSession(pluginConfig);
+                                MaxcomputeUtil.getDownloadSession(
+                                        ReadonlyConfig.fromConfig(pluginConfig));
                         TunnelRecordReader recordReader =
                                 session.openRecordReader(source.getSplitId(), source.getRowNum());
                         log.info("open record reader success");

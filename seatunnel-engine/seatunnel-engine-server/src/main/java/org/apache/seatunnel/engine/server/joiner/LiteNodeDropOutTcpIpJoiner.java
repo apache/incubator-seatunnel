@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.engine.server;
+package org.apache.seatunnel.engine.server.joiner;
 
 import com.hazelcast.cluster.Address;
 import com.hazelcast.config.Config;
