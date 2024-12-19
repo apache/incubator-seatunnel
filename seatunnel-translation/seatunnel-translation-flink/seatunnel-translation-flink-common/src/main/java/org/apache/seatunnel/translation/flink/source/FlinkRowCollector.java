@@ -46,7 +46,6 @@ public class FlinkRowCollector implements Collector<SeaTunnelRow> {
 
     private final Meter sourceReadQPS;
 
-
     private boolean emptyThisPollNext = true;
 
     public FlinkRowCollector(Config envConfig, MetricsContext metricsContext) {
@@ -75,10 +74,12 @@ public class FlinkRowCollector implements Collector<SeaTunnelRow> {
         return this;
     }
 
+    @Override
     public boolean isEmptyThisPollNext() {
         return emptyThisPollNext;
     }
 
+    @Override
     public void resetEmptyThisPollNext() {
         this.emptyThisPollNext = true;
     }

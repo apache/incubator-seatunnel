@@ -55,6 +55,10 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
 
     private InputStatus inputStatus = InputStatus.MORE_AVAILABLE;
 
+    private volatile CompletableFuture<Void> availabilityFuture;
+
+    private static final long DEFAULT_WAIT_TIME_MILLIS = 1000L;
+
     public FlinkSourceReader(
             org.apache.seatunnel.api.source.SourceReader<SeaTunnelRow, SplitT> sourceReader,
             org.apache.seatunnel.api.source.SourceReader.Context context,
@@ -74,35 +78,26 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
         }
     }
 
-    private volatile CompletableFuture<Void> availabilityFuture;
-    private static final long DEFAULT_WAIT_TIME_MILLIS = 200L;
-
-
     @Override
     public InputStatus pollNext(ReaderOutput<SeaTunnelRow> output) throws Exception {
         if (!((FlinkSourceReaderContext) context).isSendNoMoreElementEvent()) {
-            try {
             sourceReader.pollNext(flinkRowCollector.withReaderOutput(output));
-                if (flinkRowCollector.isEmptyThisPollNext()) {
-                    synchronized (this) {
-                        if (availabilityFuture == null || availabilityFuture.isDone()) {
-                            availabilityFuture = new CompletableFuture<>();
-                            scheduleComplete(availabilityFuture);
-                        }
+            if (flinkRowCollector.isEmptyThisPollNext()) {
+                synchronized (this) {
+                    if (availabilityFuture == null || availabilityFuture.isDone()) {
+                        availabilityFuture = new CompletableFuture<>();
+                        scheduleComplete(availabilityFuture);
+                        LOGGER.debug("No data available, wait for next poll.");
                     }
-                    return InputStatus.NOTHING_AVAILABLE;
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                return InputStatus.NOTHING_AVAILABLE;
             }
         } else {
             // reduce CPU idle
-            Thread.sleep(1000L);
+            Thread.sleep(DEFAULT_WAIT_TIME_MILLIS);
         }
         return inputStatus;
     }
-
-
 
     @Override
     public List<SplitWrapper<SplitT>> snapshotState(long checkpointId) {
@@ -162,14 +157,16 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
     }
 
     private void scheduleComplete(CompletableFuture<Void> future) {
-        new Thread(() -> {
-            try {
-                Thread.sleep(DEFAULT_WAIT_TIME_MILLIS);
-                future.complete(null);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                future.complete(null);
-            }
-        }).start();
+        new Thread(
+                        () -> {
+                            try {
+                                Thread.sleep(DEFAULT_WAIT_TIME_MILLIS);
+                                future.complete(null);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                future.complete(null);
+                            }
+                        })
+                .start();
     }
 }
