@@ -72,8 +72,7 @@ public class SeaTunnelRowConverter extends RowConverter<GenericRow> {
         fields[0] = seaTunnelRow.getRowKind().toByteValue();
         fields[1] = seaTunnelRow.getTableId();
         for (int i = 0; i < indexes.length; i++) {
-            Object fieldValue =
-                    convert(seaTunnelRow.getField(indexes[i]), rowType.getFieldType(indexes[i]));
+            Object fieldValue = convert(seaTunnelRow.getField(i), rowType.getFieldType(indexes[i]));
             if (fieldValue != null) {
                 fields[indexes[i] + 2] = fieldValue;
             }
