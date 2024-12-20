@@ -108,7 +108,15 @@ public class RsyncFileTransfer implements FileTransfer {
                     BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
-                    log.info(line);
+                    log.info("rsync output: {}", line);
+                }
+            }
+            try (InputStream errorStream = start.getErrorStream();
+                    InputStreamReader errorStreamReader = new InputStreamReader(errorStream);
+                    BufferedReader bufferedReader = new BufferedReader(errorStreamReader)) {
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    log.error("rsync error: {}", line);
                 }
             }
             start.waitFor();

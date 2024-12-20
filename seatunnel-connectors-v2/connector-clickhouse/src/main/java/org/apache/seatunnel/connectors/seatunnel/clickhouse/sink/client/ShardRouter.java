@@ -83,7 +83,8 @@ public class ShardRouter implements Serializable {
                             localTable.getDatabase(),
                             shardMetadata.getDefaultShard().getNode().getPort(),
                             shardMetadata.getUsername(),
-                            shardMetadata.getPassword());
+                            shardMetadata.getPassword(),
+                            shardMetadata.getDefaultShard().getNode().getOptions());
             int weight = 0;
             for (Shard shard : shardList) {
                 shards.put(weight, shard);

@@ -55,7 +55,7 @@
         <tikv.version>3.2.0</tikv.version>
         <opengauss.jdbc.version>5.1.0-og</opengauss.jdbc.version>
         <mariadb.jdbc.version>3.5.1</mariadb.jdbc.version>
-
+        <highgo.version>6.2.3</highgo.version>
     </properties>
 
     <dependencyManagement>
@@ -223,6 +223,12 @@
                 <version>${mariadb.jdbc.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>com.highgo</groupId>
+                <artifactId>HgdbJdbc</artifactId>
+                <version>${highgo.version}</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -340,6 +346,10 @@
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.highgo</groupId>
+            <artifactId>HgdbJdbc</artifactId>
         </dependency>
     </dependencies>
 
