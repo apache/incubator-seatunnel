@@ -103,7 +103,30 @@ Read external data source data through JDBC.
 | split.even-distribution.factor.upper-bound | Double     | No       | 100             | The upper bound of the chunk key distribution factor. This factor is used to determine whether the table data is evenly distributed. If the distribution factor is calculated to be less than or equal to this upper bound (i.e., (MAX(id) - MIN(id) + 1) / row count), the table chunks would be optimized for even distribution. Otherwise, if the distribution factor is greater, the table will be considered as unevenly distributed and the sampling-based sharding strategy will be used if the estimated shard count exceeds the value specified by `sample-sharding.threshold`. The default value is 100.0. |
 | split.sample-sharding.threshold            | Int        | No       | 10000           | This configuration specifies the threshold of estimated shard count to trigger the sample sharding strategy. When the distribution factor is outside the bounds specified by `chunk-key.even-distribution.factor.upper-bound` and `chunk-key.even-distribution.factor.lower-bound`, and the estimated shard count (calculated as approximate row count / chunk size) exceeds this threshold, the sample sharding strategy will be used. This can help to handle large datasets more efficiently. The default value is 1000 shards.                                                                                   |
 | split.inverse-sampling.rate                | Int        | No       | 1000            | The inverse of the sampling rate used in the sample sharding strategy. For example, if this value is set to 1000, it means a 1/1000 sampling rate is applied during the sampling process. This option provides flexibility in controlling the granularity of the sampling, thus affecting the final number of shards. It's especially useful when dealing with very large datasets where a lower sampling rate is preferred. The default value is 1000.                                                                                                                                                              |
+| decimal_type_narrowing                     | Boolean | No       | true            | Decimal type narrowing, if true, the decimal type will be narrowed to the int or long type if without loss of precision. Only support for Oracle at now. Please refer to `decimal_type_narrowing` below                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | common-options                             |            | No       | -               | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+
+### decimal_type_narrowing
+
+Decimal type narrowing, if true, the decimal type will be narrowed to the int or long type if without loss of precision. Only support for Oracle at now.
+
+eg:
+
+decimal_type_narrowing = true
+
+| Oracle        | SeaTunnel |
+|---------------|-----------|
+| NUMBER(1, 0)  | Boolean   |
+| NUMBER(6, 0)  | INT       |
+| NUMBER(10, 0) | BIGINT    |
+
+decimal_type_narrowing = false
+
+| Oracle        | SeaTunnel      |
+|---------------|----------------|
+| NUMBER(1, 0)  | Decimal(1, 0)  |
+| NUMBER(6, 0)  | Decimal(6, 0)  |
+| NUMBER(10, 0) | Decimal(10, 0) |
 
 ## Parallel Reader
 
