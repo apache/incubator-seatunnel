@@ -264,7 +264,6 @@ public class ExcelReadStrategyTest {
             Assertions.assertEquals(seaTunnelRow.getField(11).getClass(), LocalDate.class);
             Assertions.assertEquals(seaTunnelRow.getField(12).getClass(), LocalDateTime.class);
             Assertions.assertEquals(seaTunnelRow.getField(13).getClass(), LocalTime.class);
-
             Assertions.assertEquals(seaTunnelRow.getField(0), (byte) 1);
             Assertions.assertEquals(seaTunnelRow.getField(1), (short) 22);
             Assertions.assertEquals(seaTunnelRow.getField(2), 333);
