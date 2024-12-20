@@ -237,8 +237,9 @@ public final class ContainerUtil {
             String connectorPrefix,
             List<File> connectors) {
 
-        log.info("getConnectorFiles-connectorNames.size(): {}. \n ", connectorNames.size());
-        log.info("getConnectorFiles-connectors.size(): {}. \n ", connectors.size());
+        //        log.info("getConnectorFiles-connectorNames.size(): {}. \n ",
+        // connectorNames.size());
+        //        log.info("getConnectorFiles-connectors.size(): {}. \n ", connectors.size());
         if (currentModule.isFile() || connectorNames.size() == connectors.size()) {
             return;
         }
@@ -247,7 +248,7 @@ public final class ContainerUtil {
                     "getConnectorFiles-currentModule.getName()(): {}. \n ",
                     currentModule.getName());
             File targetPath = new File(currentModule.getAbsolutePath() + File.separator + "target");
-            log.info("getConnectorFiles-targetPath: {}. \n ", targetPath);
+            //            log.info("getConnectorFiles-targetPath: {}. \n ", targetPath);
             File[] files = targetPath.listFiles();
             for (File file : Objects.requireNonNull(files)) {
                 log.info("getConnectorFiles-file: {}. \n ", file);
