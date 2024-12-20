@@ -93,16 +93,18 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             String currentFileName)
             throws IOException {
         Workbook workbook;
+        FormulaEvaluator formulaEvaluator;
         if (currentFileName.endsWith(".xls")) {
             workbook = new HSSFWorkbook(inputStream);
+            formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
         } else if (currentFileName.endsWith(".xlsx")) {
             workbook = new XSSFWorkbook(inputStream);
+            formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook);
         } else {
             throw new FileConnectorException(
                     CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
                     "Only support read excel file");
         }
-        FormulaEvaluator formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook);
         DataFormatter formatter = new DataFormatter();
         Sheet sheet =
                 pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())
