@@ -178,9 +178,10 @@ public class SeaTunnelRowConverter extends RowConverter<GenericRow> {
         SeaTunnelRowType rowType = (SeaTunnelRowType) dataType;
         RowKind rowKind = RowKind.fromByteValue(engineRow.getByte(0));
         String tableId = engineRow.getString(1);
-        Object[] fields = new Object[rowType.getTotalFields()];
-        for (int i = 0; i < fields.length; i++) {
-            fields[i] = reconvert(engineRow.get(i + 2), rowType.getFieldType(i));
+        Object[] fields = new Object[indexes.length];
+        for (int i = 0; i < indexes.length; i++) {
+            int fieldIndex = indexes[i];
+            fields[i] = reconvert(engineRow.get(fieldIndex + 2), rowType.getFieldType(fieldIndex));
         }
         SeaTunnelRow seaTunnelRow = new SeaTunnelRow(fields);
         seaTunnelRow.setRowKind(rowKind);
