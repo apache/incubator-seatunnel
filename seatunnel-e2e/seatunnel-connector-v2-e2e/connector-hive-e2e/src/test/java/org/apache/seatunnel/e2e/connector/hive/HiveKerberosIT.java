@@ -257,6 +257,10 @@ public class HiveKerberosIT extends SeaTunnelContainer {
             log.info(hiveServerContainer.execInContainer("cat", "/tmp/hive/hive.log").getStdout());
             hiveServerContainer.close();
         }
+        if (kerberosContainer != null) {
+            kerberosContainer.close();
+        }
+        super.tearDown();
     }
 
     private void initializeConnection()

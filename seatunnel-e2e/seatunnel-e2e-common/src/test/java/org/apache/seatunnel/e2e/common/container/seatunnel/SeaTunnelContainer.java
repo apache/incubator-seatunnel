@@ -512,7 +512,11 @@ public class SeaTunnelContainer extends AbstractTestContainer {
 
     @Override
     public String getJobStatus(String jobId) {
-        HttpGet get = new HttpGet("http://" + server.getHost() + ":8080/job-info/" + jobId);
+        HttpGet get =
+                new HttpGet(
+                        String.format(
+                                "http://%s:%d/job-info/%s",
+                                server.getHost(), server.getMappedPort(8080), jobId));
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             CloseableHttpResponse response = client.execute(get);
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {

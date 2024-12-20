@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.e2e;
 
+import org.apache.seatunnel.e2e.common.container.seatunnel.SeaTunnelContainer;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -28,8 +30,7 @@ import java.io.IOException;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class SeaTunnelContainer
-        extends org.apache.seatunnel.e2e.common.container.seatunnel.SeaTunnelContainer {
+public abstract class SeaTunnelEngineContainer extends SeaTunnelContainer {
 
     @Override
     @BeforeAll
