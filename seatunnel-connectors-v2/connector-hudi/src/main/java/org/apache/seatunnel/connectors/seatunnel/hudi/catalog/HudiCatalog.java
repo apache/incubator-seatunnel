@@ -100,7 +100,9 @@ public class HudiCatalog implements Catalog {
     @Override
     public void close() throws CatalogException {
         try {
-            fs.close();
+            if (fs != null) {
+                fs.close();
+            }
         } catch (Exception e) {
             log.info("Hudi catalog close error.", e);
         }

@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         implements SupportMultiTableSinkWriter<Void> {
@@ -78,8 +79,7 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         String value = getValue(element, fields);
         valueBuffer.add(value);
         if (keyBuffer.size() >= batchSize) {
-            doBatchWrite();
-            clearBuffer();
+            flush();
         }
     }
 
@@ -221,6 +221,16 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
 
     @Override
     public void close() throws IOException {
+        flush();
+    }
+
+    @Override
+    public Optional<Void> prepareCommit() {
+        flush();
+        return Optional.empty();
+    }
+
+    private synchronized void flush() {
         if (!keyBuffer.isEmpty()) {
             doBatchWrite();
             clearBuffer();

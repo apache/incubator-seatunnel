@@ -285,6 +285,8 @@ public class ClickhouseFileSinkWriter
                         + "\"");
         command.add("-N");
         command.add("\"" + "temp_table" + uuid + "\"");
+        command.add("-d _local");
+        command.add("-n");
         command.add("-q");
         command.add(
                 String.format(

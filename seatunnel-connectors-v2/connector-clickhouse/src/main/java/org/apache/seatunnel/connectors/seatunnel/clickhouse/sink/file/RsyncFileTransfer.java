@@ -97,7 +97,7 @@ public class RsyncFileTransfer implements FileTransfer {
             rsyncCommand.add("-e");
             rsyncCommand.add(sshParameter);
             rsyncCommand.add(sourcePath);
-            rsyncCommand.add(String.format("root@%s:%s", host, targetPath));
+            rsyncCommand.add(String.format("%s@%s:%s", user, host, targetPath));
             log.info("Generate rsync command: {}", String.join(" ", rsyncCommand));
             ProcessBuilder processBuilder =
                     new ProcessBuilder("bash", "-c", String.join(" ", rsyncCommand));
@@ -108,7 +108,15 @@ public class RsyncFileTransfer implements FileTransfer {
                     BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
-                    log.info(line);
+                    log.info("rsync output: {}", line);
+                }
+            }
+            try (InputStream errorStream = start.getErrorStream();
+                    InputStreamReader errorStreamReader = new InputStreamReader(errorStream);
+                    BufferedReader bufferedReader = new BufferedReader(errorStreamReader)) {
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    log.error("rsync error: {}", line);
                 }
             }
             start.waitFor();

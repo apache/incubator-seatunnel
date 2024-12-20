@@ -973,7 +973,7 @@ select
     else 0
   end as c_number_0
 from
-  fake
+  dual
 ```
 
 It is used to determine whether the condition is valid and return different values according to different judgments
@@ -1009,7 +1009,7 @@ OUTER EXPLODE will return NULL, while array is NULL or empty
 EXPLODE(SPLIT(FIELD_NAME,separator))Used to split string type. The first parameter of SPLIT function  is the field name, the second parameter is the separator
 EXPLODE(ARRAY(value1,value2)) Used to custom array type.
 ```
-SELECT * FROM fake 
+SELECT * FROM dual 
 	LATERAL VIEW EXPLODE ( SPLIT ( NAME, ',' ) ) AS NAME 
 	LATERAL VIEW EXPLODE ( SPLIT ( pk_id, ';' ) ) AS pk_id 
 	LATERAL VIEW OUTER EXPLODE ( age ) AS age
