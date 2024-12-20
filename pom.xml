@@ -162,6 +162,8 @@
         <hadoop-aws.version>3.1.4</hadoop-aws.version>
         <arrow.version>15.0.1</arrow.version>
 
+        <httpcore.version>4.4.13</httpcore.version>
+        <httpcore-nio.version>4.4.13</httpcore-nio.version>
     </properties>
 
     <dependencyManagement>
@@ -502,6 +504,16 @@
                 <version>${arrow.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>${httpcore.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore-nio</artifactId>
+                <version>${httpcore-nio.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
