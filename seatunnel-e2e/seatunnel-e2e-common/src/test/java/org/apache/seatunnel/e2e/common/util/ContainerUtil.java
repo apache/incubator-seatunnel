@@ -241,8 +241,9 @@ public final class ContainerUtil {
             String connectorPrefix,
             List<File> connectors) {
 
-        log.info("getConnectorFiles-connectorNames.size(): {}. \n ", connectorNames.size());
-        log.info("getConnectorFiles-connectors.size(): {}. \n ", connectors.size());
+        //        log.info("getConnectorFiles-connectorNames.size(): {}. \n ",
+        // connectorNames.size());
+        //        log.info("getConnectorFiles-connectors.size(): {}. \n ", connectors.size());
         if (currentModule.isFile() || connectorNames.size() == connectors.size()) {
             return;
         }
@@ -254,8 +255,9 @@ public final class ContainerUtil {
             log.info("getConnectorFiles-targetPath: {}. \n ", targetPath);
             File[] files = targetPath.listFiles();
             for (File file : Objects.requireNonNull(files)) {
-                log.info("getConnectorFiles-file: {}. \n ", file);
-                log.info("getConnectorFiles-file.getName(): {}. \n ", file.getName());
+                //                log.info("getConnectorFiles-file: {}. \n ", file);
+                //                log.info("getConnectorFiles-file.getName(): {}. \n ",
+                // file.getName());
                 if (file.getName().startsWith(currentModule.getName())
                         && !file.getName().endsWith("javadoc.jar")
                         && !file.getName().endsWith("tests.jar")) {
