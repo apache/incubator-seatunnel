@@ -276,6 +276,58 @@ public class ClickhouseProxy {
     }
 
     /**
+     * Get ClickHouse table info for shard node.
+     *
+     * @param request
+     * @param database
+     * @param table
+     * @return
+     */
+    public ClickhouseTable getClickhouseTableForShardNode(
+            ClickHouseRequest<?> request, String database, String table) {
+        String sql =
+                String.format(
+                        "select engine,create_table_query,engine_full,data_paths,sorting_key from system.tables where database = '%s' and name = '%s'",
+                        database, table);
+        try (ClickHouseResponse response = request.query(sql).executeAndWait()) {
+            List<ClickHouseRecord> records = response.stream().collect(Collectors.toList());
+            if (records.isEmpty()) {
+                throw new ClickhouseConnectorException(
+                        SeaTunnelAPIErrorCode.TABLE_NOT_EXISTED,
+                        "Cannot get table from clickhouse, resultSet is empty");
+            }
+            ClickHouseRecord record = records.get(0);
+            String engine = record.getValue(0).asString();
+            String createTableDDL = record.getValue(1).asString();
+            String engineFull = record.getValue(2).asString();
+            List<String> dataPaths =
+                    record.getValue(3).asTuple().stream()
+                            .map(Object::toString)
+                            .collect(Collectors.toList());
+            String sortingKey = record.getValue(4).asString();
+            DistributedEngine distributedEngine = null;
+            if ("Distributed".equals(engine)) {
+                distributedEngine =
+                        getClickhouseDistributedTable(clickhouseRequest, database, table);
+                createTableDDL = distributedEngine.getTableDDL();
+            }
+            return new ClickhouseTable(
+                    database,
+                    table,
+                    distributedEngine,
+                    engine,
+                    createTableDDL,
+                    engineFull,
+                    dataPaths,
+                    sortingKey,
+                    getClickhouseTableSchema(clickhouseRequest, table));
+        } catch (ClickHouseException e) {
+            throw new ClickhouseConnectorException(
+                    SeaTunnelAPIErrorCode.TABLE_NOT_EXISTED, "Cannot get clickhouse table", e);
+        }
+    }
+
+    /**
      * Localization the engine in clickhouse local table's createTableDDL to support specific
      * engine. For example: change ReplicatedMergeTree to MergeTree.
      *
