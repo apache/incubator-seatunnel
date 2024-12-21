@@ -92,6 +92,7 @@ public class ClickhouseFileSinkWriter
         shardRouter = new ShardRouter(proxy, this.readerOption.getShardMetadata());
         clickhouseTable =
                 proxy.getClickhouseTable(
+                        proxy.getClickhouseConnection(),
                         this.readerOption.getShardMetadata().getDatabase(),
                         this.readerOption.getShardMetadata().getTable());
         rowCache = new HashMap<>(Common.COLLECTION_SIZE);
@@ -110,7 +111,7 @@ public class ClickhouseFileSinkWriter
                                                     proxy.getClickhouseConnection(shard);
 
                                             ClickhouseTable shardTable =
-                                                    proxy.getClickhouseTableForShardNode(
+                                                    proxy.getClickhouseTable(
                                                             request,
                                                             shard.getNode().getDatabase().get(),
                                                             clickhouseTable.getLocalTableName());
