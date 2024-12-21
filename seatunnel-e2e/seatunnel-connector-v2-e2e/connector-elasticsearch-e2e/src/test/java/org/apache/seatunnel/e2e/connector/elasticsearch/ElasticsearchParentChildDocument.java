@@ -173,6 +173,6 @@ public class ElasticsearchParentChildDocument extends TestSuiteBase implements T
         if (Objects.nonNull(esRestClient)) {
             esRestClient.close();
         }
-               container.close();
+        container.close();
     }
 }
