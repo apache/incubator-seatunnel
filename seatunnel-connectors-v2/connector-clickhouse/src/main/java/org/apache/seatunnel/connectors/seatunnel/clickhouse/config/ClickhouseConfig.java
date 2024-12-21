@@ -168,7 +168,7 @@ public class ClickhouseConfig {
                     .withDescription("Clickhouse custom config");
 
     public static final Option<String> KEY_PATH =
-            Options.key("rsync_key_path")
+            Options.key("key_path")
                     .stringType()
                     .noDefaultValue()
                     .withDescription("The path of rsync/ssh key file");
