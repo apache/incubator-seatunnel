@@ -100,7 +100,6 @@ public class ElasticsearchParentChildDocument extends TestSuiteBase implements T
         createIndexDocsByName("test1", "main", testDataset1);
         createIndexDocsByName("test2", "weixin", testDataset2);
         createIndexForResource("test3", "/elasticsearch/parent_child_mapping.json");
-        System.out.println(1111);
     }
 
     private void createIndexForResource(String indexName, String mappingPath) throws IOException {
