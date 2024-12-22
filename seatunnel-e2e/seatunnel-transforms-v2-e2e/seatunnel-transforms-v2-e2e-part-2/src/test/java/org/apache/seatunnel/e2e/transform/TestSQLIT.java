@@ -79,7 +79,6 @@ public class TestSQLIT extends TestSuiteBase {
         Assertions.assertEquals(0, splitSql.getExitCode());
     }
 
-
     @TestTemplate
     public void testSQLTransformMultiTable(TestContainer container)
             throws IOException, InterruptedException {

@@ -16,9 +16,7 @@
  */
 package org.apache.seatunnel.e2e.transform;
 
-import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
-import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
@@ -32,7 +30,6 @@ public class TestJsonPathTransformIT extends TestSuiteBase {
                 container.executeJob("/json_path_transform/json_path_basic_type_test.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
     }
-
 
     @TestTemplate
     public void testBasicTypeMultiTable(TestContainer container) throws Exception {
