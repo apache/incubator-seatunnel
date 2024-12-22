@@ -70,7 +70,6 @@ source {
         }
       }
     }
-    plugin_output = "fake"
   }
 }
 

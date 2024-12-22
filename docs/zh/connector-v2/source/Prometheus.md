@@ -101,7 +101,6 @@ http请求失败，最大重试回退时间(毫秒)
 ```hocon
 source {
   Prometheus {
-    plugin_output = "http"
     url = "http://mockserver:1080"
     query = "up"
     query_type = "Instant"
@@ -123,7 +122,6 @@ source {
 ```hocon
 source {
   Prometheus {
-    plugin_output = "http"
     url = "http://mockserver:1080"
     query = "up"
     query_type = "Range"

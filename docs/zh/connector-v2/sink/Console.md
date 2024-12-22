@@ -44,7 +44,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake"
     schema = {
       fields {
         name = "string"
@@ -56,7 +55,6 @@ source {
 
 sink {
   Console {
-    plugin_input = "fake"
   }
 }
 ```

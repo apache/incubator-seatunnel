@@ -36,8 +36,6 @@
 ```
 transform {
   FieldMapper {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     field_mapper = {
         id = id
         card = card

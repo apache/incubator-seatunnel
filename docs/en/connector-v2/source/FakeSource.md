@@ -142,7 +142,6 @@ source {
         c_timestamp = timestamp
       }
     }
-    plugin_output = "fake"
   }
 }
 ```

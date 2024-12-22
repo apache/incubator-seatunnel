@@ -27,8 +27,6 @@ env {
 
 source {
     MySQL-CDC {
-        plugin_output = "customers_mysql_cdc"
-        
         username = "root"
         password = "123456"
         table-names = ["source.user_shop", "source.user_order"]
@@ -38,9 +36,6 @@ source {
 
 transform {
   TableRename {
-    plugin_input = "customers_mysql_cdc"
-    plugin_output = "trans_result"
-    
     convert_case = "UPPER"
     prefix = "CDC_"
     suffix = "_TABLE"
@@ -55,8 +50,6 @@ transform {
 
 sink {
   Jdbc {
-    plugin_input = "trans_result"
-    
     driver="oracle.jdbc.OracleDriver"
     url="jdbc:oracle:thin:@oracle-host:1521/ORCLCDB"
     user="myuser"
@@ -83,8 +76,6 @@ env {
 
 source {
   Oracle-CDC {
-    plugin_output = "customers_oracle_cdc"
-    
     base-url = "jdbc:oracle:thin:@localhost:1521/ORCLCDB"
     username = "dbzuser"
     password = "dbz"
@@ -96,9 +87,6 @@ source {
 
 transform {
   TableRename {
-    plugin_input = "customers_oracle_cdc"
-    plugin_output = "trans_result"
-    
     convert_case = "LOWER"
     prefix = "cdc_"
     suffix = "_table"
@@ -113,8 +101,6 @@ transform {
 
 sink {
   Jdbc {
-    plugin_input = "trans_result"
-    
     url = "jdbc:mysql://localhost:3306/test"
     driver = "com.mysql.cj.jdbc.Driver"
     user = "st_user_sink"

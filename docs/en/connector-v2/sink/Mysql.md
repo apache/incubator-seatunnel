@@ -112,7 +112,6 @@ source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   FakeSource {
     parallelism = 1
-    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

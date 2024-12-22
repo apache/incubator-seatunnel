@@ -37,9 +37,6 @@ We can configure this as follows:
 ```hocon
 transform {
   Copy {
-    plugin_input = "fake"  // Optional dataset name to read from
-    plugin_output = "fake1" // Optional dataset name for output
-
     table_match_regex = "test.a.*" // 1. Matches tables needing transformation, here matching `test.abc` and `test.abcd`
     src_field = "name" // Source field
     dest_field = "name1" // Destination field

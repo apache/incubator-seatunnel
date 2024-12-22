@@ -87,7 +87,6 @@ env {
 source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   Oracle-CDC {
-    plugin_output = "customers"
     username = "dbzuser"
     password = "dbz"
     database-names = ["ORCLCDB"]
@@ -103,7 +102,6 @@ source {
 
 sink {
     Jdbc {
-      plugin_input = "customers"
       driver = "oracle.jdbc.driver.OracleDriver"
       url = "jdbc:oracle:thin:@oracle-host:1521/ORCLCDB"
       user = "dbzuser"
@@ -130,7 +128,6 @@ env {
 source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   Oracle-CDC {
-    plugin_output = "customers"
     username = "dbzuser"
     password = "dbz"
     database-names = ["ORCLCDB"]
@@ -146,7 +143,6 @@ source {
 
 sink {
   jdbc {
-    plugin_input = "customers"
     url = "jdbc:mysql://oracle-host:3306/oracle_sink"
     driver = "com.mysql.cj.jdbc.Driver"
     user = "st_user_sink"

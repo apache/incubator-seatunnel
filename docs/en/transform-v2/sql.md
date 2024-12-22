@@ -12,13 +12,7 @@ SQL transform use memory SQL engine, we can via SQL functions and ability of SQL
 
 |       name        |  type  | required | default value |
 |-------------------|--------|----------|---------------|
-| plugin_input | string | yes      | -             |
-| plugin_output | string | yes      | -             |
 | query             | string | yes      | -             |
-
-### plugin_input [string]
-
-The source table name, the query SQL table name must match this field.
 
 ### query [string]
 
@@ -43,8 +37,6 @@ We use SQL query to transform the source data like this:
 ```
 transform {
   Sql {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     query = "select id, concat(name, '_') as name, age+1 as age from dual where id>0"
   }
 }
@@ -66,7 +58,6 @@ if your upstream data schema is like this:
 ```hacon
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     string.template = ["innerQuery"]
     schema = {
@@ -123,7 +114,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     schema = {
       fields {
@@ -137,15 +127,12 @@ source {
 
 transform {
   Sql {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     query = "select id, concat(name, '_') as name, age+1 as age from dual where id>0"
   }
 }
 
 sink {
   Console {
-    plugin_input = "fake1"
   }
 }
 ```

@@ -67,7 +67,6 @@ source {
      datacenter = "datacenter1"
      keyspace = "test"
      cql = "select * from source_table"
-     plugin_output = "source_table"
     }
 }
 ```

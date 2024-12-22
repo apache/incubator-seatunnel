@@ -51,7 +51,6 @@ source {
         }
       }
     }
-    plugin_output = "fake"
   }
 }
 
@@ -76,7 +75,6 @@ source {
   Kafka {
     bootstrap.servers = "kafkaCluster:9092"
     topic = "test_avro_topic"
-    plugin_output = "kafka_table"
     start_mode = "earliest"
     format = avro
     format_error_handle_way = skip
@@ -104,7 +102,6 @@ source {
 
 sink {
   Console {
-    plugin_input = "kafka_table"
   }
 }
 ```

@@ -12,13 +12,7 @@ SQL 转换使用内存中的 SQL 引擎，我们可以通过 SQL 函数和 SQL �
 
 |        名称         |   类型   | 是否必须 | 默认值 |
 |-------------------|--------|------|-----|
-| plugin_input | string | yes  | -   |
-| plugin_output | string | yes  | -   |
 | query             | string | yes  | -   |
-
-### plugin_input [string]
-
-源表名称，查询 SQL 表名称必须与此字段匹配。
 
 ### query [string]
 
@@ -43,8 +37,6 @@ SQL 转换使用内存中的 SQL 引擎，我们可以通过 SQL 函数和 SQL �
 ```
 transform {
   Sql {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     query = "select id, concat(name, '_') as name, age+1 as age from dual where id>0"
   }
 }
@@ -66,7 +58,6 @@ transform {
 ```hacon
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     string.template = ["innerQuery"]
     schema = {
@@ -123,7 +114,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     schema = {
       fields {
@@ -137,15 +127,12 @@ source {
 
 transform {
   Sql {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     query = "select id, concat(name, '_') as name, age+1 as age from dual where id>0"
   }
 }
 
 sink {
   Console {
-    plugin_input = "fake1"
   }
 }
 ```

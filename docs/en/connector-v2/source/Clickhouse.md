@@ -80,7 +80,6 @@ source {
     username = "xxxxx"
     password = "xxxxx"
     server_time_zone = "UTC"
-    plugin_output = "test"
     clickhouse.config = {
       "socket_timeout": "300000"
     }
