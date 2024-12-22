@@ -118,10 +118,6 @@ public class TestDynamicCompileIT extends TestSuiteBase implements TestResource 
         Assertions.assertEquals(0, execResult.getExitCode());
     }
 
-    @DisabledOnContainer(
-            value = {},
-            type = {EngineType.SPARK},
-            disabledReason = "Currently SPARK do not multi table transform")
     @TestTemplate
     public void testDynamicSingleCompileJavaMultiTable(TestContainer container)
             throws IOException, InterruptedException {

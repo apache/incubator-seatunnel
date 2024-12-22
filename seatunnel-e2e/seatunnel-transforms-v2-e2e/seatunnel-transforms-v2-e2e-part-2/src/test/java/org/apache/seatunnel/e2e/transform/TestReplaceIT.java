@@ -35,10 +35,6 @@ public class TestReplaceIT extends TestSuiteBase {
         Assertions.assertEquals(0, execResult.getExitCode());
     }
 
-    @DisabledOnContainer(
-            value = {},
-            type = {EngineType.SPARK},
-            disabledReason = "Currently SPARK do not multi table transform")
     @TestTemplate
     public void testReplaceMultiTable(TestContainer container)
             throws IOException, InterruptedException {

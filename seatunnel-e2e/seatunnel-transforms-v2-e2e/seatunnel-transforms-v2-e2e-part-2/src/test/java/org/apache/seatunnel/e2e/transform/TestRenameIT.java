@@ -29,10 +29,6 @@ import java.io.IOException;
 
 public class TestRenameIT extends TestSuiteBase {
 
-    @DisabledOnContainer(
-            value = {},
-            type = {EngineType.SPARK},
-            disabledReason = "Currently SPARK do not multi table transform")
     @TestTemplate
     public void testRenameMultiTable(TestContainer container)
             throws IOException, InterruptedException {

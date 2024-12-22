@@ -39,10 +39,6 @@ public class TestFieldMapperIT extends TestSuiteBase {
         Assertions.assertEquals(0, execResult1.getExitCode());
     }
 
-    @DisabledOnContainer(
-            value = {},
-            type = {EngineType.SPARK},
-            disabledReason = "Currently SPARK do not multi table transform")
     @TestTemplate
     public void testFieldMapperMultiTable(TestContainer container)
             throws IOException, InterruptedException {

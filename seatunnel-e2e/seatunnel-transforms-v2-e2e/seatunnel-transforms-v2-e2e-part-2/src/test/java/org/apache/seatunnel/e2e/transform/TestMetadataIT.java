@@ -29,10 +29,6 @@ import java.io.IOException;
 
 public class TestMetadataIT extends TestSuiteBase {
 
-    @DisabledOnContainer(
-            value = {},
-            type = {EngineType.SPARK},
-            disabledReason = "Currently SPARK do not multi table transform")
     @TestTemplate
     public void testMetadataMultiTable(TestContainer container)
             throws IOException, InterruptedException {
