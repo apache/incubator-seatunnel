@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.translation.flink.source;
 
+import org.apache.seatunnel.shade.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.source.SourceSplit;
@@ -64,11 +65,10 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
 
     private final ScheduledExecutorService scheduledExecutor =
             Executors.newSingleThreadScheduledExecutor(
-                    r -> {
-                        Thread thread = new Thread(r, "source-reader-scheduler");
-                        thread.setDaemon(true);
-                        return thread;
-                    });
+                    new ThreadFactoryBuilder()
+                            .setDaemon(true)
+                            .setNameFormat("source-reader-scheduler")
+                            .build());
 
     public FlinkSourceReader(
             org.apache.seatunnel.api.source.SourceReader<SeaTunnelRow, SplitT> sourceReader,
