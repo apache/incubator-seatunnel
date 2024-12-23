@@ -63,17 +63,21 @@ public class FlinkSourceReader<SplitT extends SourceSplit>
 
     private static final long DEFAULT_WAIT_TIME_MILLIS = 1000L;
 
-    private final ScheduledExecutorService scheduledExecutor =
-            Executors.newSingleThreadScheduledExecutor(
-                    new ThreadFactoryBuilder()
-                            .setDaemon(true)
-                            .setNameFormat("source-reader-scheduler")
-                            .build());
+    private final ScheduledExecutorService scheduledExecutor;
 
     public FlinkSourceReader(
             org.apache.seatunnel.api.source.SourceReader<SeaTunnelRow, SplitT> sourceReader,
             org.apache.seatunnel.api.source.SourceReader.Context context,
             Config envConfig) {
+        this.scheduledExecutor =
+                Executors.newSingleThreadScheduledExecutor(
+                        new ThreadFactoryBuilder()
+                                .setDaemon(true)
+                                .setNameFormat(
+                                        String.format(
+                                                "source-reader-scheduler-%d",
+                                                context.getIndexOfSubtask()))
+                                .build());
         this.sourceReader = sourceReader;
         this.context = context;
         this.flinkRowCollector = new FlinkRowCollector(envConfig, context.getMetricsContext());
