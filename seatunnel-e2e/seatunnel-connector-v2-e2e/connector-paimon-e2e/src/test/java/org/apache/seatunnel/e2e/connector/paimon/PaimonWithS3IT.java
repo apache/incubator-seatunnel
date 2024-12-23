@@ -136,7 +136,7 @@ public class PaimonWithS3IT extends SeaTunnelContainer {
                 executeJob("/fake_to_paimon_with_s3_with_checkpoint.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
 
-        Container.ExecResult readResult = executeJob("/paimon_with_s3_to_assert.conf");
+        Container.ExecResult readResult = executeJob("/fake_2_paimon_with_s3_to_assert.conf");
         Assertions.assertEquals(0, readResult.getExitCode());
     }
 }

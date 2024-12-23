@@ -116,7 +116,6 @@ public class SinkExecuteProcessor
                             sinkConfig,
                             sinkPluginDiscovery,
                             jobContext,
-                            envOption,
                             datasetTableInfo.getCatalogTables(),
                             classLoader);
             // TODO modify checkpoint location

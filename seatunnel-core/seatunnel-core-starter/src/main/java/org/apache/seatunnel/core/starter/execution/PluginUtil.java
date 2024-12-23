@@ -167,11 +167,9 @@ public class PluginUtil {
             Config sinkConfig,
             SeaTunnelSinkPluginDiscovery sinkPluginDiscovery,
             JobContext jobContext,
-            Map<String, Object> envOptions,
             List<CatalogTable> catalogTables,
             ClassLoader classLoader) {
         boolean fallBack = !factory.isPresent() || isFallback(factory.get());
-        ReadonlyConfig envConfig = ReadonlyConfig.fromMap(envOptions);
         if (fallBack) {
             SeaTunnelSink sink =
                     fallbackCreateSink(
@@ -181,7 +179,7 @@ public class PluginUtil {
                                     PluginType.SINK.getType(),
                                     sinkConfig.getString(PLUGIN_NAME.key())),
                             sinkConfig);
-            sink.setJobConfigContext(jobContext, envConfig);
+            sink.setJobContext(jobContext);
             sink.setTypeInfo(catalogTables.get(0).getSeaTunnelRowType());
             return sink;
         } else {
@@ -203,7 +201,7 @@ public class PluginUtil {
                                     ((TableSinkFactory) factory.get())
                                             .createSink(context)
                                             .createSink();
-                            action.setJobConfigContext(jobContext, envConfig);
+                            action.setJobContext(jobContext);
                             sinks.put(catalogTable.getTablePath().toString(), action);
                         });
                 return FactoryUtil.createMultiTableSink(sinks, readonlyConfig, classLoader);
@@ -218,7 +216,7 @@ public class PluginUtil {
             ConfigValidator.of(context.getOptions()).validate(factory.get().optionRule());
             SeaTunnelSink sink =
                     ((TableSinkFactory) factory.get()).createSink(context).createSink();
-            sink.setJobConfigContext(jobContext, envConfig);
+            sink.setJobContext(jobContext);
             return sink;
         }
     }

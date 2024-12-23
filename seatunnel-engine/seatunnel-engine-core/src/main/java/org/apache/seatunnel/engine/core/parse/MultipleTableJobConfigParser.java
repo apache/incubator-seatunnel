@@ -697,7 +697,7 @@ public class MultipleTableJobConfigParser {
         SeaTunnelSink<?, ?, ?, ?> sink =
                 FactoryUtil.createAndPrepareSink(
                         catalogTable, readonlyConfig, classLoader, factoryId);
-        sink.setJobConfigContext(jobConfig.getJobContext(), jobConfig.getEnvConfig());
+        sink.setJobContext(jobConfig.getJobContext());
         SinkConfig actionConfig =
                 new SinkConfig(catalogTable.getTableId().toTablePath().toString());
         long id = idGenerator.getNextId();

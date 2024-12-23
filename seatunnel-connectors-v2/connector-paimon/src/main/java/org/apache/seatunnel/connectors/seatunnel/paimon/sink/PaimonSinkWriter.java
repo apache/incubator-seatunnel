@@ -39,7 +39,6 @@ import org.apache.seatunnel.connectors.seatunnel.paimon.sink.bucket.PaimonBucket
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.commit.PaimonCommitInfo;
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.schema.handler.AlterPaimonTableSchemaEventHandler;
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.state.PaimonSinkState;
-import org.apache.seatunnel.connectors.seatunnel.paimon.utils.JobContextUtil;
 import org.apache.seatunnel.connectors.seatunnel.paimon.utils.RowConverter;
 
 import org.apache.paimon.CoreOptions;
@@ -49,7 +48,6 @@ import org.apache.paimon.schema.TableSchema;
 import org.apache.paimon.table.BucketMode;
 import org.apache.paimon.table.FileStoreTable;
 import org.apache.paimon.table.Table;
-import org.apache.paimon.table.sink.BatchTableWrite;
 import org.apache.paimon.table.sink.CommitMessage;
 import org.apache.paimon.table.sink.StreamTableCommit;
 import org.apache.paimon.table.sink.StreamTableWrite;
@@ -88,10 +86,6 @@ public class PaimonSinkWriter
 
     private SeaTunnelRowType seaTunnelRowType;
 
-    private final JobContext jobContext;
-
-    private final ReadonlyConfig envConfig;
-
     private org.apache.seatunnel.api.table.catalog.TableSchema sourceTableSchema;
 
     private TableSchema sinkPaimonTableSchema;
@@ -115,7 +109,6 @@ public class PaimonSinkWriter
             CatalogTable catalogTable,
             Table paimonFileStoretable,
             JobContext jobContext,
-            ReadonlyConfig envConfig,
             PaimonSinkConfig paimonSinkConfig,
             PaimonHadoopConfiguration paimonHadoopConfiguration) {
         this.sourceTableSchema = catalogTable.getTableSchema();
@@ -133,8 +126,6 @@ public class PaimonSinkWriter
         }
         this.paimonSinkConfig = paimonSinkConfig;
         this.sinkPaimonTableSchema = this.paimonFileStoretable.schema();
-        this.jobContext = jobContext;
-        this.envConfig = envConfig;
         this.newTableWrite();
         BucketMode bucketMode = this.paimonFileStoretable.bucketMode();
         this.dynamicBucket =
@@ -160,7 +151,6 @@ public class PaimonSinkWriter
             Table paimonFileStoretable,
             List<PaimonSinkState> states,
             JobContext jobContext,
-            ReadonlyConfig envConfig,
             PaimonSinkConfig paimonSinkConfig,
             PaimonHadoopConfiguration paimonHadoopConfiguration) {
         this(
@@ -169,7 +159,6 @@ public class PaimonSinkWriter
                 catalogTable,
                 paimonFileStoretable,
                 jobContext,
-                envConfig,
                 paimonSinkConfig,
                 paimonHadoopConfiguration);
         if (Objects.isNull(states) || states.isEmpty()) {
@@ -239,10 +228,7 @@ public class PaimonSinkWriter
     }
 
     private void newTableWrite() {
-        this.tableWriteBuilder =
-                JobContextUtil.isCheckpointNotEnabledInBatchMode(jobContext, envConfig)
-                        ? this.paimonFileStoretable.newBatchWriteBuilder()
-                        : this.paimonFileStoretable.newStreamWriteBuilder();
+        this.tableWriteBuilder = this.paimonFileStoretable.newStreamWriteBuilder();
         TableWrite oldTableWrite = this.tableWrite;
         this.tableWrite =
                 tableWriteBuilder
@@ -261,14 +247,8 @@ public class PaimonSinkWriter
     @Override
     public Optional<PaimonCommitInfo> prepareCommit(long checkpointId) throws IOException {
         try {
-            List<CommitMessage> fileCommittables;
-            if (JobContextUtil.isCheckpointNotEnabledInBatchMode(jobContext, envConfig)) {
-                fileCommittables = ((BatchTableWrite) tableWrite).prepareCommit();
-            } else {
-                fileCommittables =
-                        ((StreamTableWrite) tableWrite)
-                                .prepareCommit(waitCompaction(), checkpointId);
-            }
+            List<CommitMessage> fileCommittables =
+                    ((StreamTableWrite) tableWrite).prepareCommit(waitCompaction(), checkpointId);
             committables.addAll(fileCommittables);
             return Optional.of(new PaimonCommitInfo(fileCommittables, checkpointId));
         } catch (Exception e) {

@@ -17,18 +17,14 @@
 
 package org.apache.seatunnel.connectors.seatunnel.paimon.sink.commit;
 
-import org.apache.seatunnel.api.common.JobContext;
-import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkAggregatedCommitter;
 import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonHadoopConfiguration;
 import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.paimon.security.PaimonSecurityContext;
-import org.apache.seatunnel.connectors.seatunnel.paimon.utils.JobContextUtil;
 
 import org.apache.paimon.table.Table;
-import org.apache.paimon.table.sink.BatchTableCommit;
 import org.apache.paimon.table.sink.CommitMessage;
 import org.apache.paimon.table.sink.StreamTableCommit;
 import org.apache.paimon.table.sink.TableCommit;
@@ -42,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 /** Paimon connector aggregated committer class */
 @Slf4j
@@ -54,21 +49,9 @@ public class PaimonAggregatedCommitter
 
     private final WriteBuilder tableWriteBuilder;
 
-    private final JobContext jobContext;
-
-    private final ReadonlyConfig envConfig;
-
     public PaimonAggregatedCommitter(
-            Table table,
-            JobContext jobContext,
-            ReadonlyConfig envConfig,
-            PaimonHadoopConfiguration paimonHadoopConfiguration) {
-        this.jobContext = jobContext;
-        this.envConfig = envConfig;
-        this.tableWriteBuilder =
-                JobContextUtil.isCheckpointNotEnabledInBatchMode(jobContext, envConfig)
-                        ? table.newBatchWriteBuilder()
-                        : table.newStreamWriteBuilder();
+            Table table, PaimonHadoopConfiguration paimonHadoopConfiguration) {
+        this.tableWriteBuilder = table.newStreamWriteBuilder();
         PaimonSecurityContext.shouldEnableKerberos(paimonHadoopConfiguration);
     }
 
@@ -78,32 +61,16 @@ public class PaimonAggregatedCommitter
         try (TableCommit tableCommit = tableWriteBuilder.newCommit()) {
             PaimonSecurityContext.runSecured(
                     () -> {
-                        if (JobContextUtil.isCheckpointNotEnabledInBatchMode(
-                                jobContext, envConfig)) {
-                            log.debug("Trying to commit states batch mode");
-                            List<CommitMessage> fileCommittables =
-                                    aggregatedCommitInfo.stream()
-                                            .flatMap(
-                                                    info ->
-                                                            info.getCommittablesMap().values()
-                                                                    .stream())
-                                            .flatMap(List::stream)
-                                            .collect(Collectors.toList());
-                            ((BatchTableCommit) tableCommit).commit(fileCommittables);
-                        } else {
-                            log.debug("Trying to commit states streaming mode");
-                            aggregatedCommitInfo.stream()
-                                    .flatMap(
-                                            paimonAggregatedCommitInfo ->
-                                                    paimonAggregatedCommitInfo.getCommittablesMap()
-                                                            .entrySet().stream())
-                                    .forEach(
-                                            entry ->
-                                                    ((StreamTableCommit) tableCommit)
-                                                            .commit(
-                                                                    entry.getKey(),
-                                                                    entry.getValue()));
-                        }
+                        log.debug("Trying to commit states streaming mode");
+                        aggregatedCommitInfo.stream()
+                                .flatMap(
+                                        paimonAggregatedCommitInfo ->
+                                                paimonAggregatedCommitInfo.getCommittablesMap()
+                                                        .entrySet().stream())
+                                .forEach(
+                                        entry ->
+                                                ((StreamTableCommit) tableCommit)
+                                                        .commit(entry.getKey(), entry.getValue()));
                         return null;
                     });
         } catch (Exception e) {

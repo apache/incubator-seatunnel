@@ -165,7 +165,7 @@ public class JobConfigParser {
         // old logic: prepare(initialization) -> set job context -> set row type (There is a logical
         // judgment that depends on before and after, not a simple set)
         sink.prepare(config);
-        sink.setJobConfigContext(jobConfig.getJobContext(), jobConfig.getEnvConfig());
+        sink.setJobContext(jobConfig.getJobContext());
         sink.setTypeInfo(rowType);
         if (!isStartWithSavePoint) {
             multipleTableJobConfigParser.handleSaveMode(sink);

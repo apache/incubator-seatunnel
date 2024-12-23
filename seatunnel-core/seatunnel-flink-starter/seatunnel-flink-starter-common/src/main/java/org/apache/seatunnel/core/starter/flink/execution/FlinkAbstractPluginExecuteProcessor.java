@@ -57,7 +57,6 @@ public abstract class FlinkAbstractPluginExecuteProcessor<T>
     protected JobContext jobContext;
     protected final List<T> plugins;
     protected final Config envConfig;
-    protected ReadonlyConfig envReadonlyConfig;
 
     protected FlinkAbstractPluginExecuteProcessor(
             List<URL> jarPaths,
@@ -68,9 +67,6 @@ public abstract class FlinkAbstractPluginExecuteProcessor<T>
         this.jobContext = jobContext;
         this.plugins = initializePlugins(jarPaths, pluginConfigs);
         this.envConfig = envConfig;
-        if (envConfig != null) {
-            this.envReadonlyConfig = ReadonlyConfig.fromConfig(envConfig);
-        }
     }
 
     @Override

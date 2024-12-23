@@ -18,7 +18,6 @@
 package org.apache.seatunnel.core.starter.spark.execution;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
-import org.apache.seatunnel.shade.com.typesafe.config.ConfigValue;
 
 import org.apache.seatunnel.api.common.JobContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
@@ -29,9 +28,7 @@ import org.apache.seatunnel.translation.spark.execution.DatasetTableInfo;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.apache.seatunnel.api.common.CommonOptions.PLUGIN_INPUT;
@@ -44,21 +41,12 @@ public abstract class SparkAbstractPluginExecuteProcessor<T>
     protected final JobContext jobContext;
     protected final List<T> plugins;
     protected static final String ENGINE_TYPE = "seatunnel";
-    protected Map envOption = new HashMap<String, Object>();
 
     protected SparkAbstractPluginExecuteProcessor(
             SparkRuntimeEnvironment sparkRuntimeEnvironment,
             JobContext jobContext,
             List<? extends Config> pluginConfigs) {
         this.sparkRuntimeEnvironment = sparkRuntimeEnvironment;
-        for (Map.Entry<String, ConfigValue> entry :
-                sparkRuntimeEnvironment.getConfig().entrySet()) {
-            String envKey = entry.getKey();
-            String envValue = entry.getValue().render();
-            if (envKey != null && envValue != null) {
-                envOption.put(envKey, envValue);
-            }
-        }
         this.jobContext = jobContext;
         this.pluginConfigs = pluginConfigs;
         this.plugins = initializePlugins(pluginConfigs);
