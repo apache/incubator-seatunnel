@@ -30,6 +30,7 @@ import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.Clickh
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.FILE_FIELDS_DELIMITER;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.FILE_TEMP_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.HOST;
+import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.KEY_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_FREE_PASSWORD;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_PASS;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.PASSWORD;
@@ -55,7 +56,8 @@ public class ClickhouseFileSinkFactory implements TableSinkFactory {
                         NODE_PASS,
                         COMPATIBLE_MODE,
                         FILE_FIELDS_DELIMITER,
-                        FILE_TEMP_PATH)
+                        FILE_TEMP_PATH,
+                        KEY_PATH)
                 .build();
     }
 }

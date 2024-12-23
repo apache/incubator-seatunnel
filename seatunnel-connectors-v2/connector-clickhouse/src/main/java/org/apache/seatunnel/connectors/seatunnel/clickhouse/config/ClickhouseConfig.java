@@ -32,6 +32,19 @@ import java.util.Map;
 
 public class ClickhouseConfig {
 
+    /** Bulk size of clickhouse jdbc */
+    public static final Option<Integer> BULK_SIZE =
+            Options.key("bulk_size")
+                    .intType()
+                    .defaultValue(20000)
+                    .withDescription("Bulk size of clickhouse jdbc");
+
+    public static final Option<String> SQL =
+            Options.key("sql")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("Clickhouse sql used to query data");
+
     /** Clickhouse server host */
     public static final Option<String> HOST =
             Options.key("host")
@@ -182,6 +195,12 @@ public class ClickhouseConfig {
                     .listType(NodePassConfig.class)
                     .noDefaultValue()
                     .withDescription("The password of Clickhouse server node");
+
+    public static final Option<String> KEY_PATH =
+            Options.key("key_path")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("The path of rsync/ssh key file");
 
     public static final Option<String> FILE_FIELDS_DELIMITER =
             Options.key("file_fields_delimiter")

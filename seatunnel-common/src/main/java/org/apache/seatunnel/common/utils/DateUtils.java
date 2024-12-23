@@ -25,8 +25,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_TIME;
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.NANO_OF_SECOND;
+import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
 public class DateUtils {
@@ -49,7 +56,10 @@ public class DateUtils {
                 Pattern.compile("\\d{4}年\\d{2}月\\d{2}日"),
                 Pattern.compile("\\d{4}/\\d{2}/\\d{2}"),
                 Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}"),
-                Pattern.compile("\\d{8}")
+                Pattern.compile("\\d{8}"),
+                Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"),
+                Pattern.compile("\\d{2}:\\d{2}:\\d{2}\\+\\d{2}:\\d{2}"),
+                Pattern.compile("\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?"),
             };
 
     public static final Map<Pattern, DateTimeFormatter> DATE_FORMATTER_MAP = new HashMap();
@@ -116,6 +126,27 @@ public class DateUtils {
                                         .appendValue(DAY_OF_MONTH, 2)
                                         .toFormatter())
                         .toFormatter());
+        DATE_FORMATTER_MAP.put(
+                PATTERN_ARRAY[5],
+                new DateTimeFormatterBuilder()
+                        .parseCaseInsensitive()
+                        .append(ISO_LOCAL_DATE)
+                        .appendLiteral('T')
+                        .append(
+                                new DateTimeFormatterBuilder()
+                                        .appendValue(HOUR_OF_DAY, 2)
+                                        .appendLiteral(':')
+                                        .appendValue(MINUTE_OF_HOUR, 2)
+                                        .optionalStart()
+                                        .appendLiteral(':')
+                                        .appendValue(SECOND_OF_MINUTE, 2)
+                                        .optionalStart()
+                                        .appendFraction(NANO_OF_SECOND, 0, 9, true)
+                                        .appendLiteral('Z')
+                                        .toFormatter())
+                        .toFormatter());
+        DATE_FORMATTER_MAP.put(PATTERN_ARRAY[6], ISO_OFFSET_TIME);
+        DATE_FORMATTER_MAP.put(PATTERN_ARRAY[7], ISO_LOCAL_TIME);
     }
 
     /**
