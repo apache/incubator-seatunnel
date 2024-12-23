@@ -192,11 +192,17 @@ const sidebars = {
             "label": "SeaTunnel Engine",
             "items": [
                 "seatunnel-engine/about",
-                "seatunnel-engine/download-seatunnel",
-                "seatunnel-engine/deployment",
-                "seatunnel-engine/local-mode-deployment",
-                "seatunnel-engine/hybrid-cluster-deployment",
-                "seatunnel-engine/separated-cluster-deployment",
+                {
+                    "type": "category",
+                    "label": "Deployment",
+                    "items": [
+                        "seatunnel-engine/download-seatunnel",
+                        "seatunnel-engine/deployment",
+                        "seatunnel-engine/local-mode-deployment",
+                        "seatunnel-engine/hybrid-cluster-deployment",
+                        "seatunnel-engine/separated-cluster-deployment"
+                    ]
+                },
                 "seatunnel-engine/savepoint",
                 "seatunnel-engine/checkpoint-storage",
                 "seatunnel-engine/engine-jar-storage-mode",

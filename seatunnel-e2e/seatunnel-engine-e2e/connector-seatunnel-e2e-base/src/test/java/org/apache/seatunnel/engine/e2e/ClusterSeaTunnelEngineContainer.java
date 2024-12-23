@@ -53,7 +53,7 @@ import static org.apache.seatunnel.e2e.common.util.ContainerUtil.PROJECT_ROOT_PA
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.in;
 
-public class ClusterSeaTunnelContainer extends SeaTunnelContainer {
+public class ClusterSeaTunnelEngineContainer extends SeaTunnelEngineContainer {
 
     private GenericContainer<?> secondServer;
 

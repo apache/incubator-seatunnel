@@ -52,7 +52,7 @@ public class MaxComputeCatalogFactory implements CatalogFactory {
     public OptionRule optionRule() {
         return OptionRule.builder()
                 .required(ACCESS_ID, ACCESS_KEY, ENDPOINT, PROJECT, TABLE_NAME)
-                .optional(PARTITION_SPEC, SPLIT_ROW, SPLIT_ROW, SCHEMA)
+                .optional(PARTITION_SPEC, SPLIT_ROW, SCHEMA)
                 .build();
     }
 }

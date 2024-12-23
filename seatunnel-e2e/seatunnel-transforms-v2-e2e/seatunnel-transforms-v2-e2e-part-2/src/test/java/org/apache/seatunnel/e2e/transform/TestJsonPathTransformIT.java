@@ -16,9 +16,7 @@
  */
 package org.apache.seatunnel.e2e.transform;
 
-import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
-import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
@@ -33,10 +31,6 @@ public class TestJsonPathTransformIT extends TestSuiteBase {
         Assertions.assertEquals(0, execResult.getExitCode());
     }
 
-    @DisabledOnContainer(
-            value = {},
-            type = {EngineType.SPARK},
-            disabledReason = "Currently SPARK do not multi table transform")
     @TestTemplate
     public void testBasicTypeMultiTable(TestContainer container) throws Exception {
         Container.ExecResult execResult =
