@@ -40,6 +40,7 @@ import com.hazelcast.internal.util.JsonUtil;
 import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import io.prometheus.client.exporter.common.TextFormat;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,6 +68,7 @@ import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_RUNN
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_SYSTEM_MONITORING_INFORMATION;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_THREAD_DUMP;
 
+@Slf4j
 public class RestHttpGetCommandProcessor extends HttpCommandProcessor<HttpGetCommand> {
 
     private final Log4j2HttpGetCommandProcessor original;
@@ -219,6 +221,7 @@ public class RestHttpGetCommandProcessor extends HttpCommandProcessor<HttpGetCom
     }
 
     private void handleMetrics(HttpGetCommand httpGetCommand, String contentType) {
+        log.info("Metrics request received");
         StringWriter stringWriter = new StringWriter();
         NodeExtension nodeExtension =
                 (NodeExtension) textCommandService.getNode().getNodeExtension();

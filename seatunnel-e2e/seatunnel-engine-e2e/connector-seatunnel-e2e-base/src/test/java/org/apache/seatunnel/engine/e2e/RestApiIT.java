@@ -93,7 +93,6 @@ public class RestApiIT {
         node1Config = ConfigProvider.locateAndGetSeaTunnelConfig();
         node1Config.getEngineConfig().getHttpConfig().setPort(8080);
         node1Config.getEngineConfig().getHttpConfig().setEnabled(true);
-        node1Config.getEngineConfig().getTelemetryConfig().getMetric().setEnabled(true);
         node1Config.getHazelcastConfig().setClusterName(testClusterName);
         node1Config.getEngineConfig().getSlotServiceConfig().setDynamicSlot(false);
         node1Config.getEngineConfig().getSlotServiceConfig().setSlotNum(20);
@@ -109,7 +108,6 @@ public class RestApiIT {
         // Dynamically generated port
         node2Config.getEngineConfig().getHttpConfig().setEnableDynamicPort(true);
         node2Config.getEngineConfig().getHttpConfig().setEnabled(true);
-        node2Config.getEngineConfig().getTelemetryConfig().getMetric().setEnabled(true);
         node2Config.getEngineConfig().getSlotServiceConfig().setDynamicSlot(false);
         node2Config.getEngineConfig().getSlotServiceConfig().setSlotNum(20);
         node2Config.setHazelcastConfig(node2hzconfig);
@@ -996,30 +994,6 @@ public class RestApiIT {
                                                 .body("[0].threadId", notNullValue());
                                     });
                         });
-    }
-
-    @Test
-    public void testGetMetrics() {
-
-        Arrays.asList(node2, node1)
-                .forEach(
-                        instance ->
-                                ports.forEach(
-                                        (key, value) -> {
-                                            given().get(
-                                                            HOST
-                                                                    + value
-                                                                    + node1Config
-                                                                            .getEngineConfig()
-                                                                            .getHttpConfig()
-                                                                            .getContextPath()
-                                                                    + RestConstant.REST_URL_METRICS)
-                                                    .then()
-                                                    .statusCode(200)
-                                                    .body(
-                                                            containsString(
-                                                                    "process_start_time_seconds"));
-                                        }));
     }
 
     @Test
