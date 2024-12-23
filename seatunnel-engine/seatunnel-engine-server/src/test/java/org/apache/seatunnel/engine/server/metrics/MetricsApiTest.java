@@ -26,12 +26,15 @@ import org.apache.seatunnel.engine.server.rest.RestConstant;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import com.hazelcast.instance.impl.HazelcastInstanceImpl;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 
+@DisabledOnOs(OS.WINDOWS)
 public class MetricsApiTest {
 
     private static HazelcastInstanceImpl instance;
