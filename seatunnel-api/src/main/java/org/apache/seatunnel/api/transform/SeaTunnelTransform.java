@@ -56,5 +56,14 @@ public interface SeaTunnelTransform<T>
     /** call it when Transformer completed */
     default void close() {}
 
-    void setMetricsContext(MetricsContext metricsContext);
+    void loadContext(Context context);
+
+    interface Context extends Serializable {
+
+        /** @return metricsContext of this transform. */
+        MetricsContext getMetricsContext();
+
+        /** @return name of this transform. */
+        String getTransformName();
+    }
 }

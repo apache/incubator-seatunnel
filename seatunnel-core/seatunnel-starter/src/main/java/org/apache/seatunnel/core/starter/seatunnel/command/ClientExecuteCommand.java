@@ -257,8 +257,8 @@ public class ClientExecuteCommand implements Command<ClientCommandArgs> {
                             .forEach(
                                     (tableName, metrics) -> {
                                         String[] transformInfos =
-                                                new String[metrics.entrySet().size() * 2 + 1];
-                                        transformInfos[0] = "Transform Information  " + tableName;
+                                                new String[metrics.entrySet().size() * 2 + 2];
+                                        transformInfos[0] = tableName + " Information";
                                         int index = 0;
                                         for (Map.Entry<String, Object> entry : metrics.entrySet()) {
                                             transformInfos[++index] = entry.getKey();

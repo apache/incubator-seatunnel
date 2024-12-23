@@ -54,7 +54,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static org.apache.seatunnel.api.common.metrics.MetricNames.TRANSFORM_COUNT;
+import static org.apache.seatunnel.api.common.metrics.MetricNames.TRANSFORM_OUTPUT_COUNT;
 
 public class JobClient {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -243,9 +243,9 @@ public class JobClient {
             Map<String, Map<String, Map<String, JsonNode>>> transformMetricsMaps,
             String metricName,
             JsonNode jobMetricsStr) {
-        if (metricName.contains(TRANSFORM_COUNT)) {
+        if (metricName.contains(TRANSFORM_OUTPUT_COUNT)) {
             processTransformMetric(
-                    transformMetricsMaps, TRANSFORM_COUNT, metricName, jobMetricsStr);
+                    transformMetricsMaps, TRANSFORM_OUTPUT_COUNT, metricName, jobMetricsStr);
         }
     }
 

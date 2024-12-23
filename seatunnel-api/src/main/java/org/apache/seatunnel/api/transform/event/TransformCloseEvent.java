@@ -15,21 +15,26 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.api.event;
+package org.apache.seatunnel.api.transform.event;
 
-public enum EventType {
-    SCHEMA_CHANGE_ADD_COLUMN,
-    SCHEMA_CHANGE_DROP_COLUMN,
-    SCHEMA_CHANGE_MODIFY_COLUMN,
-    SCHEMA_CHANGE_CHANGE_COLUMN,
-    SCHEMA_CHANGE_UPDATE_COLUMNS,
-    SCHEMA_CHANGE_RENAME_TABLE,
-    LIFECYCLE_ENUMERATOR_OPEN,
-    LIFECYCLE_ENUMERATOR_CLOSE,
-    LIFECYCLE_READER_OPEN,
-    LIFECYCLE_READER_CLOSE,
-    LIFECYCLE_WRITER_CLOSE,
-    LIFECYCLE_TRANSFORM_CLOSE,
-    LIFECYCLE_TRANSFORM_OPEN,
-    READER_MESSAGE_DELAYED,
+import org.apache.seatunnel.api.event.EventType;
+import org.apache.seatunnel.api.event.LifecycleEvent;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+public class TransformCloseEvent implements LifecycleEvent {
+    private long createdTime;
+    private String jobId;
+    private EventType eventType = EventType.LIFECYCLE_TRANSFORM_CLOSE;
+
+    public TransformCloseEvent() {
+        this.createdTime = System.currentTimeMillis();
+    }
 }

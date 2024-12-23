@@ -49,7 +49,6 @@ public abstract class AbstractCatalogSupportMapTransform
         if (Objects.nonNull(result)) {
             hazelcastMetric();
         }
-
         return result;
     }
 }

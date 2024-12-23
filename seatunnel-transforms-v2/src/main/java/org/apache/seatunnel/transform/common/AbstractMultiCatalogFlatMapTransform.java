@@ -36,15 +36,11 @@ public abstract class AbstractMultiCatalogFlatMapTransform extends AbstractMulti
     @Override
     public List<SeaTunnelRow> flatMap(SeaTunnelRow row) {
         if (transformMap.size() == 1) {
-            SeaTunnelFlatMapTransform<SeaTunnelRow> transform =
-                    ((SeaTunnelFlatMapTransform<SeaTunnelRow>)
-                            transformMap.values().iterator().next());
-            transform.setMetricsContext(metricsContext);
-            return transform.flatMap(row);
+            return ((SeaTunnelFlatMapTransform<SeaTunnelRow>)
+                            transformMap.values().iterator().next())
+                    .flatMap(row);
         }
-        SeaTunnelFlatMapTransform<SeaTunnelRow> transform =
-                (SeaTunnelFlatMapTransform<SeaTunnelRow>) transformMap.get(row.getTableId());
-        transform.setMetricsContext(metricsContext);
-        return transform.flatMap(row);
+        return ((SeaTunnelFlatMapTransform<SeaTunnelRow>) transformMap.get(row.getTableId()))
+                .flatMap(row);
     }
 }

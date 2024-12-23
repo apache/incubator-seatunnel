@@ -29,6 +29,7 @@ import org.apache.seatunnel.engine.server.checkpoint.ActionStateKey;
 import org.apache.seatunnel.engine.server.checkpoint.ActionSubtaskState;
 import org.apache.seatunnel.engine.server.checkpoint.CheckpointBarrier;
 import org.apache.seatunnel.engine.server.task.SeaTunnelTask;
+import org.apache.seatunnel.engine.server.task.context.TransformContext;
 import org.apache.seatunnel.engine.server.task.record.Barrier;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -51,6 +52,8 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
 
     private final Collector<Record<?>> collector;
 
+    private MetricsContext metricsContext;
+
     public TransformFlowLifeCycle(
             TransformChainAction<T> action,
             SeaTunnelTask runningTask,
@@ -61,16 +64,18 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         this.action = action;
         this.transform = action.getTransforms();
         this.collector = collector;
-        for (SeaTunnelTransform<T> t : transform) {
-            t.setMetricsContext(metricsContext);
-        }
+        this.metricsContext = metricsContext;
     }
 
     @Override
     public void open() throws Exception {
-        super.open();
+        int index = 0;
         for (SeaTunnelTransform<T> t : transform) {
             try {
+                String transformName = "Transform:" + ++index;
+                TransformContext transformContext =
+                        new TransformContext(metricsContext, transformName);
+                t.loadContext(transformContext);
                 t.open();
             } catch (Exception e) {
                 log.error(
@@ -182,9 +187,7 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
     }
 
     @Override
-    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {
-        // nothing
-    }
+    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {}
 
     @Override
     public void close() throws IOException {

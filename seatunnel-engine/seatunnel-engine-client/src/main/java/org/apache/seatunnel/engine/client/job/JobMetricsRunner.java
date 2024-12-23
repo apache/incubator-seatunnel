@@ -84,7 +84,7 @@ public class JobMetricsRunner implements Runnable {
                                 (tableName, metrics) -> {
                                     String[] transformInfos =
                                             new String[metrics.entrySet().size() * 2 + 1];
-                                    transformInfos[0] = "Transform Information  " + tableName;
+                                    transformInfos[0] = tableName + "Transform";
                                     int index = 0;
                                     for (Map.Entry<String, Object> entry : metrics.entrySet()) {
                                         transformInfos[++index] = entry.getKey();

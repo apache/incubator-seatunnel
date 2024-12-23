@@ -15,21 +15,29 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.api.event;
+package org.apache.seatunnel.engine.server.task.context;
 
-public enum EventType {
-    SCHEMA_CHANGE_ADD_COLUMN,
-    SCHEMA_CHANGE_DROP_COLUMN,
-    SCHEMA_CHANGE_MODIFY_COLUMN,
-    SCHEMA_CHANGE_CHANGE_COLUMN,
-    SCHEMA_CHANGE_UPDATE_COLUMNS,
-    SCHEMA_CHANGE_RENAME_TABLE,
-    LIFECYCLE_ENUMERATOR_OPEN,
-    LIFECYCLE_ENUMERATOR_CLOSE,
-    LIFECYCLE_READER_OPEN,
-    LIFECYCLE_READER_CLOSE,
-    LIFECYCLE_WRITER_CLOSE,
-    LIFECYCLE_TRANSFORM_CLOSE,
-    LIFECYCLE_TRANSFORM_OPEN,
-    READER_MESSAGE_DELAYED,
+import org.apache.seatunnel.api.common.metrics.MetricsContext;
+import org.apache.seatunnel.api.transform.SeaTunnelTransform;
+
+public class TransformContext implements SeaTunnelTransform.Context {
+
+    private static final long serialVersionUID = -3082515319043725121L;
+    private final MetricsContext metricsContext;
+    private final String transformName;
+
+    public TransformContext(MetricsContext metricsContext, String transformName) {
+        this.metricsContext = metricsContext;
+        this.transformName = transformName;
+    }
+
+    @Override
+    public MetricsContext getMetricsContext() {
+        return metricsContext;
+    }
+
+    @Override
+    public String getTransformName() {
+        return transformName;
+    }
 }
