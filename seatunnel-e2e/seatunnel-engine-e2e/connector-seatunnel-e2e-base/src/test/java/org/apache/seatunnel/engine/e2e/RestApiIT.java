@@ -1009,7 +1009,10 @@ public class RestApiIT {
                                         (key, value) -> {
                                             given().get(
                                                             HOST
-                                                                    + key
+                                                                    + instance.getCluster()
+                                                                            .getLocalMember()
+                                                                            .getAddress()
+                                                                            .getPort()
                                                                     + INSTANCE_CONTEXT_PATH
                                                                     + RestConstant.REST_URL_METRICS)
                                                     .then()
