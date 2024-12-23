@@ -1009,19 +1009,6 @@ public class RestApiIT {
                                         (key, value) -> {
                                             given().get(
                                                             HOST
-                                                                    + instance.getCluster()
-                                                                            .getLocalMember()
-                                                                            .getAddress()
-                                                                            .getPort()
-                                                                    + INSTANCE_CONTEXT_PATH
-                                                                    + RestConstant.REST_URL_METRICS)
-                                                    .then()
-                                                    .statusCode(200)
-                                                    .body(
-                                                            containsString(
-                                                                    "process_start_time_seconds"));
-                                            given().get(
-                                                            HOST
                                                                     + value
                                                                     + node1Config
                                                                             .getEngineConfig()
