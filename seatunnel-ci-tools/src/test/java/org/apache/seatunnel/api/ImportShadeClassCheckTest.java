@@ -86,7 +86,7 @@ public class ImportShadeClassCheckTest {
     public void guavaShadeCheck() {
         Map<String, List<String>> errorMap =
                 checkShade(Collections.singletonList("com.google.common"));
-        Assertions.assertEquals(2, errorMap.size(), errorMsg("guava", errorMap));
+        Assertions.assertEquals(0, errorMap.size(), errorMsg("guava", errorMap));
         log.info("check guava shade successfully");
     }
 
