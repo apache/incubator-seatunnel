@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.maxcompute.source;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.source.SourceSplitEnumerator;
 import org.apache.seatunnel.connectors.seatunnel.maxcompute.util.MaxcomputeUtil;
 
@@ -99,7 +100,8 @@ public class MaxcomputeSourceSplitEnumerator
     public void handleSplitRequest(int subtaskId) {}
 
     private void discoverySplits() throws TunnelException {
-        TableTunnel.DownloadSession session = MaxcomputeUtil.getDownloadSession(this.pluginConfig);
+        TableTunnel.DownloadSession session =
+                MaxcomputeUtil.getDownloadSession(ReadonlyConfig.fromConfig(this.pluginConfig));
         long recordCount = session.getRecordCount();
         int numReaders = enumeratorContext.currentParallelism();
         int splitRowNum = (int) Math.ceil((double) recordCount / numReaders);

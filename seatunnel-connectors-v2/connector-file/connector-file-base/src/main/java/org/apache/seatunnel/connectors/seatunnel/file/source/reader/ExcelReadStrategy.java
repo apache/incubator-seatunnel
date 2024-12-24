@@ -36,9 +36,14 @@ import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorExc
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.NumberToTextConverter;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.alibaba.excel.EasyExcel;
@@ -133,16 +138,16 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             log.info("Parsing Excel with POI");
 
             Workbook workbook;
-            if (currentFileName.endsWith(".xls")) {
-                workbook = new HSSFWorkbook(inputStream);
+            FormulaEvaluator formulaEvaluator;if (currentFileName.endsWith(".xls")) {
+                workbook = new HSSFWorkbook(inputStream);formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
             } else if (currentFileName.endsWith(".xlsx")) {
                 workbook = new XSSFWorkbook(inputStream);
-            } else {
+            formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook);} else {
                 throw new FileConnectorException(
                         CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
                         "Only support read excel file");
             }
-            Sheet sheet =
+            DataFormatter formatter = new DataFormatter();Sheet sheet =
                     pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())
                             ? workbook.getSheet(
                                     pluginConfig.getString(
@@ -175,7 +180,9 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                                             cell == null
                                                     ? null
                                                     : excelCellUtils.convert(
-                                                            getCellValue(cell.getCellType(), cell),
+                                                            getCellValue(cell.getCellType(), cell,
+                                                                formulaEvaluator,
+                                                                formatter),
                                                             fieldTypes[z - 1],
                                                             null));
                                 }
@@ -228,7 +235,11 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                 "User must defined schema for json file type");
     }
 
-    private Object getCellValue(CellType cellType, Cell cell) {
+    private Object getCellValue(
+            CellType cellType,
+            Cell cell,
+            FormulaEvaluator formulaEvaluator,
+            DataFormatter formatter) {
         switch (cellType) {
             case STRING:
                 return cell.getStringCellValue();
@@ -238,11 +249,18 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                 if (DateUtil.isCellDateFormatted(cell)) {
                     return cell.getLocalDateTimeCellValue();
                 }
-                return cell.getNumericCellValue();
+                return formatter.formatCellValue(cell);
             case BLANK:
                 return "";
             case ERROR:
                 break;
+            case FORMULA:
+                CellValue evaluate = formulaEvaluator.evaluate(cell);
+                if (evaluate.getCellType().equals(CellType.NUMERIC)) {
+                    return NumberToTextConverter.toText(evaluate.getNumberValue());
+                } else {
+                    return evaluate.formatAsString();
+                }
             default:
                 throw new FileConnectorException(
                         CommonErrorCodeDeprecated.UNSUPPORTED_DATA_TYPE,

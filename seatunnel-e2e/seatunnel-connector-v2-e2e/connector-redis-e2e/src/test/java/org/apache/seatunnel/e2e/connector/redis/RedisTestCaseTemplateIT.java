@@ -16,6 +16,8 @@
  */
 package org.apache.seatunnel.e2e.connector.redis;
 
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.DecimalType;
@@ -25,15 +27,20 @@ import org.apache.seatunnel.api.table.type.PrimitiveByteArrayType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
+import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
+import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.format.json.JsonSerializationSchema;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -52,6 +59,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +67,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.awaitility.Awaitility.await;
@@ -506,7 +517,13 @@ public abstract class RedisTestCaseTemplateIT extends TestSuiteBase implements T
     }
 
     @TestTemplate
-    public void testFakeToRedisInRealTimeTest(TestContainer container) {
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Only support for seatunnel")
+    @DisabledOnOs(OS.WINDOWS)
+    public void testFakeToRedisInRealTimeTest(TestContainer container)
+            throws IOException, InterruptedException {
         CompletableFuture.supplyAsync(
                 () -> {
                     try {
@@ -523,6 +540,43 @@ public abstract class RedisTestCaseTemplateIT extends TestSuiteBase implements T
                             Assertions.assertEquals(3, jedis.llen("list_check"));
                         });
         jedis.del("list_check");
+        // Get the task id
+        Container.ExecResult execResult = container.executeBaseCommand(new String[] {"-l"});
+        String regex = "(\\d+)\\s+";
+        Pattern pattern = Pattern.compile(regex);
+        List<String> runningJobId =
+                Arrays.stream(execResult.getStdout().toString().split("\n"))
+                        .filter(s -> s.contains("fake-to-redis-test-in-real-time"))
+                        .map(
+                                s -> {
+                                    Matcher matcher = pattern.matcher(s);
+                                    return matcher.find() ? matcher.group(1) : null;
+                                })
+                        .filter(jobId -> jobId != null)
+                        .collect(Collectors.toList());
+        Assertions.assertEquals(1, runningJobId.size());
+        // Verify that the status is Running
+        for (String jobId : runningJobId) {
+            Container.ExecResult execResult1 =
+                    container.executeBaseCommand(new String[] {"-j", jobId});
+            String stdout = execResult1.getStdout();
+            ObjectNode jsonNodes = JsonUtils.parseObject(stdout);
+            Assertions.assertEquals(jsonNodes.get("jobStatus").asText(), "RUNNING");
+        }
+        // Execute cancellation task
+        String[] batchCancelCommand =
+                Stream.concat(Arrays.stream(new String[] {"-can"}), runningJobId.stream())
+                        .toArray(String[]::new);
+        Assertions.assertEquals(0, container.executeBaseCommand(batchCancelCommand).getExitCode());
+
+        // Verify whether the cancellation is successful
+        for (String jobId : runningJobId) {
+            Container.ExecResult execResult1 =
+                    container.executeBaseCommand(new String[] {"-j", jobId});
+            String stdout = execResult1.getStdout();
+            ObjectNode jsonNodes = JsonUtils.parseObject(stdout);
+            Assertions.assertEquals(jsonNodes.get("jobStatus").asText(), "CANCELED");
+        }
     }
 
     @TestTemplate
