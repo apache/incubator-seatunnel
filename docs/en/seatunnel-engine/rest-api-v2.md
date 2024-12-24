@@ -21,7 +21,7 @@ seatunnel:
     http:
       enable-http: true
       port: 8080
-      enable-dynamic-port: false
+      enable-dynamic-port: true
       port-range: 100
 ```
 

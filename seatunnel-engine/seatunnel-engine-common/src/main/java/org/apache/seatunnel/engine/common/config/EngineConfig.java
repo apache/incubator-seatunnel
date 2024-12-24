@@ -19,6 +19,7 @@ package org.apache.seatunnel.engine.common.config;
 
 import org.apache.seatunnel.engine.common.config.server.CheckpointConfig;
 import org.apache.seatunnel.engine.common.config.server.ConnectorJarStorageConfig;
+import org.apache.seatunnel.engine.common.config.server.CoordinatorServiceConfig;
 import org.apache.seatunnel.engine.common.config.server.HttpConfig;
 import org.apache.seatunnel.engine.common.config.server.QueueType;
 import org.apache.seatunnel.engine.common.config.server.ScheduleStrategy;
@@ -56,6 +57,9 @@ public class EngineConfig {
     private SlotServiceConfig slotServiceConfig = ServerConfigOptions.SLOT_SERVICE.defaultValue();
 
     private CheckpointConfig checkpointConfig = ServerConfigOptions.CHECKPOINT.defaultValue();
+
+    private CoordinatorServiceConfig coordinatorServiceConfig =
+            ServerConfigOptions.COORDINATOR_SERVICE.defaultValue();
 
     private ConnectorJarStorageConfig connectorJarStorageConfig =
             ServerConfigOptions.CONNECTOR_JAR_STORAGE_CONFIG.defaultValue();

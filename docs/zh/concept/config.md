@@ -15,7 +15,7 @@
 
 配置文件类似下面这个例子：
 
-:::warn
+:::caution 警告
 
 旧的配置名称 `result_table_name`/`source_table_name` 已经过时，请尽快迁移到新名称 `plugin_output`/`plugin_input`。
 

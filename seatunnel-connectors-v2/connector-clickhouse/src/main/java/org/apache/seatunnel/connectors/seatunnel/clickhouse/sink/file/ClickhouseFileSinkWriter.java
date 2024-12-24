@@ -384,9 +384,10 @@ public class ClickhouseFileSinkWriter
         String hostAddress = shard.getNode().getHost();
         String user = readerOption.getNodeUser().getOrDefault(hostAddress, "root");
         String password = readerOption.getNodePassword().getOrDefault(hostAddress, null);
+        String keyPath = readerOption.getKeyPath();
         FileTransfer fileTransfer =
                 FileTransferFactory.createFileTransfer(
-                        this.readerOption.getCopyMethod(), hostAddress, user, password);
+                        this.readerOption.getCopyMethod(), hostAddress, user, password, keyPath);
         fileTransfer.init();
         int randomPath = threadLocalRandom.nextInt(shardLocalDataPaths.get(shard).size());
         fileTransfer.transferAndChown(

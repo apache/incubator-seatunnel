@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.paimon.utils;
+package org.apache.seatunnel.connectors.seatunnel.jdbc.utils;
 
-import org.apache.seatunnel.api.common.JobContext;
-import org.apache.seatunnel.common.constants.JobMode;
+import java.util.Objects;
 
-import lombok.extern.slf4j.Slf4j;
-
-/** Job env util */
-@Slf4j
-public class JobContextUtil {
-
-    public static boolean isBatchJob(JobContext jobContext) {
-        return jobContext.getJobMode().equals(JobMode.BATCH);
+public class DefaultValueUtils {
+    public static boolean isMysqlSpecialDefaultValue(Object defaultValue) {
+        if (Objects.isNull(defaultValue)) {
+            return false;
+        }
+        String defaultValueStr = defaultValue.toString();
+        return defaultValueStr.matches(
+                        "(?i)^(CURRENT_TIMESTAMP|CURRENT_TIME|CURRENT_DATE)\\(?\\d*\\)?$")
+                || defaultValueStr.equalsIgnoreCase("TRUE")
+                || defaultValueStr.equalsIgnoreCase("FALSE");
     }
 }
