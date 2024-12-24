@@ -167,6 +167,12 @@ public class ClickhouseConfig {
                     .defaultValue(Collections.emptyMap())
                     .withDescription("Clickhouse custom config");
 
+    public static final Option<String> KEY_PATH =
+            Options.key("key_path")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("The path of rsync/ssh key file");
+
     public static final Option<String> FILE_FIELDS_DELIMITER =
             Options.key("file_fields_delimiter")
                     .stringType()

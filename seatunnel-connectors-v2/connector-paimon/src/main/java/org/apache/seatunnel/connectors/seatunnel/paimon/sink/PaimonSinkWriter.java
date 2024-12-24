@@ -39,7 +39,6 @@ import org.apache.seatunnel.connectors.seatunnel.paimon.sink.bucket.PaimonBucket
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.commit.PaimonCommitInfo;
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.schema.handler.AlterPaimonTableSchemaEventHandler;
 import org.apache.seatunnel.connectors.seatunnel.paimon.sink.state.PaimonSinkState;
-import org.apache.seatunnel.connectors.seatunnel.paimon.utils.JobContextUtil;
 import org.apache.seatunnel.connectors.seatunnel.paimon.utils.RowConverter;
 
 import org.apache.paimon.CoreOptions;
@@ -49,8 +48,6 @@ import org.apache.paimon.schema.TableSchema;
 import org.apache.paimon.table.BucketMode;
 import org.apache.paimon.table.FileStoreTable;
 import org.apache.paimon.table.Table;
-import org.apache.paimon.table.sink.BatchTableCommit;
-import org.apache.paimon.table.sink.BatchTableWrite;
 import org.apache.paimon.table.sink.CommitMessage;
 import org.apache.paimon.table.sink.StreamTableCommit;
 import org.apache.paimon.table.sink.StreamTableWrite;
@@ -88,10 +85,6 @@ public class PaimonSinkWriter
     private final List<CommitMessage> committables = new ArrayList<>();
 
     private SeaTunnelRowType seaTunnelRowType;
-
-    private final SinkWriter.Context context;
-
-    private final JobContext jobContext;
 
     private org.apache.seatunnel.api.table.catalog.TableSchema sourceTableSchema;
 
@@ -133,8 +126,6 @@ public class PaimonSinkWriter
         }
         this.paimonSinkConfig = paimonSinkConfig;
         this.sinkPaimonTableSchema = this.paimonFileStoretable.schema();
-        this.context = context;
-        this.jobContext = jobContext;
         this.newTableWrite();
         BucketMode bucketMode = this.paimonFileStoretable.bucketMode();
         this.dynamicBucket =
@@ -147,8 +138,8 @@ public class PaimonSinkWriter
             this.bucketAssigner =
                     new PaimonBucketAssigner(
                             paimonFileStoretable,
-                            this.context.getNumberOfParallelSubtasks(),
-                            this.context.getIndexOfSubtask());
+                            context.getNumberOfParallelSubtasks(),
+                            context.getIndexOfSubtask());
         }
         PaimonSecurityContext.shouldEnableKerberos(paimonHadoopConfiguration);
     }
@@ -181,14 +172,13 @@ public class PaimonSinkWriter
                             .map(PaimonSinkState::getCommittables)
                             .flatMap(List::stream)
                             .collect(Collectors.toList());
-            log.info("Trying to recommit states {}", commitables);
-            if (JobContextUtil.isBatchJob(jobContext)) {
-                log.debug("Trying to recommit states batch mode");
-                ((BatchTableCommit) tableCommit).commit(commitables);
-            } else {
-                log.debug("Trying to recommit states streaming mode");
-                ((StreamTableCommit) tableCommit).commit(checkpointId, commitables);
+            // batch mode without checkpoint has no state to commit
+            if (commitables.isEmpty()) {
+                return;
             }
+            // streaming mode or batch mode with checkpoint need to recommit by stream api
+            log.info("Trying to recommit states {}", commitables);
+            ((StreamTableCommit) tableCommit).commit(checkpointId, commitables);
         } catch (Exception e) {
             throw new PaimonConnectorException(
                     PaimonConnectorErrorCode.TABLE_WRITE_COMMIT_FAILED, e);
@@ -238,10 +228,7 @@ public class PaimonSinkWriter
     }
 
     private void newTableWrite() {
-        this.tableWriteBuilder =
-                JobContextUtil.isBatchJob(jobContext)
-                        ? this.paimonFileStoretable.newBatchWriteBuilder()
-                        : this.paimonFileStoretable.newStreamWriteBuilder();
+        this.tableWriteBuilder = this.paimonFileStoretable.newStreamWriteBuilder();
         TableWrite oldTableWrite = this.tableWrite;
         this.tableWrite =
                 tableWriteBuilder
@@ -260,14 +247,8 @@ public class PaimonSinkWriter
     @Override
     public Optional<PaimonCommitInfo> prepareCommit(long checkpointId) throws IOException {
         try {
-            List<CommitMessage> fileCommittables;
-            if (JobContextUtil.isBatchJob(jobContext)) {
-                fileCommittables = ((BatchTableWrite) tableWrite).prepareCommit();
-            } else {
-                fileCommittables =
-                        ((StreamTableWrite) tableWrite)
-                                .prepareCommit(waitCompaction(), checkpointId);
-            }
+            List<CommitMessage> fileCommittables =
+                    ((StreamTableWrite) tableWrite).prepareCommit(waitCompaction(), checkpointId);
             committables.addAll(fileCommittables);
             return Optional.of(new PaimonCommitInfo(fileCommittables, checkpointId));
         } catch (Exception e) {

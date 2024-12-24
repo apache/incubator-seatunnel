@@ -47,6 +47,11 @@ libfb303-xxx.jar
 | paimon.hadoop.conf          | Map    | No       | -                            | Properties in hadoop conf                                                                                                                                        |
 | paimon.hadoop.conf-path     | String | No       | -                            | The specified loading path for the 'core-site.xml', 'hdfs-site.xml', 'hive-site.xml' files                                                                       |
 
+## Checkpoint in batch mode
+
+When you set `checkpoint.interval` to a value greater than 0 in batch mode, the paimon connector will commit the data to the paimon table when the checkpoint triggers after a certain number of records have been written. At this moment, the written data in paimon that is visible. 
+However, if you do not set `checkpoint.interval` in batch mode, the paimon sink connector will commit the data after all records are written. The written data in paimon that is not visible until the batch task completes.
+
 ## Changelog
 You must configure the `changelog-producer=input` option to enable the changelog producer mode of the paimon table. If you use the auto-create table function of paimon sink, you can configure this property in `paimon.table.write-props`.
 
@@ -107,9 +112,8 @@ source {
     password = "mysqlpw"
     table-names = ["shop.products"]
     base-url = "jdbc:mysql://mysql_cdc_e2e:3306/shop"
-    debezium = {
-      include.schema.changes = true
-    }
+    
+    schema-changes.enabled = true
   }
 }
 
