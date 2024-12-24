@@ -72,7 +72,7 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         int index = 0;
         for (SeaTunnelTransform<T> t : transform) {
             try {
-                String transformName = "Transform:" + ++index;
+                String transformName = "Transform" + ++index;
                 TransformContext transformContext =
                         new TransformContext(metricsContext, transformName);
                 t.loadContext(transformContext);
