@@ -69,7 +69,8 @@ public class OracleIncrementalSourceFactory extends BaseChangeStreamTableSourceF
                         JdbcSourceOptions.CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_LOWER_BOUND,
                         JdbcSourceOptions.CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_UPPER_BOUND,
                         JdbcSourceOptions.SAMPLE_SHARDING_THRESHOLD,
-                        JdbcSourceOptions.TABLE_NAMES_CONFIG)
+                        JdbcSourceOptions.TABLE_NAMES_CONFIG,
+                        JdbcSourceOptions.SCHEMA_CHANGES_ENABLED)
                 .optional(OracleSourceOptions.STARTUP_MODE, OracleSourceOptions.STOP_MODE)
                 .conditional(
                         OracleSourceOptions.STARTUP_MODE,
@@ -109,15 +110,25 @@ public class OracleIncrementalSourceFactory extends BaseChangeStreamTableSourceF
                             context.getOptions(), context.getClassLoader());
             boolean enableSchemaChange =
                     context.getOptions()
-                            .getOptional(SourceOptions.DEBEZIUM_PROPERTIES)
-                            .map(
-                                    e ->
-                                            e.getOrDefault(
-                                                    OracleSourceConfigFactory.SCHEMA_CHANGE_KEY,
-                                                    OracleSourceConfigFactory.SCHEMA_CHANGE_DEFAULT
-                                                            .toString()))
-                            .map(Boolean::parseBoolean)
-                            .orElse(OracleSourceConfigFactory.SCHEMA_CHANGE_DEFAULT);
+                            .getOptional(SourceOptions.SCHEMA_CHANGES_ENABLED)
+                            .orElse(
+                                    // TODO remove this after all users used the new schema change
+                                    // option
+                                    context.getOptions()
+                                            .getOptional(SourceOptions.DEBEZIUM_PROPERTIES)
+                                            .map(
+                                                    e ->
+                                                            e.getOrDefault(
+                                                                    OracleSourceConfigFactory
+                                                                            .SCHEMA_CHANGE_KEY,
+                                                                    SourceOptions
+                                                                            .SCHEMA_CHANGES_ENABLED
+                                                                            .defaultValue()
+                                                                            .toString()))
+                                            .map(Boolean::parseBoolean)
+                                            .orElse(
+                                                    SourceOptions.SCHEMA_CHANGES_ENABLED
+                                                            .defaultValue()));
             if (!restoreTables.isEmpty() && enableSchemaChange) {
                 catalogTables = mergeTableStruct(catalogTables, restoreTables);
             }

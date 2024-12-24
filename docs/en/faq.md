@@ -68,7 +68,7 @@ Define the variable in the configuration. For example, in an SQL transformation 
 ...
 transform {
   Sql {
-    query = "select * from user_view where city ='${city}' and dt = '${date}'"
+    query = "select * from dual where city ='${city}' and dt = '${date}'"
   }
 }
 ...

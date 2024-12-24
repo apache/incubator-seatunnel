@@ -22,6 +22,7 @@ import org.apache.seatunnel.engine.common.config.server.CheckpointStorageConfig;
 import org.apache.seatunnel.engine.common.config.server.ConnectorJarHAStorageConfig;
 import org.apache.seatunnel.engine.common.config.server.ConnectorJarStorageConfig;
 import org.apache.seatunnel.engine.common.config.server.ConnectorJarStorageMode;
+import org.apache.seatunnel.engine.common.config.server.CoordinatorServiceConfig;
 import org.apache.seatunnel.engine.common.config.server.HttpConfig;
 import org.apache.seatunnel.engine.common.config.server.QueueType;
 import org.apache.seatunnel.engine.common.config.server.ScheduleStrategy;
@@ -106,6 +107,25 @@ public class YamlSeaTunnelDomConfigProcessor extends AbstractDomConfigProcessor 
         return slotServiceConfig;
     }
 
+    private CoordinatorServiceConfig parseCoordinatorServiceConfig(Node coordinatorServiceNode) {
+        CoordinatorServiceConfig coordinatorServiceConfig = new CoordinatorServiceConfig();
+        for (Node node : childElements(coordinatorServiceNode)) {
+            String name = cleanNodeName(node);
+            if (ServerConfigOptions.MAX_THREAD_NUM.key().equals(name)) {
+                coordinatorServiceConfig.setMaxThreadNum(
+                        getIntegerValue(
+                                ServerConfigOptions.MAX_THREAD_NUM.key(), getTextContent(node)));
+            } else if (ServerConfigOptions.CORE_THREAD_NUM.key().equals(name)) {
+                coordinatorServiceConfig.setCoreThreadNum(
+                        getIntegerValue(
+                                ServerConfigOptions.CORE_THREAD_NUM.key(), getTextContent(node)));
+            } else {
+                LOGGER.warning("Unrecognized element: " + name);
+            }
+        }
+        return coordinatorServiceConfig;
+    }
+
     private void parseEngineConfig(Node engineNode, SeaTunnelConfig config) {
         final EngineConfig engineConfig = config.getEngineConfig();
         for (Node node : childElements(engineNode)) {
@@ -177,6 +197,8 @@ public class YamlSeaTunnelDomConfigProcessor extends AbstractDomConfigProcessor 
                         ScheduleStrategy.valueOf(getTextContent(node).toUpperCase(Locale.ROOT)));
             } else if (ServerConfigOptions.HTTP.key().equals(name)) {
                 engineConfig.setHttpConfig(parseHttpConfig(node));
+            } else if (ServerConfigOptions.COORDINATOR_SERVICE.key().equals(name)) {
+                engineConfig.setCoordinatorServiceConfig(parseCoordinatorServiceConfig(node));
             } else {
                 LOGGER.warning("Unrecognized element: " + name);
             }

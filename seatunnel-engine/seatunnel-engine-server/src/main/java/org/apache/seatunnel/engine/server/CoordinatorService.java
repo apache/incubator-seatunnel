@@ -199,11 +199,12 @@ public class CoordinatorService {
             @NonNull SeaTunnelServer seaTunnelServer,
             EngineConfig engineConfig) {
         this.nodeEngine = nodeEngine;
+        this.engineConfig = engineConfig;
         this.logger = nodeEngine.getLogger(getClass());
         this.executorService =
                 new ThreadPoolExecutor(
-                        0,
-                        Integer.MAX_VALUE,
+                        engineConfig.getCoordinatorServiceConfig().getCoreThreadNum(),
+                        engineConfig.getCoordinatorServiceConfig().getMaxThreadNum(),
                         60L,
                         TimeUnit.SECONDS,
                         new SynchronousQueue<>(),
@@ -212,7 +213,6 @@ public class CoordinatorService {
                                 .build(),
                         new ThreadPoolStatus.RejectionCountingHandler());
         this.seaTunnelServer = seaTunnelServer;
-        this.engineConfig = engineConfig;
         masterActiveListener = Executors.newSingleThreadScheduledExecutor();
         masterActiveListener.scheduleAtFixedRate(
                 this::checkNewActiveMaster, 0, 100, TimeUnit.MILLISECONDS);

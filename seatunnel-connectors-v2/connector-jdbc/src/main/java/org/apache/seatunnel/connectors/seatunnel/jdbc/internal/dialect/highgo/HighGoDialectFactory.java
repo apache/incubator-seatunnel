@@ -14,19 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.highgo;
 
-package org.apache.seatunnel.connectors.seatunnel.paimon.utils;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialectFactory;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql.PostgresDialectFactory;
 
-import org.apache.seatunnel.api.common.JobContext;
-import org.apache.seatunnel.common.constants.JobMode;
+import com.google.auto.service.AutoService;
 
-import lombok.extern.slf4j.Slf4j;
-
-/** Job env util */
-@Slf4j
-public class JobContextUtil {
-
-    public static boolean isBatchJob(JobContext jobContext) {
-        return jobContext.getJobMode().equals(JobMode.BATCH);
+@AutoService(JdbcDialectFactory.class)
+public class HighGoDialectFactory extends PostgresDialectFactory {
+    @Override
+    public boolean acceptsURL(String url) {
+        return url.startsWith("jdbc:highgo:");
     }
 }
