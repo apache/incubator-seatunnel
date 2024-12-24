@@ -861,20 +861,11 @@ public class ZetaSQLFunction {
                     } else {
 
                         ArrayType arrayType = (ArrayType) zetaSQLType.getExpressionType(expression);
-                        SeaTunnelDataType seaTunnelDataType =
-                                PhysicalColumn.of(
-                                                alias,
-                                                arrayType.getElementType(),
-                                                200,
-                                                true,
-                                                "",
-                                                "")
-                                        .getDataType();
 
                         if (aliasIndex == -1) {
                             fieldNames = ArrayUtils.add(fieldNames, alias);
                             seaTunnelDataTypes =
-                                    ArrayUtils.add(seaTunnelDataTypes, seaTunnelDataType);
+                                    ArrayUtils.add(seaTunnelDataTypes, arrayType.getElementType());
                             inputColumnsMapping.add(alias);
                         }
                     }

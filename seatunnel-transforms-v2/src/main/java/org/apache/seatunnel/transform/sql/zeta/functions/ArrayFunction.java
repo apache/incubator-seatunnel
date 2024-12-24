@@ -17,8 +17,6 @@
 package org.apache.seatunnel.transform.sql.zeta.functions;
 
 import org.apache.seatunnel.api.table.type.ArrayType;
-import org.apache.seatunnel.api.table.type.BasicType;
-import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 
@@ -31,7 +29,6 @@ import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,29 +57,26 @@ public class ArrayFunction {
         }
 
         Class<?> arrayType = getClassType(args);
-        SeaTunnelDataType<?> seaTunnelDataType = getSeaTunnelDataType(arrayType);
-
-        return new ArrayType(
-                Array.newInstance(arrayType, args.size()).getClass(), seaTunnelDataType);
+        return getSeaTunnelDataType(arrayType);
     }
 
-    private static SeaTunnelDataType getSeaTunnelDataType(Class<?> clazz) {
+    private static ArrayType getSeaTunnelDataType(Class<?> clazz) {
         String className = clazz.getSimpleName();
         switch (className) {
             case "Integer":
-                return BasicType.INT_TYPE;
+                return ArrayType.INT_ARRAY_TYPE;
             case "Double":
-                return BasicType.DOUBLE_TYPE;
+                return ArrayType.DOUBLE_ARRAY_TYPE;
             case "Boolean":
-                return BasicType.BOOLEAN_TYPE;
+                return ArrayType.BOOLEAN_ARRAY_TYPE;
             case "Long":
-                return BasicType.LONG_TYPE;
+                return ArrayType.LONG_ARRAY_TYPE;
             case "float":
-                return BasicType.FLOAT_TYPE;
+                return ArrayType.FLOAT_ARRAY_TYPE;
             case "short":
-                return BasicType.SHORT_TYPE;
+                return ArrayType.SHORT_ARRAY_TYPE;
             default:
-                return BasicType.STRING_TYPE;
+                return ArrayType.STRING_ARRAY_TYPE;
         }
     }
 
