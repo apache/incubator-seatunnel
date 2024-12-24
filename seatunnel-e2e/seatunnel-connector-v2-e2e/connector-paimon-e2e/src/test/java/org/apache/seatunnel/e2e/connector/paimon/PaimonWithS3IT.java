@@ -122,11 +122,21 @@ public class PaimonWithS3IT extends SeaTunnelContainer {
     }
 
     @Test
-    public void testFaceCDCSinkPaimonWithS3Filesystem() throws Exception {
+    public void testFakeCDCSinkPaimonWithS3Filesystem() throws Exception {
         Container.ExecResult execResult = executeJob("/fake_to_paimon_with_s3.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
 
         Container.ExecResult readResult = executeJob("/paimon_with_s3_to_assert.conf");
+        Assertions.assertEquals(0, readResult.getExitCode());
+    }
+
+    @Test
+    public void testFakeCDCSinkPaimonWithCheckpointInBatchModeWithS3Filesystem() throws Exception {
+        Container.ExecResult execResult =
+                executeJob("/fake_to_paimon_with_s3_with_checkpoint.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+
+        Container.ExecResult readResult = executeJob("/fake_2_paimon_with_s3_to_assert.conf");
         Assertions.assertEquals(0, readResult.getExitCode());
     }
 }
