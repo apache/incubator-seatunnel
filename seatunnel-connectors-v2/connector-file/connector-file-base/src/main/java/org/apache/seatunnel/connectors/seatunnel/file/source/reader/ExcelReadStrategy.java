@@ -138,16 +138,20 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
             log.info("Parsing Excel with POI");
 
             Workbook workbook;
-            FormulaEvaluator formulaEvaluator;if (currentFileName.endsWith(".xls")) {
-                workbook = new HSSFWorkbook(inputStream);formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            FormulaEvaluator formulaEvaluator;
+            if (currentFileName.endsWith(".xls")) {
+                workbook = new HSSFWorkbook(inputStream);
+                formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
             } else if (currentFileName.endsWith(".xlsx")) {
                 workbook = new XSSFWorkbook(inputStream);
-            formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook);} else {
+                formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook);
+            } else {
                 throw new FileConnectorException(
                         CommonErrorCodeDeprecated.UNSUPPORTED_OPERATION,
                         "Only support read excel file");
             }
-            DataFormatter formatter = new DataFormatter();Sheet sheet =
+            DataFormatter formatter = new DataFormatter();
+            Sheet sheet =
                     pluginConfig.hasPath(BaseSourceConfigOptions.SHEET_NAME.key())
                             ? workbook.getSheet(
                                     pluginConfig.getString(
@@ -180,9 +184,11 @@ public class ExcelReadStrategy extends AbstractReadStrategy {
                                             cell == null
                                                     ? null
                                                     : excelCellUtils.convert(
-                                                            getCellValue(cell.getCellType(), cell,
-                                                                formulaEvaluator,
-                                                                formatter),
+                                                            getCellValue(
+                                                                    cell.getCellType(),
+                                                                    cell,
+                                                                    formulaEvaluator,
+                                                                    formatter),
                                                             fieldTypes[z - 1],
                                                             null));
                                 }
