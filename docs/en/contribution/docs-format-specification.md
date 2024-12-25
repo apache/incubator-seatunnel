@@ -1,5 +1,5 @@
 # Docs Format Specification
-### Admonitions
+## Admonitions
 
 We have special admonitions syntax by wrapping text with a set of 3 colons, followed by a label denoting its type. When you want to emphasize the content, it is recommended to use admonitions.
 
