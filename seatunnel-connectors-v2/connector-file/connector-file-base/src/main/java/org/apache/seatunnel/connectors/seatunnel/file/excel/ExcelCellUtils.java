@@ -85,7 +85,7 @@ public class ExcelCellUtils implements Serializable {
     }
 
     @SneakyThrows(JsonProcessingException.class)
-    public Object convert(Object field, SeaTunnelDataType<?> fieldType, @Nullable Cell cellRaw)  {
+    public Object convert(Object field, SeaTunnelDataType<?> fieldType, @Nullable Cell cellRaw) {
         if (field == null && cellRaw == null) {
             return null;
         }
