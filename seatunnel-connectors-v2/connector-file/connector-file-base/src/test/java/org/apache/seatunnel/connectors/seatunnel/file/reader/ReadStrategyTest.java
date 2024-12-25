@@ -49,6 +49,7 @@ public class ReadStrategyTest {
         LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
         xmlReadStrategy.setPluginConfig(pluginConfig);
         xmlReadStrategy.init(localConf);
+        System.out.println("test...................." + xmlFilePath);
         List<String> fileNamesByPath =
                 xmlReadStrategy.getFileNamesByPath(xmlFilePath + "/%{NOTSPACE:list}.xml");
         Assertions.assertEquals(1, fileNamesByPath.size());
