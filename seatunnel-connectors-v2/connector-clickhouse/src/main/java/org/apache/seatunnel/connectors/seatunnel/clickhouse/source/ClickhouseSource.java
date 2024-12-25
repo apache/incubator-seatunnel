@@ -49,7 +49,6 @@ import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseFormat;
 import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseResponse;
-import com.google.auto.service.AutoService;
 
 import java.util.Collections;
 import java.util.List;
@@ -67,7 +66,6 @@ import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.Clickh
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.TABLE_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.USERNAME;
 
-@AutoService(SeaTunnelSource.class)
 public class ClickhouseSource
         implements SeaTunnelSource<SeaTunnelRow, ClickhouseSourceSplit, ClickhouseSourceState>,
                 SupportParallelism,
@@ -85,10 +83,6 @@ public class ClickhouseSource
     }
 
     public ClickhouseSource(ReadonlyConfig readonlyConfig) {
-        initClickhouseSource(readonlyConfig);
-    }
-
-    private void initClickhouseSource(ReadonlyConfig readonlyConfig) {
         Map<String, String> customConfig =
                 readonlyConfig.getOptional(CLICKHOUSE_CONFIG).orElse(null);
         servers =
