@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.excel;
 
+import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
@@ -83,8 +84,8 @@ public class ExcelCellUtils implements Serializable {
         return null;
     }
 
-    @SneakyThrows
-    public Object convert(Object field, SeaTunnelDataType<?> fieldType, @Nullable Cell cellRaw) {
+    @SneakyThrows(JsonProcessingException.class)
+    public Object convert(Object field, SeaTunnelDataType<?> fieldType, @Nullable Cell cellRaw)  {
         if (field == null && cellRaw == null) {
             return null;
         }
