@@ -67,7 +67,7 @@
 
 在开启同步任务之前，针对现有的表结构选择不同的处理方案。
 选项介绍：  
-`RECREATE_SCHEMA` ：表不存在时创建，表保存时删除并重建。
+`RECREATE_SCHEMA` ：表不存在时创建，表保存时删除并重建。  
 `CREATE_SCHEMA_WHEN_NOT_EXIST` ：表不存在时会创建，表存在时跳过。  
 `ERROR_WHEN_SCHEMA_NOT_EXIST` ：表不存在时会报错。  
 `IGNORE` ：忽略对表的处理。
