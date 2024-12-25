@@ -83,7 +83,7 @@
 
 ### save_mode_create_template
 
-使用模板自动创建Doris表，
+使用模板自动创建clickhouse表，
 会根据上游数据类型和schema类型创建相应的建表语句，
 默认模板可以根据情况进行修改。
 
