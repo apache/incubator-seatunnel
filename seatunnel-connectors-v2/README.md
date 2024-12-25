@@ -193,7 +193,7 @@ The `SourceReader.Context` is the context for the `SourceReader`, which interact
 
 - Used to create a factory class for the Sink, through which Sink instances are created using the `createSink` method.
 - `factoryIdentifier` is used to identify the name of the current Factory, which is also configured in the configuration file to distinguish different connectors.
-- `OptionRule` is used to define the parameters supported by the current connector. You can use this method to define the logic of the parameters, such as which parameters are required, which parameters are optional, which parameters are mutually exclusive, etc. SeaTunnel will use `OptionRule` to verify the validity of the user's configuration. Please refer to the Option below.
+- `optionRule` is used to define the parameters supported by the current connector. You can use this method to define the logic of the parameters, such as which parameters are required, which parameters are optional, which parameters are mutually exclusive, etc. SeaTunnel will use `OptionRule` to verify the validity of the user's configuration. Please refer to the Option below.
 - Make sure to add the `@AutoService(Factory.class)` annotation to the `TableSinkFactory` class.
 
 #### SeaTunnelSink.java
