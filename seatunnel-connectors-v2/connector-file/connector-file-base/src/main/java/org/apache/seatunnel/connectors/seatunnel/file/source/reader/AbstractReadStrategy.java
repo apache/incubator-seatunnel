@@ -99,7 +99,8 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     public void init(HadoopConf conf) {
         this.hadoopConf = conf;
         this.hadoopFileSystemProxy = new HadoopFileSystemProxy(hadoopConf);
-        if (pluginConfig.hasPath(BaseSourceConfigOptions.FILE_PATH_RULE.key())) {
+        if (pluginConfig != null
+                && pluginConfig.hasPath(BaseSourceConfigOptions.FILE_PATH_RULE.key())) {
             FilePathRule filePathRule =
                     pluginConfig.getEnum(
                             FilePathRule.class, BaseSourceConfigOptions.FILE_PATH_RULE.key());
@@ -139,7 +140,8 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     @Override
     public List<String> getFileNamesByPath(String path) throws IOException {
         FilePathRule filePathRule = FilePathRule.NONE;
-        if (pluginConfig.hasPath(BaseSourceConfigOptions.FILE_PATH_RULE.key())) {
+        if (pluginConfig != null
+                && pluginConfig.hasPath(BaseSourceConfigOptions.FILE_PATH_RULE.key())) {
             filePathRule =
                     pluginConfig.getEnum(
                             FilePathRule.class, BaseSourceConfigOptions.FILE_PATH_RULE.key());
