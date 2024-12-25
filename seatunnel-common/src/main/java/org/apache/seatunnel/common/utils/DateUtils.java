@@ -52,15 +52,15 @@ public class DateUtils {
 
     public static final Pattern[] PATTERN_ARRAY =
             new Pattern[] {
-                Pattern.compile("\\d{4}-\\d{2}-\\d{2}"),
-                Pattern.compile("\\d{4}年\\d{2}月\\d{2}日"),
-                Pattern.compile("\\d{4}/\\d{2}/\\d{2}"),
-                Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}"),
-                Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"),
-                Pattern.compile("\\d{2}:\\d{2}:\\d{2}\\+\\d{2}:\\d{2}"),
-                Pattern.compile("\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?"),
-                Pattern.compile("\\d{8}"),
-                Pattern.compile("\\d{4}/\\d{1,2}/\\d{1,2}")
+                    Pattern.compile("\\d{4}-\\d{2}-\\d{2}"),
+                    Pattern.compile("\\d{4}年\\d{2}月\\d{2}日"),
+                    Pattern.compile("\\d{4}/\\d{2}/\\d{2}"),
+                    Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}"),
+                    Pattern.compile("\\d{8}"),
+                    Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"),
+                    Pattern.compile("\\d{2}:\\d{2}:\\d{2}\\+\\d{2}:\\d{2}"),
+                    Pattern.compile("\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?"),
+                    Pattern.compile("\\d{4}/\\d{1,2}/\\d{1,2}")
             };
 
     public static final Map<Pattern, DateTimeFormatter> DATE_FORMATTER_MAP = new HashMap();
@@ -148,6 +148,12 @@ public class DateUtils {
                         .toFormatter());
         DATE_FORMATTER_MAP.put(PATTERN_ARRAY[6], ISO_OFFSET_TIME);
         DATE_FORMATTER_MAP.put(PATTERN_ARRAY[7], ISO_LOCAL_TIME);
+        DATE_FORMATTER_MAP.put(
+                PATTERN_ARRAY[8],
+                new DateTimeFormatterBuilder()
+                        .parseCaseInsensitive()
+                        .append(DateTimeFormatter.ofPattern("yyyy/M/d"))
+                        .toFormatter());
     }
 
     /**
