@@ -166,7 +166,7 @@ Context是SourceReader的上下文，通过该上下文来和SeaTunnel进行交�
 
 - 用于创建Sink的工厂类，通过该类来创建Sink实例，通过`createSink`方法来创建Sink实例。
 - `factoryIdentifier`用于标识当前Factory的名称，也是在配置文件中配置的名称，用于区分不同的连接器。
-- OptionRule用于定义当前连接器支持的参数，可以通过该方法来定义参数的逻辑，比如哪些参数是必须的，哪些参数是可选的，哪些参数是互斥的等等，SeaTunnel会通过OptionRule来校验用户的配置是否合法。请参考下方的Option。
+- `optionRule` 用于定义当前连接器支持的参数，可以通过该方法来定义参数的逻辑，比如哪些参数是必须的，哪些参数是可选的，哪些参数是互斥的等等，SeaTunnel会通过OptionRule来校验用户的配置是否合法。请参考下方的Option。
 - 请确保在`TableSinkFactory`添加`@AutoService(Factory.class)`注解。
 
 #### SeaTunnelSink.java
