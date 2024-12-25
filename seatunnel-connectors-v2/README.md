@@ -82,7 +82,7 @@ The API design of the current version of SeaTunnel draws on the design concept o
 
 - Used to create a factory class for Source, through which Source instances are created using the `createSource` method.
 - `factoryIdentifier` is used to identify the name of the current Factory, which is also configured in the configuration file to distinguish different connectors.
-- `OptionRule` is used to define the parameters supported by the current connector. This method can be used to define the logic of the parameters, such as which parameters are required, which are optional, which are mutually exclusive, etc. 
+- `optionRule` is used to define the parameters supported by the current connector. This method can be used to define the logic of the parameters, such as which parameters are required, which are optional, which are mutually exclusive, etc. 
   SeaTunnel will use `OptionRule` to verify the validity of the user's configuration. Please refer to the `Option` below.
 - Make sure to add the `@AutoService(Factory.class)` annotation to `TableSourceFactory`.
 
