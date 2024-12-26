@@ -45,8 +45,7 @@ for /f "usebackq delims=" %%a in ("%SEATUNNEL_HOME%\config\plugin_config") do (
     setlocal enabledelayedexpansion
     if "!line:~0,1!" neq "-" if "!line:~0,1!" neq "#" (
         echo install connector : !line!
-@REM         call "%SEATUNNEL_HOME%\mvnw.cmd" dependency:get -Dtransitive=false -DgroupId="org.apache.seatunnel" -DartifactId="!line!" -Dversion="%version%" -Ddest="%SEATUNNEL_HOME%\connectors"
-        call mvn dependency:get -Dtransitive=false -DgroupId="org.apache.seatunnel" -DartifactId="!line!" -Dversion="%version%" -Ddest="%SEATUNNEL_HOME%\connectors"
+        call "%SEATUNNEL_HOME%\mvnw.cmd" dependency:get -Dtransitive=false -DgroupId="org.apache.seatunnel" -DartifactId="!line!" -Dversion="%version%" -Ddest="%SEATUNNEL_HOME%\connectors"
     )
     endlocal
 )
