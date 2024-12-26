@@ -845,3 +845,18 @@ To get a list of logs from the current node: `http://localhost:5801/log`
 To get the content of a log file: `http://localhost:5801/log/job-898380162133917698.log`
 
 </details>
+
+
+### Get Node Metrics
+
+<details>
+ <summary>
+    <code>GET</code> <code><b>/metrics</b></code>  
+    <code>GET</code> <code><b>/openmetrics</b></code>
+</summary>
+
+To get the metrics, you need to open `Telemetry` first, or you will get an empty response.  
+
+More information about `Telemetry` can be found in the [Telemetry](telemetry.md) documentation.
+
+</details>

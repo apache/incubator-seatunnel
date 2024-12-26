@@ -6,7 +6,7 @@
 
 将数据输出到本地文件。
 
-:::提示
+:::tip 提示
 
 如果你使用的是 spark/flink，为了使用此连接器，你必须确保你的 spark/flink 集群已集成 hadoop。已测试的 hadoop 版本是 2.x。
 

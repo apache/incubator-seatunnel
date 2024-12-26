@@ -67,7 +67,7 @@
 
 在开启同步任务之前，针对现有的表结构选择不同的处理方案。
 选项介绍：  
-`RECREATE_SCHEMA` ：表不存在时创建，表保存时删除并重建。
+`RECREATE_SCHEMA` ：表不存在时创建，表保存时删除并重建。  
 `CREATE_SCHEMA_WHEN_NOT_EXIST` ：表不存在时会创建，表存在时跳过。  
 `ERROR_WHEN_SCHEMA_NOT_EXIST` ：表不存在时会报错。  
 `IGNORE` ：忽略对表的处理。
@@ -83,7 +83,7 @@
 
 ### save_mode_create_template
 
-使用模板自动创建Doris表，
+使用模板自动创建 Clickhouse 表，
 会根据上游数据类型和schema类型创建相应的建表语句，
 默认模板可以根据情况进行修改。
 
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS  `${database}`.`${table}` (
 
 - database：用于获取上游schema中的数据库。
 - table_name：用于获取上游schema中的表名。
-- rowtype_fields：用于获取上游schema中的所有字段，自动映射到Doris的字段描述。
+- rowtype_fields：用于获取上游schema中的所有字段，自动映射到 Clickhouse 的字段描述。
 - rowtype_primary_key：用于获取上游模式中的主键（可能是列表）。
 - rowtype_unique_key：用于获取上游模式中的唯一键（可能是列表）。
 

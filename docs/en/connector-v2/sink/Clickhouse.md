@@ -84,7 +84,7 @@ Option descriptions:
 
 ### save_mode_create_template
 
-Automatically create Doris tables using templates.  
+Automatically create Clickhouse tables using templates.  
 The table creation statements will be generated based on the upstream data types and schema. The default template can be modified as needed.
 
 Default template:
@@ -118,7 +118,7 @@ The following placeholders can be used:
 
 - `database`: Retrieves the database from the upstream schema.
 - `table_name`: Retrieves the table name from the upstream schema.
-- `rowtype_fields`: Retrieves all fields from the upstream schema and automatically maps them to Doris field descriptions.
+- `rowtype_fields`: Retrieves all fields from the upstream schema and automatically maps them to Clickhouse field descriptions.
 - `rowtype_primary_key`: Retrieves the primary key from the upstream schema (this may be a list).
 - `rowtype_unique_key`: Retrieves the unique key from the upstream schema (this may be a list).
 
