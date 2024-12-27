@@ -162,7 +162,7 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
                 .append("#")
                 .append(context.getTransformName())
                 .append("#")
-                .append(inputTableName);
+                .append(outTableName);
         return metricName.toString();
     }
 }
