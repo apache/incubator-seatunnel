@@ -111,15 +111,17 @@ public class ClickhouseIT extends TestSuiteBase implements TestResource {
 
     @TestTemplate
     public void testClickhouseMultiSource(TestContainer container) throws Exception {
+        String sinkTable = "`default`.t3";
         Container.ExecResult execResult = container.executeJob(CLICKHOUSE_MULTI_LIST_TABLE_CONFIG);
         Assertions.assertEquals(0, execResult.getExitCode());
-        String query = "SELECT COUNT(*) FROM `default`.t3";
+        String query = "SELECT COUNT(*) FROM " + sinkTable;
         try (Statement sourceStatement = connection.createStatement();
                 ResultSet sourceResultSet = sourceStatement.executeQuery(query)) {
             if (sourceResultSet.next()) {
                 int count = sourceResultSet.getInt(1);
                 Assertions.assertEquals(4, count);
             }
+            connection.createStatement().execute("TRUNCATE TABLE " + sinkTable);
         }
     }
 
