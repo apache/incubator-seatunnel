@@ -44,23 +44,21 @@ public class TimeUtils {
                 Pattern.compile("\\d{2}:\\d{2}:\\d{2}.\\d{3}"),
             };
 
-    public static DateTimeFormatter matchTimeFormatter(String dateTime) {
+    public static Formatter matchTimeFormatter(String dateTime) {
         for (int j = 0; j < PATTERN_ARRAY.length; j++) {
             if (PATTERN_ARRAY[j].matcher(dateTime).matches()) {
-                DateTimeFormatter dateTimeFormatter = Time_FORMATTER_MAP.get(PATTERN_ARRAY[j]);
+                Formatter dateTimeFormatter = Time_FORMATTER_MAP.get(PATTERN_ARRAY[j]);
                 return dateTimeFormatter;
             }
         }
         return null;
     }
 
-    public static final Map<Pattern, DateTimeFormatter> Time_FORMATTER_MAP = new HashMap();
+    public static final Map<Pattern, Formatter> Time_FORMATTER_MAP = new HashMap();
 
     static {
-        Time_FORMATTER_MAP.put(
-                PATTERN_ARRAY[0], DateTimeFormatter.ofPattern(Formatter.HH_MM_SS.value));
-        Time_FORMATTER_MAP.put(
-                PATTERN_ARRAY[1], DateTimeFormatter.ofPattern(Formatter.HH_MM_SS_SSS.value));
+        Time_FORMATTER_MAP.put(PATTERN_ARRAY[0], Formatter.parse(Formatter.HH_MM_SS.value));
+        Time_FORMATTER_MAP.put(PATTERN_ARRAY[1], Formatter.parse(Formatter.HH_MM_SS_SSS.value));
     }
 
     public static String toString(LocalTime time, Formatter formatter) {

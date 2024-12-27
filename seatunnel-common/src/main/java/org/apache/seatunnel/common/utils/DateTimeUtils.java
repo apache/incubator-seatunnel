@@ -227,6 +227,12 @@ public class DateTimeUtils {
                     return entry.getValue();
                 }
             }
+            for (Map.Entry<Pattern, DateTimeFormatter> entry :
+                    YYYY_M_D_HH_MM_SS_17_FORMATTER_MAP_ENTRY_SET) {
+                if (entry.getKey().matcher(dateTime).matches()) {
+                    return entry.getValue();
+                }
+            }
         } else if (dateTime.length() > 19) {
             for (Map.Entry<Pattern, DateTimeFormatter> entry :
                     YYYY_MM_DD_HH_MM_SS_M19_FORMATTER_MAP_ENTRY_SET) {
@@ -249,6 +255,12 @@ public class DateTimeUtils {
                 }
             }
         } else if (dateTime.length() == 14) {
+            for (Map.Entry<Pattern, DateTimeFormatter> entry :
+                    YYYY_M_D_HH_MM_15_FORMATTER_MAP_ENTRY_SET) {
+                if (entry.getKey().matcher(dateTime).matches()) {
+                    return entry.getValue();
+                }
+            }
             return YYYY_MM_DD_HH_MM_SS_14_FORMATTER;
         }
         return null;
