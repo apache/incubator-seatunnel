@@ -67,7 +67,7 @@ By default, we use 2PC commit to ensure `exactly-once`
 | encoding                              | string  | no       | "UTF-8"                                    | Only used when file_format_type is json,text,csv,xml.                                                             |
 | schema_save_mode                      | string  | no       | CREATE_SCHEMA_WHEN_NOT_EXIST               | Existing dir processing method                                                                    |
 | data_save_mode                        | string  | no       | APPEND_DATA                                | Existing data processing method                                                                   |
- 
+  
 ### host [string]
 
 The target ftp host is required
