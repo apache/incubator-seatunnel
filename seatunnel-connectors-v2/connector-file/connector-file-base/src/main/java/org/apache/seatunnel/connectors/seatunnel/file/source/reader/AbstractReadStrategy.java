@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.source.Collector;
@@ -25,9 +27,11 @@ import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.file.config.ArchiveCompressFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FilePathRule;
 import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
 import org.apache.seatunnel.connectors.seatunnel.file.hadoop.HadoopFileSystemProxy;
 
@@ -37,17 +41,24 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipParameters;
 import org.apache.hadoop.fs.FileStatus;
 
+import io.krakens.grok.api.Grok;
+import io.krakens.grok.api.GrokCompiler;
+import io.krakens.grok.api.Match;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +67,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions.GROK_PATTEN_TEMPLATES_PATH;
 
 @Slf4j
 public abstract class AbstractReadStrategy implements ReadStrategy {
@@ -70,6 +83,7 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     protected static final BigDecimal[] TYPE_ARRAY_BIG_DECIMAL = new BigDecimal[0];
     protected static final LocalDate[] TYPE_ARRAY_LOCAL_DATE = new LocalDate[0];
     protected static final LocalDateTime[] TYPE_ARRAY_LOCAL_DATETIME = new LocalDateTime[0];
+    private static final String STATIC_PATH_PATTERN = "^(.*?)[/\\\\]%\\{.*?}";
 
     protected HadoopConf hadoopConf;
     protected SeaTunnelRowType seaTunnelRowType;
@@ -86,11 +100,71 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
             BaseSourceConfigOptions.ARCHIVE_COMPRESS_CODEC.defaultValue();
 
     protected Pattern pattern;
+    protected final GrokCompiler grokCompiler = GrokCompiler.newInstance();
+    protected Grok grok;
 
     @Override
     public void init(HadoopConf conf) {
         this.hadoopConf = conf;
         this.hadoopFileSystemProxy = new HadoopFileSystemProxy(hadoopConf);
+        if (pluginConfig != null
+                && pluginConfig.hasPath(BaseSourceConfigOptions.FILE_PATH_RULE.key())) {
+            FilePathRule filePathRule =
+                    pluginConfig.getEnum(
+                            FilePathRule.class, BaseSourceConfigOptions.FILE_PATH_RULE.key());
+            switch (filePathRule) {
+                case GROK:
+                    Map<String, String> defaultGrokPatternMap = new HashMap<>();
+                    URL resource =
+                            AbstractReadStrategy.class
+                                    .getClassLoader()
+                                    .getResource(GROK_PATTEN_TEMPLATES_PATH);
+                    if (resource == null) {
+                        log.error("grok pattern file not found!");
+                    } else {
+                        defaultGrokPatternMap = loadFlattenedGrokTemplates(resource.getPath());
+                    }
+                    Map<String, Object> unwrapped =
+                            pluginConfig
+                                    .getObject(BaseSourceConfigOptions.GROK_PATTERN.key())
+                                    .unwrapped();
+                    Map<String, String> custoGrokPatternMap = new LinkedHashMap<>();
+                    for (Map.Entry<String, Object> entry : unwrapped.entrySet()) {
+                        custoGrokPatternMap.put(entry.getKey(), entry.getValue().toString());
+                    }
+                    defaultGrokPatternMap.putAll(custoGrokPatternMap);
+                    this.grokCompiler.register(defaultGrokPatternMap);
+                    grok =
+                            grokCompiler.compile(
+                                    pluginConfig.getString(
+                                            BaseSourceConfigOptions.FILE_PATH.key()));
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    @SneakyThrows
+    private static Map<String, String> loadFlattenedGrokTemplates(String filePath) {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        Map<String, Object> yamlData = mapper.readValue(new File(filePath), Map.class);
+        Map<String, String> flattenedMap = new HashMap<>();
+        flattenToBottomLevel(yamlData, flattenedMap);
+        return flattenedMap;
+    }
+
+    private static void flattenToBottomLevel(
+            Map<String, Object> source, Map<String, String> target) {
+        for (Map.Entry<String, Object> entry : source.entrySet()) {
+            Object value = entry.getValue();
+
+            if (value instanceof Map) {
+                flattenToBottomLevel((Map<String, Object>) value, target);
+            } else if (value instanceof String) {
+                target.put(entry.getKey(), (String) value);
+            }
+        }
     }
 
     @Override
@@ -106,7 +180,17 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
 
     @Override
     public List<String> getFileNamesByPath(String path) throws IOException {
+        FilePathRule filePathRule = FilePathRule.NONE;
+        if (pluginConfig != null
+                && pluginConfig.hasPath(BaseSourceConfigOptions.FILE_PATH_RULE.key())) {
+            filePathRule =
+                    pluginConfig.getEnum(
+                            FilePathRule.class, BaseSourceConfigOptions.FILE_PATH_RULE.key());
+        }
         ArrayList<String> fileNames = new ArrayList<>();
+        if (filePathRule == FilePathRule.GROK) {
+            path = extractStaticPath(path);
+        }
         FileStatus[] stats = hadoopFileSystemProxy.listStatus(path);
         for (FileStatus fileStatus : stats) {
             if (fileStatus.isDirectory()) {
@@ -115,26 +199,119 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
             }
             if (fileStatus.isFile() && filterFileByPattern(fileStatus) && fileStatus.getLen() > 0) {
                 // filter '_SUCCESS' file
-                if (!fileStatus.getPath().getName().equals("_SUCCESS")
+                if (!"_SUCCESS".equals(fileStatus.getPath().getName())
                         && !fileStatus.getPath().getName().startsWith(".")) {
                     String filePath = fileStatus.getPath().toString();
-                    if (!readPartitions.isEmpty()) {
-                        for (String readPartition : readPartitions) {
-                            if (filePath.contains(readPartition)) {
-                                fileNames.add(filePath);
-                                this.fileNames.add(filePath);
-                                break;
+
+                    switch (filePathRule) {
+                        case GROK:
+                            Match match = grok.match(filePath);
+                            Map<String, Object> captureMap = match.capture();
+                            Map<String, Object> grokRuleMap =
+                                    pluginConfig
+                                            .getObject(BaseSourceConfigOptions.GROK_RULE.key())
+                                            .unwrapped();
+                            FilePathRule.GrokRule grokRule =
+                                    JsonUtils.parseObject(
+                                            JsonUtils.toJsonString(grokRuleMap),
+                                            FilePathRule.GrokRule.class);
+                            if (isValidCapture(captureMap, grokRule)) {
+                                addFileNameIfMatches(filePath, fileNames);
                             }
-                        }
-                    } else {
-                        fileNames.add(filePath);
-                        this.fileNames.add(filePath);
+                            break;
+                        case NONE:
+                        default:
+                            addFileNameIfMatches(filePath, fileNames);
+                            break;
                     }
                 }
             }
         }
 
         return fileNames;
+    }
+
+    private void addFileNameIfMatches(String filePath, List<String> fileNames) {
+        if (!readPartitions.isEmpty()) {
+            for (String readPartition : readPartitions) {
+                if (filePath.contains(readPartition)) {
+                    fileNames.add(filePath);
+                    this.fileNames.add(filePath);
+                    break;
+                }
+            }
+        } else {
+            fileNames.add(filePath);
+            this.fileNames.add(filePath);
+        }
+    }
+
+    private boolean isValidCapture(Map<String, Object> captureMap, FilePathRule.GrokRule grokRule) {
+        if (grokRule == null) {
+            return true;
+        }
+        if (grokRule.getPatterns() != null) {
+            for (Map.Entry<String, String> entry : grokRule.getPatterns().entrySet()) {
+                String key = entry.getKey();
+                String regex = entry.getValue();
+                String actualValue = (String) captureMap.get(key);
+                if (actualValue == null) {
+                    return false;
+                }
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(actualValue);
+                if (!matcher.matches()) {
+                    return false;
+                }
+            }
+        }
+
+        if (grokRule.getTimeScopes() != null) {
+            for (Map.Entry<String, FilePathRule.TimeScope> entry :
+                    grokRule.getTimeScopes().entrySet()) {
+                String key = entry.getKey();
+                FilePathRule.TimeScope timeScope = entry.getValue();
+                String actualValue = (String) captureMap.get(key);
+                if (actualValue == null) {
+                    return false;
+                }
+                try {
+                    long actualTime = Long.parseLong(actualValue);
+                    long startTime = Long.parseLong(timeScope.getStart());
+                    long endTime = Long.parseLong(timeScope.getEnd());
+                    if (actualTime < startTime || actualTime > endTime) {
+                        return false;
+                    }
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+
+        if (grokRule.getEnumRules() != null) {
+            for (Map.Entry<String, List<String>> entry : grokRule.getEnumRules().entrySet()) {
+                String key = entry.getKey();
+                List<String> expectedValues = entry.getValue();
+                String actualValue = (String) captureMap.get(key);
+                if (actualValue == null || !expectedValues.contains(actualValue)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static String extractStaticPath(String inputPath) {
+        Pattern pattern = Pattern.compile(STATIC_PATH_PATTERN);
+        Matcher matcher = pattern.matcher(inputPath);
+
+        StringBuilder staticPath = new StringBuilder();
+        while (matcher.find()) {
+            staticPath.append(matcher.group(1));
+        }
+
+        return staticPath.toString();
     }
 
     @Override

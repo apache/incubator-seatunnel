@@ -36,7 +36,7 @@ public class FileSinkConfigTest {
 
     @Test
     public void testConfigInit() throws Exception {
-        URL conf = OrcReadStrategyTest.class.getResource("/test_write_hdfs.conf");
+        URL conf = FileSinkConfigTest.class.getResource("/test_write_hdfs.conf");
         Assertions.assertNotNull(conf);
         String confPath = Paths.get(conf.toURI()).toString();
         Config config = ConfigFactory.parseFile(new File(confPath));

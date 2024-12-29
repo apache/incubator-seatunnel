@@ -25,8 +25,12 @@ import org.apache.seatunnel.common.utils.TimeUtils;
 import org.apache.seatunnel.format.text.constant.TextFormatConstant;
 
 import java.util.List;
+import java.util.Map;
 
 public class BaseSourceConfigOptions {
+
+    public static final String GROK_PATTEN_TEMPLATES_PATH = "grok_templates.yaml";
+
     public static final Option<FileFormat> FILE_FORMAT_TYPE =
             Options.key("file_format_type")
                     .objectType(FileFormat.class)
@@ -39,6 +43,24 @@ public class BaseSourceConfigOptions {
                     .stringType()
                     .noDefaultValue()
                     .withDescription("The file path of source files");
+
+    public static final Option<FilePathRule> FILE_PATH_RULE =
+            Options.key("file_path_rule")
+                    .objectType(FilePathRule.class)
+                    .defaultValue(FilePathRule.NONE)
+                    .withDescription("The file path rule of source files");
+
+    public static final Option<Map<String, String>> GROK_PATTERN =
+            Options.key("grok_pattern")
+                    .mapType()
+                    .noDefaultValue()
+                    .withDescription("The grok pattern of source files");
+
+    public static final Option<FilePathRule.GrokRule> GROK_RULE =
+            Options.key("grok_rule")
+                    .objectType(FilePathRule.GrokRule.class)
+                    .noDefaultValue()
+                    .withDescription("The grok rule of source files");
 
     public static final Option<String> FIELD_DELIMITER =
             Options.key("field_delimiter")

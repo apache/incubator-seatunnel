@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.file.writer;
+package org.apache.seatunnel.connectors.seatunnel.file.reader;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
@@ -122,7 +122,7 @@ public class ParquetReadStrategyTest {
     @Test
     public void testParquetReadProjection1() throws Exception {
         URL resource = ParquetReadStrategyTest.class.getResource("/timestamp_as_int96.parquet");
-        URL conf = OrcReadStrategyTest.class.getResource("/test_read_parquet.conf");
+        URL conf = ParquetReadStrategyTest.class.getResource("/test_read_parquet.conf");
         Assertions.assertNotNull(resource);
         Assertions.assertNotNull(conf);
         String path = Paths.get(resource.toURI()).toString();
@@ -151,7 +151,7 @@ public class ParquetReadStrategyTest {
     @Test
     public void testParquetReadProjection2() throws Exception {
         URL resource = ParquetReadStrategyTest.class.getResource("/hive.parquet");
-        URL conf = OrcReadStrategyTest.class.getResource("/test_read_parquet2.conf");
+        URL conf = ParquetReadStrategyTest.class.getResource("/test_read_parquet2.conf");
         Assertions.assertNotNull(resource);
         Assertions.assertNotNull(conf);
         String path = Paths.get(resource.toURI()).toString();
