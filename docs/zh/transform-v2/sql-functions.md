@@ -991,7 +991,15 @@ select UUID() as seatunnel_uuid
 
 示例:
 
-select ARRAY('test1','test2','test3') as arrays
+SELECT Array('c_1','c_2') as string_array,
+       Array(1.23,2.34) as double_array,
+       Array(1,2) as int_array,
+       Array(2147483648,2147483649) as long_array,
+       Array(1.23,2147483648) as double_array_1,
+       Array(1.23,2147483648,'c_1') as string_array_1
+FROM fake
+
+注意：目前仅支持string、double、long、int几种类型
 
 ### LATERAL VIEW
 #### EXPLODE
