@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 public class BaseSourceConfigOptions {
+
+    public static final String GROK_PATTEN_TEMPLATES_PATH = "grok_templates.yaml";
+
     public static final Option<FileFormat> FILE_FORMAT_TYPE =
             Options.key("file_format_type")
                     .objectType(FileFormat.class)

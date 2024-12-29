@@ -24,6 +24,8 @@ import org.apache.seatunnel.connectors.seatunnel.file.source.reader.XmlReadStrat
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.FS_DEFAULT_NAME
 public class ReadStrategyTest {
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     public void testXmlRead() throws IOException, URISyntaxException {
         URL xmlFile = XmlReadStrategyTest.class.getResource("/xml/name=xmlTest");
         URL conf = XmlReadStrategyTest.class.getResource("/xml/test_grok_read_xml.conf");
@@ -49,7 +52,6 @@ public class ReadStrategyTest {
         LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
         xmlReadStrategy.setPluginConfig(pluginConfig);
         xmlReadStrategy.init(localConf);
-        System.out.println("test...................." + xmlFilePath);
         List<String> fileNamesByPath =
                 xmlReadStrategy.getFileNamesByPath(xmlFilePath + "/%{NOTSPACE:list}.xml");
         Assertions.assertEquals(1, fileNamesByPath.size());

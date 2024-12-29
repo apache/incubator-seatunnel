@@ -39,7 +39,8 @@
         <hadoop-minikdc.version>3.1.4</hadoop-minikdc.version>
         <dom4j.version>2.1.4</dom4j.version>
         <jaxen.version>2.0.0</jaxen.version>
-        <java.grok>0.1.9</java.grok>
+        <java.grok.version>0.1.9</java.grok.version>
+        <jackson-dataformat-yaml.version>2.11.0</jackson-dataformat-yaml.version>
     </properties>
 
     <dependencyManagement>
@@ -162,7 +163,12 @@
         <dependency>
             <groupId>io.krakens</groupId>
             <artifactId>java-grok</artifactId>
-            <version>${java.grok}</version>
+            <version>${java.grok.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson-dataformat-yaml.version}</version>
         </dependency>
     </dependencies>
 

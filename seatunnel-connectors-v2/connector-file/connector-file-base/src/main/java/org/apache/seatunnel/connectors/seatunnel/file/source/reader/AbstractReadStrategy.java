@@ -39,20 +39,26 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipParameters;
 import org.apache.hadoop.fs.FileStatus;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.krakens.grok.api.Grok;
 import io.krakens.grok.api.GrokCompiler;
 import io.krakens.grok.api.Match;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +67,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions.GROK_PATTEN_TEMPLATES_PATH;
 
 @Slf4j
 public abstract class AbstractReadStrategy implements ReadStrategy {
@@ -75,7 +83,7 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     protected static final BigDecimal[] TYPE_ARRAY_BIG_DECIMAL = new BigDecimal[0];
     protected static final LocalDate[] TYPE_ARRAY_LOCAL_DATE = new LocalDate[0];
     protected static final LocalDateTime[] TYPE_ARRAY_LOCAL_DATETIME = new LocalDateTime[0];
-    private static final String STATIC_PATH_PATTERN = "(/[^%]+)";
+    private static final String STATIC_PATH_PATTERN = "^(.*?)[/\\\\]%\\{.*?}";
 
     protected HadoopConf hadoopConf;
     protected SeaTunnelRowType seaTunnelRowType;
@@ -106,15 +114,26 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
                             FilePathRule.class, BaseSourceConfigOptions.FILE_PATH_RULE.key());
             switch (filePathRule) {
                 case GROK:
+                    Map<String, String> defaultGrokPatternMap = new HashMap<>();
+                    URL resource =
+                            AbstractReadStrategy.class
+                                    .getClassLoader()
+                                    .getResource(GROK_PATTEN_TEMPLATES_PATH);
+                    if (resource == null) {
+                        log.error("grok pattern file not found!");
+                    } else {
+                        defaultGrokPatternMap = loadFlattenedGrokTemplates(resource.getPath());
+                    }
                     Map<String, Object> unwrapped =
                             pluginConfig
                                     .getObject(BaseSourceConfigOptions.GROK_PATTERN.key())
                                     .unwrapped();
-                    Map<String, String> grokPatternMap = new LinkedHashMap<>();
+                    Map<String, String> custoGrokPatternMap = new LinkedHashMap<>();
                     for (Map.Entry<String, Object> entry : unwrapped.entrySet()) {
-                        grokPatternMap.put(entry.getKey(), entry.getValue().toString());
+                        custoGrokPatternMap.put(entry.getKey(), entry.getValue().toString());
                     }
-                    this.grokCompiler.register(grokPatternMap);
+                    defaultGrokPatternMap.putAll(custoGrokPatternMap);
+                    this.grokCompiler.register(defaultGrokPatternMap);
                     grok =
                             grokCompiler.compile(
                                     pluginConfig.getString(
@@ -122,6 +141,28 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
                     break;
                 default:
                     break;
+            }
+        }
+    }
+
+    @SneakyThrows
+    private static Map<String, String> loadFlattenedGrokTemplates(String filePath) {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        Map<String, Object> yamlData = mapper.readValue(new File(filePath), Map.class);
+        Map<String, String> flattenedMap = new HashMap<>();
+        flattenToBottomLevel(yamlData, flattenedMap);
+        return flattenedMap;
+    }
+
+    private static void flattenToBottomLevel(
+            Map<String, Object> source, Map<String, String> target) {
+        for (Map.Entry<String, Object> entry : source.entrySet()) {
+            Object value = entry.getValue();
+
+            if (value instanceof Map) {
+                flattenToBottomLevel((Map<String, Object>) value, target);
+            } else if (value instanceof String) {
+                target.put(entry.getKey(), (String) value);
             }
         }
     }
@@ -148,7 +189,6 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
         }
         ArrayList<String> fileNames = new ArrayList<>();
         if (filePathRule == FilePathRule.GROK) {
-
             path = extractStaticPath(path);
         }
         FileStatus[] stats = hadoopFileSystemProxy.listStatus(path);
@@ -159,7 +199,7 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
             }
             if (fileStatus.isFile() && filterFileByPattern(fileStatus) && fileStatus.getLen() > 0) {
                 // filter '_SUCCESS' file
-                if (!fileStatus.getPath().getName().equals("_SUCCESS")
+                if (!"_SUCCESS".equals(fileStatus.getPath().getName())
                         && !fileStatus.getPath().getName().startsWith(".")) {
                     String filePath = fileStatus.getPath().toString();
 
@@ -207,6 +247,9 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
     }
 
     private boolean isValidCapture(Map<String, Object> captureMap, FilePathRule.GrokRule grokRule) {
+        if (grokRule == null) {
+            return true;
+        }
         if (grokRule.getPatterns() != null) {
             for (Map.Entry<String, String> entry : grokRule.getPatterns().entrySet()) {
                 String key = entry.getKey();
