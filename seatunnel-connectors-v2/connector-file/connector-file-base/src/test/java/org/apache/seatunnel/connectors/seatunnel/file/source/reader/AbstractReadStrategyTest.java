@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
+import org.apache.seatunnel.connectors.seatunnel.file.writer.ParquetReadStrategyTest;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
@@ -27,7 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.seatunnel.connectors.seatunnel.file.writer.ParquetReadStrategyTest;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -42,17 +44,19 @@ public class AbstractReadStrategyTest {
     @Test
     public void testParquetReadArray() throws Exception {
         AutoGenerateParquetData.generateTestData();
-        try (ParquetReadStrategy parquetReadStrategy = new ParquetReadStrategy();) {
-            ParquetReadStrategyTest.LocalConf localConf = new ParquetReadStrategyTest.LocalConf(FS_DEFAULT_NAME_DEFAULT);
+        try (ParquetReadStrategy parquetReadStrategy = new ParquetReadStrategy(); ) {
+            ParquetReadStrategyTest.LocalConf localConf =
+                    new ParquetReadStrategyTest.LocalConf(FS_DEFAULT_NAME_DEFAULT);
             parquetReadStrategy.init(localConf);
-            List<String> list = parquetReadStrategy.getFileNamesByPath(AutoGenerateParquetData.DATA_FILE_PATH);
+            List<String> list =
+                    parquetReadStrategy.getFileNamesByPath(AutoGenerateParquetData.DATA_FILE_PATH);
             Assertions.assertEquals(1, list.size());
-            Assertions.assertTrue(list.get(0).endsWith(AutoGenerateParquetData.DATA_FILE_PATH_KEEP));
+            Assertions.assertTrue(
+                    list.get(0).endsWith(AutoGenerateParquetData.DATA_FILE_PATH_KEEP));
         } finally {
             AutoGenerateParquetData.deleteFile(AutoGenerateParquetData.DATA_FILE_PATH);
         }
     }
-
 
     public static class AutoGenerateParquetData {
 
@@ -124,6 +128,4 @@ public class AbstractReadStrategyTest {
             }
         }
     }
-
-
 }
