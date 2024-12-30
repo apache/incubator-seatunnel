@@ -61,6 +61,7 @@
 | kerberos_keytab_path             | string  | 否    | -                                          | kerberos 的 keytab 路径                                                                                                                                                                                                                                                                             |
 | compress_codec                   | string  | 否    | none                                       | 压缩编解码器                                                                                                                                                                                                                                                                                           |
 | common-options                   | object  | 否    | -                                          | 接收器插件通用参数，请参阅 [接收器通用选项](../sink-common-options.md) 了解详情                                                                                                                                                                                                                                          |
+| enable_header_write                   | boolean | 否    | false                                      | 仅在 file_format_type 为 text,csv 时使用。<br/> false:不写入表头,true:写入表头。 |
 | max_rows_in_memory               | int     | 否    | -                                          | 仅当 file_format 为 excel 时使用。当文件格式为 Excel 时，可以缓存在内存中的最大数据项数。                                                                                                                                                                                                                                       |
 | sheet_name                       | string  | 否    | Sheet${Random number}                      | 仅当 file_format 为 excel 时使用。将工作簿的表写入指定的表名                                                                                                                                                                                                                                                         |
 
@@ -177,6 +178,9 @@ HdfsFile {
     is_enable_transaction = true
 }
 ```
+### enable_header_write [boolean]
+
+仅在 file_format_type 为 text,csv 时使用。false:不写入表头,true:写入表头。
 
 ### kerberos 的简单配置
 
