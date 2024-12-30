@@ -19,7 +19,7 @@ config directory.
 
 The config file is similar to the below one:
 
-:::warn
+:::caution warn
 
 The old configuration name `source_table_name`/`result_table_name` is deprecated, please migrate to the new name `plugin_input`/`plugin_output` as soon as possible.
 

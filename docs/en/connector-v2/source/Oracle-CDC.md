@@ -252,6 +252,30 @@ exit;
 | schema-changes.enabled                         | Boolean  | No       | false   | Schema evolution is disabled by default. Now we only support `add column`、`drop column`、`rename column` and `modify column`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | debezium                                       | Config   | No       | -       | Pass-through [Debezium's properties](https://github.com/debezium/debezium/blob/v1.9.8.Final/documentation/modules/ROOT/pages/connectors/oracle.adoc#connector-properties) to Debezium Embedded Engine which is used to capture data changes from Oracle server.                                                                                                                                                                                                                                                                                                                                                      |
 | common-options                                 |          | no       | -       | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| decimal_type_narrowing                     | Boolean | No       | true            | Decimal type narrowing, if true, the decimal type will be narrowed to the int or long type if without loss of precision. Only support for Oracle at now. Please refer to `decimal_type_narrowing` below                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+
+
+### decimal_type_narrowing
+
+Decimal type narrowing, if true, the decimal type will be narrowed to the int or long type if without loss of precision. Only support for Oracle at now.
+
+eg:
+
+decimal_type_narrowing = true
+
+| Oracle        | SeaTunnel |
+|---------------|-----------|
+| NUMBER(1, 0)  | Boolean   |
+| NUMBER(6, 0)  | INT       |
+| NUMBER(10, 0) | BIGINT    |
+
+decimal_type_narrowing = false
+
+| Oracle        | SeaTunnel      |
+|---------------|----------------|
+| NUMBER(1, 0)  | Decimal(1, 0)  |
+| NUMBER(6, 0)  | Decimal(6, 0)  |
+| NUMBER(10, 0) | Decimal(10, 0) |
 
 ## Task Example
 

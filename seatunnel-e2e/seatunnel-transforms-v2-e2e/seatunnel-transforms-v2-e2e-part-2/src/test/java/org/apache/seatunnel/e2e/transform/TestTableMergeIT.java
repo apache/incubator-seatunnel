@@ -15,18 +15,22 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.paimon.utils;
+package org.apache.seatunnel.e2e.transform;
 
-import org.apache.seatunnel.api.common.JobContext;
-import org.apache.seatunnel.common.constants.JobMode;
+import org.apache.seatunnel.e2e.common.container.TestContainer;
 
-import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.TestTemplate;
+import org.testcontainers.containers.Container;
 
-/** Job env util */
-@Slf4j
-public class JobContextUtil {
+import java.io.IOException;
 
-    public static boolean isBatchJob(JobContext jobContext) {
-        return jobContext.getJobMode().equals(JobMode.BATCH);
+public class TestTableMergeIT extends TestSuiteBase {
+
+    @TestTemplate
+    public void testMergeMultiTable(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult = container.executeJob("/table_merge_multi_table.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
     }
 }

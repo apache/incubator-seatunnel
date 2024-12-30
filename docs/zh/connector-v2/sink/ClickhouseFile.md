@@ -10,7 +10,7 @@
 
 - [ ] [精准一次](../../concept/connector-v2-features.md)
 
-:::小提示
+:::tip 提示
 
 你也可以采用JDBC的方式将数据写入Clickhouse。
 
@@ -18,7 +18,7 @@
 
 ## 接收器选项
 
-|           名称           |   类型    | 是否必须 |                  默认值                   |
+| 名称                     |   类型    | 是否必须 |                  默认值                   |
 |------------------------|---------|------|----------------------------------------|
 | host                   | string  | yes  | -                                      |
 | database               | string  | yes  | -                                      |
@@ -36,6 +36,7 @@
 | compatible_mode        | boolean | no   | false                                  |
 | file_fields_delimiter  | string  | no   | "\t"                                   |
 | file_temp_path         | string  | no   | "/tmp/seatunnel/clickhouse-local/file" |
+| key_path               | string  | no   | "/tmp/id_rsa"                          |
 | common-options         |         | no   | -                                      |
 
 ### host [string]
@@ -101,6 +102,10 @@ ClickHouseFile使用CSV格式来临时保存数据。但如果数据中包含CSV
 ### file_temp_path [string]
 
 ClickhouseFile本地存储临时文件的目录。
+
+### key_path [string]
+
+用于scp或rsync传输文件的私钥路径。
 
 ### common options
 

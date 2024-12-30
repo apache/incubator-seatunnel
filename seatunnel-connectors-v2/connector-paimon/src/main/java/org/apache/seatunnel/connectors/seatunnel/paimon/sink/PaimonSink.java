@@ -67,13 +67,13 @@ public class PaimonSink
 
     private JobContext jobContext;
 
-    private ReadonlyConfig readonlyConfig;
+    private final ReadonlyConfig readonlyConfig;
 
-    private PaimonSinkConfig paimonSinkConfig;
+    private final PaimonSinkConfig paimonSinkConfig;
 
-    private CatalogTable catalogTable;
+    private final CatalogTable catalogTable;
 
-    private PaimonHadoopConfiguration paimonHadoopConfiguration;
+    private final PaimonHadoopConfiguration paimonHadoopConfiguration;
 
     public PaimonSink(ReadonlyConfig readonlyConfig, CatalogTable catalogTable) {
         this.readonlyConfig = readonlyConfig;
@@ -102,8 +102,7 @@ public class PaimonSink
     @Override
     public Optional<SinkAggregatedCommitter<PaimonCommitInfo, PaimonAggregatedCommitInfo>>
             createAggregatedCommitter() throws IOException {
-        return Optional.of(
-                new PaimonAggregatedCommitter(paimonTable, jobContext, paimonHadoopConfiguration));
+        return Optional.of(new PaimonAggregatedCommitter(paimonTable, paimonHadoopConfiguration));
     }
 
     @Override
