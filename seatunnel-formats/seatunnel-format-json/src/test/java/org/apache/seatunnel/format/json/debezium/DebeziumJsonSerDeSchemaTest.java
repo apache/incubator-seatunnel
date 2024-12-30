@@ -511,7 +511,8 @@ public class DebeziumJsonSerDeSchemaTest {
                 new SeaTunnelRowType(
                         new String[] {
                             "id", "f1", "f5", "f25", "f44", "f45", "f46", "f47", "f48", "f49",
-                            "f50", "f51", "f52", "f53", "f54", "f55", "f56", "f57", "f38"
+                            "f50", "f51", "f52", "f53", "f54", "f55", "f56", "f57", "f38",
+                                    "not_exist_column"
                         },
                         new SeaTunnelDataType[] {
                             INT_TYPE,
@@ -532,6 +533,7 @@ public class DebeziumJsonSerDeSchemaTest {
                             LOCAL_DATE_TIME_TYPE,
                             LOCAL_DATE_TIME_TYPE,
                             LOCAL_DATE_TIME_TYPE,
+                            INT_TYPE,
                             INT_TYPE
                         });
         DebeziumJsonDeserializationSchema deserializationSchema =
@@ -563,6 +565,7 @@ public class DebeziumJsonSerDeSchemaTest {
         Assertions.assertEquals("2024-12-17T18:00:57", row.getField(16).toString());
         Assertions.assertEquals("2024-12-17T18:00:58.786", row.getField(17).toString());
         Assertions.assertNull(row.getField(18));
+        Assertions.assertNull(row.getField(19));
     }
 
     private void testSerializationDeserialization(String resourceFile, boolean schemaInclude)
