@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.transform.replace;
 
+import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -136,5 +138,10 @@ public class ReplaceTransform extends SingleFieldOutputTransform {
                     getPluginName(), config.get(ReplaceTransformConfig.KEY_REPLACE_FIELD));
         }
         return collect.get(0).copy();
+    }
+
+    @VisibleForTesting
+    public void initRowContainerGenerator() {
+        transformTableSchema();
     }
 }

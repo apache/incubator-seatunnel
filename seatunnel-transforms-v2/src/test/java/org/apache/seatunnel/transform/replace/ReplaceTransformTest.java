@@ -25,8 +25,8 @@ import org.apache.seatunnel.api.table.catalog.PrimaryKey;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
-import org.apache.seatunnel.api.table.schema.event.AlterTableDropColumnEvent;
 import org.apache.seatunnel.api.table.type.BasicType;
+import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ public class ReplaceTransformTest {
                             .column(
                                     PhysicalColumn.of(
                                             "f2",
-                                            BasicType.LONG_TYPE,
+                                            BasicType.STRING_TYPE,
                                             null,
                                             null,
                                             true,
@@ -86,12 +86,11 @@ public class ReplaceTransformTest {
                     null);
 
     @Test
-    public void testRepalceTransformSchangeChange() {
-        AlterTableAddColumnEvent addColumnEvent =
-                AlterTableAddColumnEvent.addAfter(
-                        DEFAULT_TABLE.getTableId(),
-                        PhysicalColumn.of("f4", BasicType.LONG_TYPE, null, null, true, null, null),
-                        "f1");
+    public void testReplaceTransformSchemaChange() {
+
+        // before schema change
+        SeaTunnelRow inputRow = new SeaTunnelRow(new Object[] {1L, "old string", 1L});
+        inputRow.setTableId(DEFAULT_TABLE.getTablePath().getFullName());
 
         Map map = new HashMap<>();
         map.put("replace_field", "f2");
@@ -99,17 +98,32 @@ public class ReplaceTransformTest {
         map.put("replacement", "new string");
 
         ReadonlyConfig readonlyConfig = ReadonlyConfig.fromMap(map);
-
         ReplaceTransform replaceTransform = new ReplaceTransform(readonlyConfig, DEFAULT_TABLE);
+
+        replaceTransform.initRowContainerGenerator();
+
+        Assertions.assertEquals(1, replaceTransform.getFieldIndex());
+        SeaTunnelRow outputRow = replaceTransform.transform(inputRow);
+
+        Assertions.assertEquals(
+                "SeaTunnelRow{tableId=Database-x.Schema-x.Table-x, kind=+I, fields=[1, new string, 1]}",
+                outputRow.toString());
+
+        // after schema change
+        AlterTableAddColumnEvent addColumnEvent =
+                AlterTableAddColumnEvent.addAfter(
+                        DEFAULT_TABLE.getTableId(),
+                        PhysicalColumn.of("f4", BasicType.LONG_TYPE, null, null, true, null, null),
+                        "f1");
 
         replaceTransform.mapSchemaChangeEvent(addColumnEvent);
 
-        Assertions.assertEquals(2, replaceTransform.getFieldIndex());
+        SeaTunnelRow inputRowTwo = new SeaTunnelRow(new Object[] {2L, 2L, "old string", 2L});
+        inputRowTwo.setTableId(DEFAULT_TABLE.getTablePath().getFullName());
+        SeaTunnelRow outputRowTwo = replaceTransform.transform(inputRowTwo);
 
-        AlterTableDropColumnEvent dropColumnEvent =
-                new AlterTableDropColumnEvent(DEFAULT_TABLE.getTableId(), "f4");
-        replaceTransform.mapSchemaChangeEvent(dropColumnEvent);
-
-        Assertions.assertEquals(1, replaceTransform.getFieldIndex());
+        Assertions.assertEquals(
+                "SeaTunnelRow{tableId=Database-x.Schema-x.Table-x, kind=+I, fields=[2, 2, new string, 2]}",
+                outputRowTwo.toString());
     }
 }
