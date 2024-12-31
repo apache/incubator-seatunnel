@@ -45,7 +45,7 @@ public class AbstractReadStrategyTest {
 
     @DisabledOnOs(OS.WINDOWS)
     @Test
-    public void testParquetReadArray() throws Exception {
+    public void testReadDirectorySkipHiddenDirectories() throws Exception {
         AutoGenerateParquetData.generateTestData();
         try (ParquetReadStrategy parquetReadStrategy = new ParquetReadStrategy(); ) {
             ParquetReadStrategyTest.LocalConf localConf =
