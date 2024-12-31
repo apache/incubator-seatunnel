@@ -70,7 +70,9 @@ public class ElasticsearchSinkWriter
         this.context = context;
         this.maxBatchSize = maxBatchSize;
 
-        IndexInfo indexInfo = new IndexInfo(catalogTable.getTableId().getTableName(), config);
+        // Convert index name to lowercase to comply with Elasticsearch requirements
+        String lowerCaseTableName = catalogTable.getTableId().getTableName().toLowerCase();
+        IndexInfo indexInfo = new IndexInfo(lowerCaseTableName, config);
         esRestClient = EsRestClient.createInstance(config);
         this.seaTunnelRowSerializer =
                 new ElasticsearchRowSerializer(

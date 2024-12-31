@@ -388,7 +388,9 @@ public class EsRestClient implements Closeable {
      * @return true or false
      */
     public boolean checkIndexExist(String index) {
-        Request request = new Request("HEAD", "/" + index);
+        // Convert index name to lowercase to comply with Elasticsearch requirements
+        String lowerCaseIndexName = index.toLowerCase();
+        Request request = new Request("HEAD", "/" + lowerCaseIndexName);
         try {
             Response response = restClient.performRequest(request);
             int statusCode = response.getStatusLine().getStatusCode();
@@ -400,7 +402,9 @@ public class EsRestClient implements Closeable {
     }
 
     public List<IndexDocsCount> getIndexDocsCount(String index) {
-        String endpoint = String.format("/_cat/indices/%s?h=index,docsCount&format=json", index);
+        // Convert index name to lowercase to comply with Elasticsearch requirements
+        String lowerCaseIndexName = index.toLowerCase();
+        String endpoint = String.format("/_cat/indices/%s?h=index,docsCount&format=json", lowerCaseIndexName);
         Request request = new Request("GET", endpoint);
         try {
             Response response = restClient.performRequest(request);
@@ -458,7 +462,9 @@ public class EsRestClient implements Closeable {
     }
 
     public void createIndex(String indexName, String mapping) {
-        String endpoint = String.format("/%s", indexName);
+        // Convert index name to lowercase to comply with Elasticsearch requirements
+        String lowerCaseIndexName = indexName.toLowerCase();
+        String endpoint = String.format("/%s", lowerCaseIndexName);
         Request request = new Request("PUT", endpoint);
         if (StringUtils.isNotEmpty(mapping)) {
             request.setJsonEntity(mapping);
@@ -484,7 +490,9 @@ public class EsRestClient implements Closeable {
     }
 
     public void dropIndex(String tableName) {
-        String endpoint = String.format("/%s", tableName);
+        // Convert index name to lowercase to comply with Elasticsearch requirements
+        String lowerCaseTableName = tableName.toLowerCase();
+        String endpoint = String.format("/%s", lowerCaseTableName);
         Request request = new Request("DELETE", endpoint);
         try {
             Response response = restClient.performRequest(request);
@@ -510,7 +518,9 @@ public class EsRestClient implements Closeable {
     }
 
     public void clearIndexData(String indexName) {
-        String endpoint = String.format("/%s/_delete_by_query", indexName);
+        // Convert index name to lowercase to comply with Elasticsearch requirements
+        String lowerCaseIndexName = indexName.toLowerCase();
+        String endpoint = String.format("/%s/_delete_by_query", lowerCaseIndexName);
         Request request = new Request("POST", endpoint);
         String jsonString = "{ \"query\": { \"match_all\": {} } }";
         request.setJsonEntity(jsonString);

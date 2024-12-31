@@ -90,7 +90,9 @@ public class ElasticsearchSink
         SchemaSaveMode schemaSaveMode = config.get(SinkConfig.SCHEMA_SAVE_MODE);
         DataSaveMode dataSaveMode = config.get(SinkConfig.DATA_SAVE_MODE);
 
-        TablePath tablePath = TablePath.of("", catalogTable.getTableId().getTableName());
+        // Convert the table name to lowercase to ensure the index name is valid
+        String lowerCaseTableName = catalogTable.getTableId().getTableName().toLowerCase();
+        TablePath tablePath = TablePath.of("", lowerCaseTableName);
         return Optional.of(
                 new DefaultSaveModeHandler(
                         schemaSaveMode, dataSaveMode, catalog, tablePath, null, null));
