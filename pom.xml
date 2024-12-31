@@ -196,6 +196,11 @@
                 <artifactId>disruptor</artifactId>
                 <version>${log4j2-disruptor.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy-java.version}</version>
+            </dependency>
             <!-- Include the logging bridges -->
             <!-- commons-logging bridge to slf4j -->
             <dependency>
