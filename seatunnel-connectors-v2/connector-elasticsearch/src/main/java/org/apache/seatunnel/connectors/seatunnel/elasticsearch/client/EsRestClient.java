@@ -404,7 +404,8 @@ public class EsRestClient implements Closeable {
     public List<IndexDocsCount> getIndexDocsCount(String index) {
         // Convert index name to lowercase to comply with Elasticsearch requirements
         String lowerCaseIndexName = index.toLowerCase();
-        String endpoint = String.format("/_cat/indices/%s?h=index,docsCount&format=json", lowerCaseIndexName);
+        String endpoint =
+                String.format("/_cat/indices/%s?h=index,docsCount&format=json", lowerCaseIndexName);
         Request request = new Request("GET", endpoint);
         try {
             Response response = restClient.performRequest(request);
