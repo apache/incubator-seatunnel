@@ -24,6 +24,16 @@
 用于发送数据到doris. 同时支持流模式和批模式处理.
 Doris Sink连接器的内部实现是通过stream load批量缓存和导入的。
 
+## 依赖
+
+### 对于 Spark/Flink
+
+> 1. 你需要下载 [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) 并添加到目录 `${SEATUNNEL_HOME}/plugins/`.
+
+### 对于 SeaTunnel Zeta
+
+> 1. 你需要下载 [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) 并添加到目录 `${SEATUNNEL_HOME}/lib/`.
+
 ## Sink 选项
 
 |              Name              |  Type   | Required |           Default            |                                                                      Description                                                                       |
