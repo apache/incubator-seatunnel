@@ -78,7 +78,6 @@ RUN cd /opt && \
     tar -zxvf apache-seatunnel-${VERSION}-bin.tar.gz && \
     mv apache-seatunnel-${VERSION} seatunnel && \
     rm apache-seatunnel-${VERSION}-bin.tar.gz && \
-    cp seatunnel/config/log4j2_client.properties seatunnel/config/log4j2.properties && \
     cp seatunnel/config/hazelcast-master.yaml seatunnel/config/hazelcast-worker.yaml
 
 WORKDIR /opt/seatunnel
@@ -280,7 +279,9 @@ networks:
 运行 `docker-compose up`命令来启动集群，该配置会启动一个master节点，2个worker节点
 
 
-启动完成后，可以运行`docker logs -f seatunne_master`, `docker logs -f seatunnel_worker_1`来查看节点的日志  
+启动完成后，可以运行
+- `docker exec -it seatunne_master cat logs/seatunnel-engine-master.log`来查看master节点的日志
+- `docker exec -it seatunnel_worker_1 cat logs/seatunnel-engine-master.log`来查看worker节点的日志  
 当你访问`http://localhost:5801/hazelcast/rest/maps/system-monitoring-information` 时，可以看到集群的状态为1个master节点，2个worker节点.
 
 #### 集群扩容
