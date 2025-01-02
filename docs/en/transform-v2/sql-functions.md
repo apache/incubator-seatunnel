@@ -994,7 +994,7 @@ select UUID() as seatunnel_uuid
 
 ### ARRAY
 
-ARRAY<T> array(T, ...)
+```ARRAY<T> array(T, ...)```
 Create an array consisting of variadic elements and return it. Here, T can be either “column” or “literal”.
 
 Example:

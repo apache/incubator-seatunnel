@@ -987,7 +987,7 @@ select UUID() as seatunnel_uuid
 
 ### ARRAY
 
-ARRAY<T> array(T, ...)
+```ARRAY<T> array(T, ...)```
 创建一个由可变参数元素组成的数组并返回它。这里，T 可以是“列”或“常量”。。
 
 示例:
