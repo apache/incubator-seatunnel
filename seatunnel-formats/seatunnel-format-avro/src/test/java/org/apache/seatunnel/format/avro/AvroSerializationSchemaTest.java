@@ -177,4 +177,59 @@ class AvroSerializationSchemaTest {
         LocalDateTime localDateTime1 = (LocalDateTime) subRow.getField(13);
         Assertions.assertEquals(localDateTime1.compareTo(localDateTime), 0);
     }
+
+    private SeaTunnelRow buildSeaTunnelRowValueNull() {
+        SeaTunnelRow subSeaTunnelRow = new SeaTunnelRow(14);
+        subSeaTunnelRow.setField(0, null);
+        subSeaTunnelRow.setField(1, null);
+        subSeaTunnelRow.setField(2, null);
+        subSeaTunnelRow.setField(3, null);
+        subSeaTunnelRow.setField(4, null);
+        subSeaTunnelRow.setField(5, null);
+        subSeaTunnelRow.setField(6, null);
+        subSeaTunnelRow.setField(7, null);
+        subSeaTunnelRow.setField(8, null);
+        subSeaTunnelRow.setField(9, null);
+        subSeaTunnelRow.setField(10, null);
+        subSeaTunnelRow.setField(11, null);
+        subSeaTunnelRow.setField(12, null);
+        subSeaTunnelRow.setField(13, null);
+
+        SeaTunnelRow seaTunnelRow = new SeaTunnelRow(15);
+        seaTunnelRow.setField(0, null);
+        seaTunnelRow.setField(1, null);
+        seaTunnelRow.setField(2, null);
+        seaTunnelRow.setField(3, null);
+        seaTunnelRow.setField(4, null);
+        seaTunnelRow.setField(5, null);
+        seaTunnelRow.setField(6, null);
+        seaTunnelRow.setField(7, null);
+        seaTunnelRow.setField(8, null);
+        seaTunnelRow.setField(9, null);
+        seaTunnelRow.setField(10, null);
+        seaTunnelRow.setField(11, null);
+        seaTunnelRow.setField(12, null);
+        seaTunnelRow.setField(13, null);
+        seaTunnelRow.setField(14, subSeaTunnelRow);
+        return seaTunnelRow;
+    }
+
+    @Test
+    public void testSerializationValueNull() throws IOException {
+        SeaTunnelRowType rowType = buildSeaTunnelRowType();
+        CatalogTable catalogTable = CatalogTableUtil.getCatalogTable("", "", "", "test", rowType);
+        SeaTunnelRow seaTunnelRow = buildSeaTunnelRowValueNull();
+        AvroSerializationSchema serializationSchema = new AvroSerializationSchema(rowType);
+        byte[] bytes = serializationSchema.serialize(seaTunnelRow);
+        AvroDeserializationSchema deserializationSchema =
+                new AvroDeserializationSchema(catalogTable);
+        SeaTunnelRow deserialize = deserializationSchema.deserialize(bytes);
+        String[] strArray1 = (String[]) seaTunnelRow.getField(1);
+        String[] strArray2 = (String[]) deserialize.getField(1);
+        Assertions.assertArrayEquals(strArray1, strArray2);
+        SeaTunnelRow subRow = (SeaTunnelRow) deserialize.getField(14);
+        Assertions.assertEquals(subRow.getField(9), null);
+        Assertions.assertEquals(subRow.getField(12), null);
+        Assertions.assertEquals(subRow.getField(13), null);
+    }
 }
