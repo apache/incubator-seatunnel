@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.transform.nlpmodel.embadding.remote.openai;
+package org.apache.seatunnel.transform.nlpmodel.embedding.remote.doubao;
 
-import org.apache.seatunnel.shade.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
 
-import org.apache.seatunnel.transform.nlpmodel.embadding.remote.AbstractModel;
+import org.apache.seatunnel.transform.nlpmodel.embedding.remote.AbstractModel;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -35,16 +35,17 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class OpenAIModel extends AbstractModel {
+public class DoubaoModel extends AbstractModel {
 
     private final CloseableHttpClient client;
     private final String apiKey;
     private final String model;
     private final String apiPath;
 
-    public OpenAIModel(String apiKey, String model, String apiPath, Integer vectorizedNumber) {
+    public DoubaoModel(String apiKey, String model, String apiPath, Integer vectorizedNumber) {
         super(vectorizedNumber);
         this.apiKey = apiKey;
         this.model = model;
@@ -54,9 +55,6 @@ public class OpenAIModel extends AbstractModel {
 
     @Override
     protected List<List<Float>> vector(Object[] fields) throws IOException {
-        if (fields.length > 1) {
-            throw new IllegalArgumentException("OpenAI model only supports single input");
-        }
         return vectorGeneration(fields);
     }
 
@@ -80,7 +78,7 @@ public class OpenAIModel extends AbstractModel {
         String responseStr = EntityUtils.toString(response.getEntity());
 
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Failed to get vector from openai, response: " + responseStr);
+            throw new IOException("Failed to get vector from doubao, response: " + responseStr);
         }
 
         JsonNode data = OBJECT_MAPPER.readTree(responseStr).get("data");
@@ -99,11 +97,9 @@ public class OpenAIModel extends AbstractModel {
     }
 
     @VisibleForTesting
-    public ObjectNode createJsonNodeFromData(Object[] data) throws JsonProcessingException {
-        ObjectNode objectNode = OBJECT_MAPPER.createObjectNode();
-        objectNode.put("model", model);
-        objectNode.put("input", data[0].toString());
-        return objectNode;
+    public ObjectNode createJsonNodeFromData(Object[] fields) {
+        ArrayNode arrayNode = OBJECT_MAPPER.valueToTree(Arrays.asList(fields));
+        return OBJECT_MAPPER.createObjectNode().put("model", model).set("input", arrayNode);
     }
 
     @Override

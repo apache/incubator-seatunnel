@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.transform.nlpmodel.embadding;
+package org.apache.seatunnel.transform.nlpmodel.embedding;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
@@ -28,11 +28,11 @@ import org.apache.seatunnel.transform.common.MultipleFieldOutputTransform;
 import org.apache.seatunnel.transform.exception.TransformCommonError;
 import org.apache.seatunnel.transform.nlpmodel.ModelProvider;
 import org.apache.seatunnel.transform.nlpmodel.ModelTransformConfig;
-import org.apache.seatunnel.transform.nlpmodel.embadding.remote.Model;
-import org.apache.seatunnel.transform.nlpmodel.embadding.remote.custom.CustomModel;
-import org.apache.seatunnel.transform.nlpmodel.embadding.remote.doubao.DoubaoModel;
-import org.apache.seatunnel.transform.nlpmodel.embadding.remote.openai.OpenAIModel;
-import org.apache.seatunnel.transform.nlpmodel.embadding.remote.qianfan.QianfanModel;
+import org.apache.seatunnel.transform.nlpmodel.embedding.remote.Model;
+import org.apache.seatunnel.transform.nlpmodel.embedding.remote.custom.CustomModel;
+import org.apache.seatunnel.transform.nlpmodel.embedding.remote.doubao.DoubaoModel;
+import org.apache.seatunnel.transform.nlpmodel.embedding.remote.openai.OpenAIModel;
+import org.apache.seatunnel.transform.nlpmodel.embedding.remote.qianfan.QianfanModel;
 import org.apache.seatunnel.transform.nlpmodel.llm.LLMTransformConfig;
 
 import lombok.NonNull;
