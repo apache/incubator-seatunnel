@@ -15,19 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.jdbc.utils;
+package org.apache.seatunnel.connectors.seatunnel.file.config;
 
-import java.util.Objects;
+import java.io.Serializable;
 
-public class MysqlDefaultValueUtils {
-    public static boolean isSpecialDefaultValue(Object defaultValue) {
-        if (Objects.isNull(defaultValue)) {
-            return false;
-        }
-        String defaultValueStr = defaultValue.toString();
-        return defaultValueStr.matches(
-                        "(?i)^(CURRENT_TIMESTAMP|CURRENT_TIME|CURRENT_DATE)\\(?\\d*\\)?$")
-                || defaultValueStr.equalsIgnoreCase("TRUE")
-                || defaultValueStr.equalsIgnoreCase("FALSE");
+public enum ExcelEngine implements Serializable {
+    POI("POI"),
+    EASY_EXCEL("EasyExcel");
+
+    private final String excelEngineName;
+
+    ExcelEngine(String excelEngineName) {
+        this.excelEngineName = excelEngineName;
+    }
+
+    public String getExcelEngineName() {
+        return excelEngineName;
     }
 }

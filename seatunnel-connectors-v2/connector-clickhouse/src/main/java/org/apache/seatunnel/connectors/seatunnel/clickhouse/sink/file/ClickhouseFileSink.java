@@ -62,6 +62,7 @@ import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.Clickh
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.FILE_FIELDS_DELIMITER;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.FILE_TEMP_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.HOST;
+import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.KEY_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_ADDRESS;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_FREE_PASSWORD;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_PASS;
@@ -108,6 +109,7 @@ public class ClickhouseFileSink
                         .put(COMPATIBLE_MODE.key(), COMPATIBLE_MODE.defaultValue())
                         .put(FILE_TEMP_PATH.key(), FILE_TEMP_PATH.defaultValue())
                         .put(FILE_FIELDS_DELIMITER.key(), FILE_FIELDS_DELIMITER.defaultValue())
+                        .put(KEY_PATH.key(), KEY_PATH.defaultValue())
                         .build();
 
         config = config.withFallback(ConfigFactory.parseMap(defaultConfigs));
@@ -184,7 +186,8 @@ public class ClickhouseFileSink
                         nodePassword,
                         config.getBoolean(COMPATIBLE_MODE.key()),
                         config.getString(FILE_TEMP_PATH.key()),
-                        config.getString(FILE_FIELDS_DELIMITER.key()));
+                        config.getString(FILE_FIELDS_DELIMITER.key()),
+                        config.getString(KEY_PATH.key()));
     }
 
     @Override

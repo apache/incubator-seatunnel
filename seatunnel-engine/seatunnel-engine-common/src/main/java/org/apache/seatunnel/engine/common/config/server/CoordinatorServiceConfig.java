@@ -15,18 +15,28 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.paimon.utils;
+package org.apache.seatunnel.engine.common.config.server;
 
-import org.apache.seatunnel.api.common.JobContext;
-import org.apache.seatunnel.common.constants.JobMode;
+import lombok.Data;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.Serializable;
 
-/** Job env util */
-@Slf4j
-public class JobContextUtil {
+import static com.hazelcast.internal.util.Preconditions.checkPositive;
 
-    public static boolean isBatchJob(JobContext jobContext) {
-        return jobContext.getJobMode().equals(JobMode.BATCH);
+@Data
+public class CoordinatorServiceConfig implements Serializable {
+
+    private int coreThreadNum = ServerConfigOptions.CORE_THREAD_NUM.defaultValue();
+
+    private int maxThreadNum = ServerConfigOptions.MAX_THREAD_NUM.defaultValue();
+
+    public void setCoreThreadNum(int coreThreadNum) {
+        checkPositive(coreThreadNum, ServerConfigOptions.CORE_THREAD_NUM + " must be >= 0");
+        this.coreThreadNum = coreThreadNum;
+    }
+
+    public void setMaxThreadNum(int maxThreadNum) {
+        checkPositive(maxThreadNum, ServerConfigOptions.MAX_THREAD_NUM + " must be > 0");
+        this.maxThreadNum = maxThreadNum;
     }
 }

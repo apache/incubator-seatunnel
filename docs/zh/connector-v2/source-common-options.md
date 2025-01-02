@@ -6,7 +6,7 @@ sidebar_position: 3
 
 > Source connector 的常用参数
 
-:::warn
+:::caution 警告
 
 旧的配置名称 `result_table_name` 已经过时，请尽快迁移到新名称 `plugin_output`。
 

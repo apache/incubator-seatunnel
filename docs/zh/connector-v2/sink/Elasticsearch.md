@@ -46,7 +46,7 @@
 
 ### index [string]
 
-`Elasticsearch` 的 `index` 名称。索引支持包含字段名变量，例如 `seatunnel_${age}`，并且该字段必须出现在 seatunnel Row 中。如果没有，我们将把它视为普通索引
+`Elasticsearch` 的 `index` 名称。索引支持包含字段名变量，例如 `seatunnel_${age}`(需要配置schema_save_mode="IGNORE")，并且该字段必须出现在 seatunnel Row 中。如果没有，我们将把它视为普通索引
 
 ### index_type [string]
 
@@ -125,25 +125,52 @@ Sink插件常用参数，请参考 [Sink常用选项](../sink-common-options.md)
 
 简单示例
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
         index = "seatunnel-${age}"
+        schema_save_mode="IGNORE"
+    }
+}
+```
+
+多表写入
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
     }
 }
 ```
 
 变更数据捕获 (Change data capture) 事件
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
         index = "seatunnel-${age}"
-        
+        schema_save_mode="IGNORE"
         # CDC required options
         primary_keys = ["key1", "key2", ...]
+    }
+}
+```
+
+```
+变更数据捕获 (Change data capture) 事件多表写入
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
+        primary_keys = ["${primary_key}"]
     }
 }
 ```

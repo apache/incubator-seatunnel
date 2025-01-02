@@ -46,7 +46,7 @@ Engine Supported
 
 ### index [string]
 
-`Elasticsearch`  `index` name.Index support contains variables of field name,such as `seatunnel_${age}`,and the field must appear at seatunnel row.
+`Elasticsearch`  `index` name.Index support contains variables of field name,such as `seatunnel_${age}`(Need to configure schema_save_mode="IGNORE"),and the field must appear at seatunnel row.
 If not, we will treat it as a normal index.
 
 ### index_type [string]
@@ -126,25 +126,51 @@ Option introduction：
 
 Simple
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
         index = "seatunnel-${age}"
+        schema_save_mode="IGNORE"
+    }
+}
+
+```
+Multi-table writing
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
     }
 }
 ```
 
 CDC(Change data capture) event
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
         index = "seatunnel-${age}"
-        
+        schema_save_mode="IGNORE"
         # cdc required options
         primary_keys = ["key1", "key2", ...]
+    }
+}
+
+```
+CDC(Change data capture) event Multi-table writing
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
+        primary_keys = ["${primary_key}"]
     }
 }
 ```
