@@ -93,7 +93,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
                     + "  multipolygon geometry(MULTIPOLYGON, 4326),\n"
                     + "  geometrycollection geometry(GEOMETRYCOLLECTION, 4326),\n"
                     + "  geog geography(POINT, 4326),\n"
-                    + "  inet_col INET\n"
+                    + "  inet_col INET,\n"
+                    + "  char_one_col CHAR(1)\n"
                     + ")";
     private static final String PG_SINK_DDL =
             "CREATE TABLE IF NOT EXISTS test.public.\"PG_IDE_SINK_TABLE\" (\n"
@@ -125,7 +126,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
                     + "    \"MULTIPOLYGON\" varchar(2000) NULL,\n"
                     + "    \"GEOMETRYCOLLECTION\" varchar(2000) NULL,\n"
                     + "    \"GEOG\" varchar(2000) NULL,\n"
-                    + "    \"INET_COL\" INET NULL\n"
+                    + "    \"INET_COL\" INET NULL,\n"
+                    + "    \"CHAR_ONE_COL\" CHAR(1) NULL\n"
                     + "  )";
 
     private static final String SOURCE_SQL =
@@ -158,7 +160,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
                     + "multipolygon,\n"
                     + "geometrycollection,\n"
                     + "geog,\n"
-                    + "inet_col\n"
+                    + "inet_col,\n"
+                    + "char_one_col\n"
                     + " from pg_ide_source_table";
     private static final String SINK_SQL =
             "SELECT\n"
@@ -190,7 +193,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
                     + "  CAST(\"MULTIPOLYGON\" AS GEOMETRY) AS MULTILINESTRING,\n"
                     + "  CAST(\"GEOMETRYCOLLECTION\" AS GEOMETRY) AS GEOMETRYCOLLECTION,\n"
                     + "  CAST(\"GEOG\" AS GEOGRAPHY) AS GEOG,\n"
-                    + "  \"INET_COL\"\n"
+                    + "  \"INET_COL\",\n"
+                    + "  \"CHAR_ONE_COL\"\n"
                     + "FROM\n"
                     + "  \"PG_IDE_SINK_TABLE\";";
 
@@ -215,8 +219,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
     public void startUp() throws Exception {
         POSTGRESQL_CONTAINER =
                 new PostgreSQLContainer<>(
-                                DockerImageName.parse(PG_IMAGE)
-                                        .asCompatibleSubstituteFor("postgres"))
+                        DockerImageName.parse(PG_IMAGE)
+                                .asCompatibleSubstituteFor("postgres"))
                         .withNetwork(TestSuiteBase.NETWORK)
                         .withNetworkAliases("postgresql")
                         .withCommand("postgres -c max_prepared_transactions=100")
@@ -282,7 +286,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
                                 + "    multipolygon,\n"
                                 + "    geometrycollection,\n"
                                 + "    geog,\n"
-                                + "    inet_col\n"
+                                + "    inet_col,\n"
+                                + "    char_one_col\n"
                                 + "  )\n"
                                 + "VALUES\n"
                                 + "  (\n"
@@ -335,6 +340,7 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
                                 + "    ),\n"
                                 + "    ST_GeographyFromText('POINT(-122.3452 47.5925)'),\n"
                                 + "    '192.168.1.1'\n"
+                                + "    'T'\n"
                                 + "  )");
             }
 
@@ -353,8 +359,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
 
     private List<List<Object>> querySql(String sql) {
         try (Connection connection = getJdbcConnection();
-                Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(sql)) {
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
             List<List<Object>> result = new ArrayList<>();
             int columnCount = resultSet.getMetaData().getColumnCount();
             while (resultSet.next()) {
