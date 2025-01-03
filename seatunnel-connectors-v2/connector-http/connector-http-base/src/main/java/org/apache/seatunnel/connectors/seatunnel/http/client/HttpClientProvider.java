@@ -309,7 +309,7 @@ public class HttpClientProvider implements AutoCloseable {
         // set request header
         addHeaders(httpPost, headers);
         // set request params
-        addParameters(httpPost, params);
+        addParameters(params);
         // add body in request
         addBody(httpPost, body);
         // return http response
@@ -420,6 +420,20 @@ public class HttpClientProvider implements AutoCloseable {
         }
         // Set to the request's http object
         request.setEntity(new UrlEncodedFormEntity(parameters, ENCODING));
+    }
+
+    private void addParameters(Map<String, String> params) {
+        if (Objects.isNull(params) || params.isEmpty()) {
+            return;
+        }
+        List<NameValuePair> parameters = new ArrayList<>();
+        Set<Map.Entry<String, String>> entrySet = params.entrySet();
+        for (Map.Entry<String, String> e : entrySet) {
+            String name = e.getKey();
+            String value = e.getValue();
+            NameValuePair pair = new BasicNameValuePair(name, value);
+            parameters.add(pair);
+        }
     }
 
     private void addHeaders(HttpRequestBase request, Map<String, String> headers) {
