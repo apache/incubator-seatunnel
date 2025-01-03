@@ -219,8 +219,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
     public void startUp() throws Exception {
         POSTGRESQL_CONTAINER =
                 new PostgreSQLContainer<>(
-                        DockerImageName.parse(PG_IMAGE)
-                                .asCompatibleSubstituteFor("postgres"))
+                                DockerImageName.parse(PG_IMAGE)
+                                        .asCompatibleSubstituteFor("postgres"))
                         .withNetwork(TestSuiteBase.NETWORK)
                         .withNetworkAliases("postgresql")
                         .withCommand("postgres -c max_prepared_transactions=100")
@@ -359,8 +359,8 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
 
     private List<List<Object>> querySql(String sql) {
         try (Connection connection = getJdbcConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql)) {
             List<List<Object>> result = new ArrayList<>();
             int columnCount = resultSet.getMetaData().getColumnCount();
             while (resultSet.next()) {
