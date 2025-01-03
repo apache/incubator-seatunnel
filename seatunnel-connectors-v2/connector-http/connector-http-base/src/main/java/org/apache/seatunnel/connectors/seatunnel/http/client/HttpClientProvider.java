@@ -429,9 +429,10 @@ public class HttpClientProvider implements AutoCloseable {
             return;
         }
         // body useless
-        if (request.getEntity() != null
-                && request.getEntity().getContentType() != null
-                && APPLICATION_FORM_URLENCODED.equals(request.getEntity().getContentType())) {
+        if (request.getHeaders(HTTP.CONTENT_TYPE) != null
+                && request.getHeaders(HTTP.CONTENT_TYPE).length > 0
+                && APPLICATION_FORM_URLENCODED.equals(
+                        request.getHeaders(HTTP.CONTENT_TYPE)[0].getValue())) {
             List<NameValuePair> parameters = new ArrayList<>();
             Set<Map.Entry<String, String>> entrySet = params.entrySet();
             for (Map.Entry<String, String> e : entrySet) {
