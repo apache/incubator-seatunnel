@@ -67,6 +67,7 @@ import java.util.concurrent.TimeUnit;
 public class HttpClientProvider implements AutoCloseable {
     private static final String ENCODING = "UTF-8";
     private static final String APPLICATION_JSON = "application/json";
+    private static final String APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private static final int INITIAL_CAPACITY = 16;
     private RequestConfig requestConfig;
     private final CloseableHttpClient httpClient;
@@ -309,9 +310,7 @@ public class HttpClientProvider implements AutoCloseable {
         // set request header
         addHeaders(httpPost, headers);
         // set request params
-        addParameters(params);
-        // add body in request
-        addBody(httpPost, body);
+        addParameters(httpPost, params, body);
         // return http response
         return getResponse(httpPost);
     }
@@ -422,18 +421,40 @@ public class HttpClientProvider implements AutoCloseable {
         request.setEntity(new UrlEncodedFormEntity(parameters, ENCODING));
     }
 
-    private void addParameters(Map<String, String> params) {
+    private void addParameters(
+            HttpEntityEnclosingRequestBase request, Map<String, String> params, String body)
+            throws UnsupportedEncodingException {
         if (Objects.isNull(params) || params.isEmpty()) {
+            addBody(request, body);
             return;
         }
-        List<NameValuePair> parameters = new ArrayList<>();
-        Set<Map.Entry<String, String>> entrySet = params.entrySet();
-        for (Map.Entry<String, String> e : entrySet) {
-            String name = e.getKey();
-            String value = e.getValue();
-            NameValuePair pair = new BasicNameValuePair(name, value);
-            parameters.add(pair);
+        // body useless
+        if (request.getEntity() != null
+                && request.getEntity().getContentType() != null
+                && APPLICATION_FORM_URLENCODED.equals(request.getEntity().getContentType())) {
+            List<NameValuePair> parameters = new ArrayList<>();
+            Set<Map.Entry<String, String>> entrySet = params.entrySet();
+            for (Map.Entry<String, String> e : entrySet) {
+                String name = e.getKey();
+                String value = e.getValue();
+                NameValuePair pair = new BasicNameValuePair(name, value);
+                parameters.add(pair);
+            }
+            request.setEntity(new UrlEncodedFormEntity(parameters, ENCODING));
+        } else {
+            String newBody = replaceParams(body, params);
+            addBody(request, newBody);
         }
+    }
+
+    private String replaceParams(String template, Map<String, String> params) {
+        String result = template;
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            result = result.replace("${" + key + "}", value);
+        }
+        return result;
     }
 
     private void addHeaders(HttpRequestBase request, Map<String, String> headers) {
