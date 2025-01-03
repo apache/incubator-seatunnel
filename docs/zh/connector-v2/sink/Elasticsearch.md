@@ -125,7 +125,7 @@ Sink插件常用参数，请参考 [Sink常用选项](../sink-common-options.md)
 
 简单示例
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
@@ -135,9 +135,21 @@ sink {
 }
 ```
 
+多表写入
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
+    }
+}
+```
+
 变更数据捕获 (Change data capture) 事件
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
@@ -145,6 +157,20 @@ sink {
         schema_save_mode="IGNORE"
         # CDC required options
         primary_keys = ["key1", "key2", ...]
+    }
+}
+```
+
+```
+变更数据捕获 (Change data capture) 事件多表写入
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
+        primary_keys = ["${primary_key}"]
     }
 }
 ```

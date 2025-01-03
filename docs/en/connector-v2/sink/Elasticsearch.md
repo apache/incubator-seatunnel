@@ -126,7 +126,7 @@ Option introduction：
 
 Simple
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
@@ -134,11 +134,23 @@ sink {
         schema_save_mode="IGNORE"
     }
 }
+
+```
+Multi-table writing
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
+    }
+}
 ```
 
 CDC(Change data capture) event
 
-```bash
+```conf
 sink {
     Elasticsearch {
         hosts = ["localhost:9200"]
@@ -146,6 +158,19 @@ sink {
         schema_save_mode="IGNORE"
         # cdc required options
         primary_keys = ["key1", "key2", ...]
+    }
+}
+
+```
+CDC(Change data capture) event Multi-table writing
+
+```conf
+sink {
+    Elasticsearch {
+        hosts = ["localhost:9200"]
+        index = "${table_name}"
+        schema_save_mode="IGNORE"
+        primary_keys = ["${primary_key}"]
     }
 }
 ```

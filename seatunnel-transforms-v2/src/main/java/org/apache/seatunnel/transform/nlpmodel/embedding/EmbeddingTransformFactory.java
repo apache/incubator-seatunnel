@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.transform.nlpmodel.embadding;
+package org.apache.seatunnel.transform.nlpmodel.embedding;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 
