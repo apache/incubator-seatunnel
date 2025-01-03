@@ -67,7 +67,7 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
     private final String inputTableName;
 
     public SQLTransform(@NonNull ReadonlyConfig config, @NonNull CatalogTable catalogTable) {
-        super(catalogTable);
+        super(config, catalogTable);
         this.query = config.get(KEY_QUERY);
         if (config.getOptional(KEY_ENGINE).isPresent()) {
             this.engineType = EngineType.valueOf(config.get(KEY_ENGINE).toUpperCase());
@@ -111,21 +111,20 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
     }
 
     @Override
-    protected TableSchema transformTableSchema() {
+    protected TableSchema convertTableSchema(TableSchema tableSchema) {
         tryOpen();
         List<String> inputColumnsMapping = new ArrayList<>();
         outRowType = sqlEngine.typeMapping(inputColumnsMapping);
         List<String> outputColumns = Arrays.asList(outRowType.getFieldNames());
 
         TableSchema.Builder builder = TableSchema.builder();
-        if (inputCatalogTable.getTableSchema().getPrimaryKey() != null
-                && outputColumns.containsAll(
-                        inputCatalogTable.getTableSchema().getPrimaryKey().getColumnNames())) {
+        if (tableSchema.getPrimaryKey() != null
+                && outputColumns.containsAll(tableSchema.getPrimaryKey().getColumnNames())) {
             builder.primaryKey(inputCatalogTable.getTableSchema().getPrimaryKey().copy());
         }
 
         List<ConstraintKey> outputConstraintKeys =
-                inputCatalogTable.getTableSchema().getConstraintKeys().stream()
+                tableSchema.getConstraintKeys().stream()
                         .filter(
                                 key -> {
                                     List<String> constraintColumnNames =
@@ -148,7 +147,7 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
             Column simpleColumn = null;
             String inputColumnName = inputColumnsMapping.get(i);
             if (inputColumnName != null) {
-                for (Column inputColumn : inputCatalogTable.getTableSchema().getColumns()) {
+                for (Column inputColumn : tableSchema.getColumns()) {
                     if (inputColumnName.equals(inputColumn.getName())) {
                         simpleColumn = inputColumn;
                         break;
