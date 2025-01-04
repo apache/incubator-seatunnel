@@ -1,14 +1,16 @@
 package org.apache.seatunnel.connectors.seatunnel.file.split;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.source.SourceEvent;
 import org.apache.seatunnel.api.source.SourceSplitEnumerator;
 import org.apache.seatunnel.connectors.seatunnel.file.source.split.FileSourceSplit;
 import org.apache.seatunnel.connectors.seatunnel.file.source.split.FileSourceSplitEnumerator;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,18 +75,20 @@ public class FileSourceSplitEnumeratorTest {
         fileSourceSplitEnumerator.run();
 
         // check all files are assigned
-        Assertions.assertEquals(fileSize, assignSplitMap.values().stream().mapToInt(List::size).sum());
+        Assertions.assertEquals(
+                fileSize, assignSplitMap.values().stream().mapToInt(List::size).sum());
 
-        Set<FileSourceSplit> valueSet = assignSplitMap.values().stream().flatMap(List::stream).collect(Collectors.toSet());
+        Set<FileSourceSplit> valueSet =
+                assignSplitMap.values().stream().flatMap(List::stream).collect(Collectors.toSet());
 
         // check no duplicated assigned split
         Assertions.assertEquals(valueSet.size(), fileSize);
 
         // check file allocation balance
         for (int i = 1; i < parallelism; i++) {
-            Assertions.assertTrue(Math.abs(assignSplitMap.get(i).size() - assignSplitMap.get(i-1).size()) <= 1,
+            Assertions.assertTrue(
+                    Math.abs(assignSplitMap.get(i).size() - assignSplitMap.get(i - 1).size()) <= 1,
                     "The number of files assigned to adjacent subtasks is more than 1.");
         }
-
     }
 }
