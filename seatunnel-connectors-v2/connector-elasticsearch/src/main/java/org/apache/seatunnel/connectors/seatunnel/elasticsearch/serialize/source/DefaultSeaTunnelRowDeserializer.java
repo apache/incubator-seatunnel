@@ -46,6 +46,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.apache.seatunnel.api.table.type.BasicType.BOOLEAN_TYPE;
 import static org.apache.seatunnel.api.table.type.BasicType.BYTE_TYPE;
@@ -177,6 +178,35 @@ public class DefaultSeaTunnelRowDeserializer implements SeaTunnelRowDeserializer
             } else if (fieldType instanceof ArrayType) {
                 ArrayType<?, ?> arrayType = (ArrayType<?, ?>) fieldType;
                 SeaTunnelDataType<?> elementType = arrayType.getElementType();
+                if (elementType instanceof MapType) {
+                    MapType<?, ?> mapType = (MapType<?, ?>) elementType;
+                    List<Map> mapList = JsonUtils.toList(fieldValue, Map.class);
+                    Object arr = Array.newInstance(elementType.getTypeClass(), mapList.size());
+                    SeaTunnelDataType<?> keyType = mapType.getKeyType();
+                    SeaTunnelDataType<?> valueType = mapType.getValueType();
+                    for (int i = 0; i < mapList.size(); i++) {
+                        Map<String, String> map = mapList.get(i);
+                        Map<Object, Object> convertMap = new HashMap<>();
+                        for (Map.Entry entry : map.entrySet()) {
+                            Object convertKey =
+                                    convertValue(
+                                            keyType,
+                                            Objects.isNull(entry.getKey())
+                                                    ? null
+                                                    : String.valueOf(entry.getKey()));
+                            Object convertValue =
+                                    convertValue(
+                                            valueType,
+                                            Objects.isNull(entry.getValue())
+                                                    ? null
+                                                    : String.valueOf(entry.getValue()));
+                            convertMap.put(convertKey, convertValue);
+                        }
+                        Array.set(arr, i, convertMap);
+                    }
+                    return arr;
+                }
+
                 List<String> stringList = JsonUtils.toList(fieldValue, String.class);
                 Object arr = Array.newInstance(elementType.getTypeClass(), stringList.size());
                 for (int i = 0; i < stringList.size(); i++) {
