@@ -30,6 +30,7 @@ import org.apache.seatunnel.format.json.JsonSerializationSchema;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Objects;
 
 @Slf4j
@@ -61,7 +62,11 @@ public class HttpSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         try {
             // only support post web hook
             HttpResponse response =
-                    httpClient.doPost(httpParameter.getUrl(), httpParameter.getHeaders(), body);
+                    httpClient.doPost(
+                            httpParameter.getUrl(),
+                            Collections.emptyMap(),
+                            httpParameter.getHeaders(),
+                            body);
             if (HttpResponse.STATUS_OK == response.getCode()) {
                 return;
             }

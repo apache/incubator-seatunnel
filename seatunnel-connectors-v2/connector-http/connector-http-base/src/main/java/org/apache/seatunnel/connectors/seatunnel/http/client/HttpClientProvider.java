@@ -42,6 +42,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.util.Strings;
 
 import com.github.rholder.retry.Attempt;
 import com.github.rholder.retry.RetryListener;
@@ -67,7 +68,6 @@ import java.util.concurrent.TimeUnit;
 public class HttpClientProvider implements AutoCloseable {
     private static final String ENCODING = "UTF-8";
     private static final String APPLICATION_JSON = "application/json";
-    private static final String APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private static final int INITIAL_CAPACITY = 16;
     private RequestConfig requestConfig;
     private final CloseableHttpClient httpClient;
@@ -185,17 +185,6 @@ public class HttpClientProvider implements AutoCloseable {
     }
 
     /**
-     * Send a post request without request headers and request parameters
-     *
-     * @param url request address
-     * @return http response result
-     * @throws Exception information
-     */
-    public HttpResponse doPost(String url) throws Exception {
-        return doPost(url, Collections.emptyMap(), Collections.emptyMap());
-    }
-
-    /**
      * Send post request with request parameters
      *
      * @param url request address
@@ -204,30 +193,7 @@ public class HttpClientProvider implements AutoCloseable {
      * @throws Exception information
      */
     public HttpResponse doPost(String url, Map<String, String> params) throws Exception {
-        return doPost(url, Collections.emptyMap(), params);
-    }
-
-    /**
-     * Send a post request with request headers and request parameters
-     *
-     * @param url request address
-     * @param headers request header map
-     * @param params request parameter map
-     * @return http response result
-     * @throws Exception information
-     */
-    public HttpResponse doPost(String url, Map<String, String> headers, Map<String, String> params)
-            throws Exception {
-        // create a new http get
-        HttpPost httpPost = new HttpPost(url);
-        // set default request config
-        httpPost.setConfig(requestConfig);
-        // set request header
-        addHeaders(httpPost, headers);
-        // set request params
-        addParameters(httpPost, params);
-        // return http response
-        return getResponse(httpPost);
+        return doPost(url, Collections.emptyMap(), params, Strings.EMPTY);
     }
 
     /**
@@ -239,30 +205,7 @@ public class HttpClientProvider implements AutoCloseable {
      * @throws Exception information
      */
     public HttpResponse doPost(String url, String body) throws Exception {
-        return doPost(url, Collections.emptyMap(), body);
-    }
-
-    /**
-     * Send a post request with request headers and request body
-     *
-     * @param url request address
-     * @param headers request header map
-     * @param body request body content
-     * @return http response result
-     * @throws Exception information
-     */
-    public HttpResponse doPost(String url, Map<String, String> headers, String body)
-            throws Exception {
-        // create a new http post
-        HttpPost httpPost = new HttpPost(url);
-        // set default request config
-        httpPost.setConfig(requestConfig);
-        // set request header
-        addHeaders(httpPost, headers);
-        // add body in request
-        addBody(httpPost, body);
-        // return http response
-        return getResponse(httpPost);
+        return doPost(url, Collections.emptyMap(), Collections.emptyMap(), body);
     }
 
     /**
@@ -428,11 +371,8 @@ public class HttpClientProvider implements AutoCloseable {
             addBody(request, body);
             return;
         }
-        // body useless
-        if (request.getHeaders(HTTP.CONTENT_TYPE) != null
-                && request.getHeaders(HTTP.CONTENT_TYPE).length > 0
-                && APPLICATION_FORM_URLENCODED.equals(
-                        request.getHeaders(HTTP.CONTENT_TYPE)[0].getValue())) {
+        // When body is empty, it is considered a form submission
+        if (StringUtils.isBlank(body)) {
             List<NameValuePair> parameters = new ArrayList<>();
             Set<Map.Entry<String, String>> entrySet = params.entrySet();
             for (Map.Entry<String, String> e : entrySet) {
