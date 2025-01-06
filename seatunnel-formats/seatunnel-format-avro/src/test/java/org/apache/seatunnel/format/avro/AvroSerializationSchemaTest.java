@@ -57,8 +57,8 @@ class AvroSerializationSchemaTest {
         subSeaTunnelRow.setField(2, "strVal");
         subSeaTunnelRow.setField(3, true);
         subSeaTunnelRow.setField(4, 1);
-        subSeaTunnelRow.setField(5, 2);
-        subSeaTunnelRow.setField(6, 3);
+        subSeaTunnelRow.setField(5, new Byte("2"));
+        subSeaTunnelRow.setField(6, Short.valueOf("3"));
         subSeaTunnelRow.setField(7, Long.MAX_VALUE - 1);
         subSeaTunnelRow.setField(8, 33.333F);
         subSeaTunnelRow.setField(9, 123.456);
@@ -109,8 +109,8 @@ class AvroSerializationSchemaTest {
             BasicType.STRING_TYPE,
             BasicType.BOOLEAN_TYPE,
             BasicType.INT_TYPE,
-            BasicType.INT_TYPE,
-            BasicType.INT_TYPE,
+            BasicType.BYTE_TYPE,
+            BasicType.SHORT_TYPE,
             BasicType.LONG_TYPE,
             BasicType.FLOAT_TYPE,
             BasicType.DOUBLE_TYPE,

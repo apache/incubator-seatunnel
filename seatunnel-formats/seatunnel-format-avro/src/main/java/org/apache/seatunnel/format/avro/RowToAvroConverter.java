@@ -87,7 +87,6 @@ public class RowToAvroConverter implements Serializable {
         }
         switch (seaTunnelDataType.getSqlType()) {
             case STRING:
-            case SMALLINT:
             case INT:
             case BIGINT:
             case FLOAT:
@@ -98,6 +97,8 @@ public class RowToAvroConverter implements Serializable {
             case DATE:
             case TIMESTAMP:
                 return data;
+            case SMALLINT:
+                return Integer.parseInt(data.toString());
             case TINYINT:
                 Class<?> typeClass = seaTunnelDataType.getTypeClass();
                 if (typeClass == Byte.class) {
