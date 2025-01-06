@@ -61,7 +61,7 @@ We can use `debezium_record_table_filter` to filter the data in the debezium for
 
 ```hocon
 debezium_record_table_filter {
-  database_name = "test"
+  database_name = "test" // null if not exists
   schema_name = "public" // null if not exists
   table_name = "products"
 }
