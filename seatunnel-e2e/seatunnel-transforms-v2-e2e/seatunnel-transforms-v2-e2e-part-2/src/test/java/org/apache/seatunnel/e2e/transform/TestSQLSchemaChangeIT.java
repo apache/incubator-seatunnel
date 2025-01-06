@@ -145,7 +145,7 @@ public class TestSQLSchemaChangeIT extends TestSuiteBase implements TestResource
     public void testSchemaChange(TestContainer container) throws InterruptedException {
 
         String jobId = String.valueOf(JobIdGenerator.newJobId());
-        String jobConfigFile = "/elasticsearch/mysqlcdc_to_sql_transform_with_schema_change.conf";
+        String jobConfigFile = "/sql_transform/mysqlcdc_to_sql_transform_with_schema_change.conf";
         CompletableFuture.runAsync(
                 () -> {
                     try {
