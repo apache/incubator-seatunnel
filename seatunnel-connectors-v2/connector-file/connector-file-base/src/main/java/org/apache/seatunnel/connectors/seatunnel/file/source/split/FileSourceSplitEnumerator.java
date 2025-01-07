@@ -126,7 +126,7 @@ public class FileSourceSplitEnumerator
 
     @Override
     public int currentUnassignedSplitSize() {
-        return pendingSplit.size();
+        return pendingSplit.size() - assignedSplit.size();
     }
 
     @Override
