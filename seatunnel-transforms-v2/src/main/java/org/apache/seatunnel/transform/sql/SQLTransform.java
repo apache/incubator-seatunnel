@@ -206,6 +206,13 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
                         inputCatalogTable.getOptions(),
                         inputCatalogTable.getPartitionKeys(),
                         inputCatalogTable.getComment());
+        sqlEngine.init(
+                inputTableName,
+                inputCatalogTable.getTableId().getTableName(),
+                inputCatalogTable.getSeaTunnelRowType(),
+                query);
+        sqlEngine.resetAllColumnsCount();
+        restProducedCatalogTable();
 
         if (event instanceof AlterTableColumnsEvent) {
             AlterTableColumnsEvent alterTableColumnsEvent = (AlterTableColumnsEvent) event;
