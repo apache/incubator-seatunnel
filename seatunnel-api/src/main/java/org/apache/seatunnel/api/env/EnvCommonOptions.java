@@ -33,6 +33,20 @@ public interface EnvCommonOptions {
                             "When parallelism is not specified in connector, the parallelism in env is used by default. "
                                     + "When parallelism is specified, it will override the parallelism in env.");
 
+    Option<Integer> PIPELINE_PARALLELISM =
+            Options.key("pipeline_parallelism")
+                    .intType()
+                    .defaultValue(10)
+                    .withDescription(
+                            "pipeline_parallelism is used when multiple pipeline such as database sharding or table sharding. this can ease the stress on the database.");
+
+    Option<Integer> PIPELINE_WAIT_SECONDS =
+            Options.key("pipeline_wait_seconds")
+                    .intType()
+                    .defaultValue(2)
+                    .withDescription(
+                            "pipeline wait seconds when pipeline is blocked as pipeline parallelism");
+
     Option<String> JOB_NAME =
             Options.key("job.name")
                     .stringType()

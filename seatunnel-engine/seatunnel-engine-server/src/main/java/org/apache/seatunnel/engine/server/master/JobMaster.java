@@ -101,6 +101,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -118,6 +119,8 @@ public class JobMaster {
     private final NodeEngine nodeEngine;
 
     private final ExecutorService executorService;
+
+    private final ScheduledExecutorService scheduledExecutorService;
 
     private final FlakeIdGenerator flakeIdGenerator;
 
@@ -182,6 +185,7 @@ public class JobMaster {
             @NonNull Data jobImmutableInformationData,
             @NonNull NodeEngine nodeEngine,
             @NonNull ExecutorService executorService,
+            @NonNull ScheduledExecutorService scheduledExecutorService,
             @NonNull ResourceManager resourceManager,
             @NonNull JobHistoryService jobHistoryService,
             @NonNull IMap runningJobStateIMap,
@@ -195,6 +199,7 @@ public class JobMaster {
         this.jobImmutableInformationData = jobImmutableInformationData;
         this.nodeEngine = nodeEngine;
         this.executorService = executorService;
+        this.scheduledExecutorService = scheduledExecutorService;
         flakeIdGenerator =
                 this.nodeEngine
                         .getHazelcastInstance()
@@ -1013,6 +1018,10 @@ public class JobMaster {
 
     public ExecutorService getExecutorService() {
         return executorService;
+    }
+
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
     }
 
     public void interrupt() {

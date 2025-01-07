@@ -28,6 +28,8 @@ public class EnvOptionRule {
                 .optional(
                         EnvCommonOptions.JOB_NAME,
                         CommonOptions.PARALLELISM,
+                        EnvCommonOptions.PIPELINE_PARALLELISM,
+                        EnvCommonOptions.PIPELINE_WAIT_SECONDS,
                         EnvCommonOptions.JARS,
                         EnvCommonOptions.CHECKPOINT_INTERVAL,
                         EnvCommonOptions.CHECKPOINT_TIMEOUT,

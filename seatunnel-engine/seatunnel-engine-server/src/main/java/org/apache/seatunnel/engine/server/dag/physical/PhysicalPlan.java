@@ -39,10 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class PhysicalPlan {
@@ -87,6 +90,10 @@ public class PhysicalPlan {
 
     private volatile boolean isRunning = false;
 
+    private final int pipelineParallel;
+
+    private final int pipelineWaitSeconds;
+
     public PhysicalPlan(
             @NonNull List<SubPlan> pipelineList,
             @NonNull ExecutorService executorService,
@@ -127,6 +134,27 @@ public class PhysicalPlan {
 
         this.runningJobStateIMap = runningJobStateIMap;
         this.runningJobStateTimestampsIMap = runningJobStateTimestampsIMap;
+
+        Object pipelineParallelObj =
+                Optional.ofNullable(jobImmutableInformation.getJobConfig())
+                        .map(JobConfig::getEnvOptions)
+                        .map(a -> a.get(PIPELINE_PARALLELISM.key()))
+                        .orElse(null);
+        if (pipelineParallelObj != null && StringUtils.isNumeric(pipelineParallelObj.toString())) {
+            pipelineParallel = Integer.parseInt(pipelineParallelObj.toString());
+        } else {
+            pipelineParallel = PIPELINE_PARALLELISM.defaultValue();
+        }
+        Object pipelineWaitSecondsObj =
+                Optional.ofNullable(jobImmutableInformation.getJobConfig())
+                        .map(JobConfig::getEnvOptions)
+                        .map(a -> a.get(PIPELINE_WAIT_SECONDS.key()))
+                        .orElse(null);
+        if (pipelineWaitSecondsObj != null && StringUtils.isNumeric(pipelineWaitSecondsObj.toString())) {
+            pipelineWaitSeconds = Integer.parseInt(pipelineWaitSecondsObj.toString());
+        } else {
+            pipelineWaitSeconds = PIPELINE_WAIT_SECONDS.defaultValue();
+        }
     }
 
     public void setJobMaster(JobMaster jobMaster) {
@@ -312,15 +340,51 @@ public class PhysicalPlan {
                 break;
             case PENDING:
             case SCHEDULED:
-                getPipelineList()
-                        .forEach(
+                List<SubPlan> subPlans = getPipelineList();
+                long count =
+                        subPlans.stream()
+                                .filter(
+                                        a ->
+                                                a.getPipelineState().ordinal()
+                                                        > PipelineStatus.CREATED.ordinal())
+                                .count();
+                if (count < subPlans.size()) {
+                    long maybeRunningPipelineCount = Math.max(count - finishedPipelineNum.get(), 0);
+                    if (maybeRunningPipelineCount < pipelineParallel) {
+                        long canStartNum = pipelineParallel - maybeRunningPipelineCount;
+                        List<SubPlan> canStartList =
+                                subPlans.stream()
+                                        .filter(
+                                                a ->
+                                                        PipelineStatus.CREATED.equals(
+                                                                a.getCurrPipelineStatus()))
+                                        .limit(canStartNum)
+                                        .collect(Collectors.toList());
+                        canStartList.forEach(
                                 subPlan -> {
                                     if (PipelineStatus.CREATED.equals(
                                             subPlan.getCurrPipelineStatus())) {
                                         subPlan.startSubPlanStateProcess();
                                     }
                                 });
-                updateJobState(JobStatus.RUNNING);
+                        if ((count + canStartList.size()) >= subPlans.size()) {
+                            // all pipeline started, then change job status to running
+                            updateJobState(JobStatus.RUNNING);
+                        } else {
+                            // some pipeline wait start, just sleep 1 seconds
+                            jobMaster
+                                    .getScheduledExecutorService()
+                                    .schedule(this::stateProcess, 2, TimeUnit.SECONDS);
+                        }
+                    } else {
+                        // just sleep 1 seconds, continue start pipeline
+                        jobMaster
+                                .getScheduledExecutorService()
+                                .schedule(this::stateProcess, 2, TimeUnit.SECONDS);
+                    }
+                } else {
+                    log.error("all pipeline started, but job status is still scheduled.");
+                }
                 break;
             case RUNNING:
             case DOING_SAVEPOINT:
