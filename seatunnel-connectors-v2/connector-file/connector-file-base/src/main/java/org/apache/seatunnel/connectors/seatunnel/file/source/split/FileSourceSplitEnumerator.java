@@ -37,10 +37,10 @@ public class FileSourceSplitEnumerator
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSourceSplitEnumerator.class);
 
     private final Context<FileSourceSplit> context;
-    private final Set<FileSourceSplit> pendingSplit = new HashSet<>();
+    private final Set<FileSourceSplit> allSplit = new HashSet<>();
     private Set<FileSourceSplit> assignedSplit;
     private final List<String> filePaths;
-    private AtomicInteger assignCount = new AtomicInteger(0);
+    private final AtomicInteger assignCount = new AtomicInteger(0);
 
     public FileSourceSplitEnumerator(
             SourceSplitEnumerator.Context<FileSourceSplit> context, List<String> filePaths) {
@@ -59,7 +59,7 @@ public class FileSourceSplitEnumerator
 
     @Override
     public void open() {
-        this.pendingSplit.addAll(discoverySplits());
+        this.allSplit.addAll(discoverySplits());
     }
 
     @Override
@@ -84,7 +84,7 @@ public class FileSourceSplitEnumerator
     @Override
     public void addSplitsBack(List<FileSourceSplit> splits, int subtaskId) {
         if (!splits.isEmpty()) {
-            pendingSplit.addAll(splits);
+            allSplit.addAll(splits);
             assignSplit(subtaskId);
         }
     }
@@ -93,12 +93,12 @@ public class FileSourceSplitEnumerator
         ArrayList<FileSourceSplit> currentTaskSplits = new ArrayList<>();
         if (context.currentParallelism() == 1) {
             // if parallelism == 1, we should assign all the splits to reader
-            currentTaskSplits.addAll(pendingSplit);
+            currentTaskSplits.addAll(allSplit);
         } else {
-            // if parallelism > 1, according to hashCode of split's id to determine whether to
+            // if parallelism > 1, according to polling strategy to determine whether to
             // allocate the current task
             assignCount.set(0);
-            for (FileSourceSplit fileSourceSplit : pendingSplit) {
+            for (FileSourceSplit fileSourceSplit : allSplit) {
                 int splitOwner =
                         getSplitOwner(assignCount.getAndIncrement(), context.currentParallelism());
                 if (splitOwner == taskId) {
@@ -126,7 +126,7 @@ public class FileSourceSplitEnumerator
 
     @Override
     public int currentUnassignedSplitSize() {
-        return pendingSplit.size() - assignedSplit.size();
+        return allSplit.size() - assignedSplit.size();
     }
 
     @Override

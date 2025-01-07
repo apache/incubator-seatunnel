@@ -15,14 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.file.split;
+package org.apache.seatunnel.connectors.seatunnel.file.source.split;
 
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.source.SourceEvent;
 import org.apache.seatunnel.api.source.SourceSplitEnumerator;
-import org.apache.seatunnel.connectors.seatunnel.file.source.split.FileSourceSplit;
-import org.apache.seatunnel.connectors.seatunnel.file.source.split.FileSourceSplitEnumerator;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
