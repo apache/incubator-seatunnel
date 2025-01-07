@@ -51,10 +51,6 @@ public class ArrayType<T, E> implements SeaTunnelDataType<T> {
     public static final ArrayType<LocalTimeType[], LocalTimeType> OFFSET_DATE_TIME_ARRAY_TYPE =
             new ArrayType(LocalTimeType[].class, LocalTimeType.OFFSET_DATE_TIME_TYPE);
 
-    public static final ArrayType<MapType[], MapType> MAP_ARRAY_TYPE =
-            new ArrayType(
-                    MapType[].class, new MapType<>(BasicType.STRING_TYPE, BasicType.STRING_TYPE));
-
     // --------------------------------------------------------------------------------------------
 
     private final Class<T> arrayClass;
