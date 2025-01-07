@@ -339,7 +339,7 @@ public class JdbcPostgresIdentifierIT extends TestSuiteBase implements TestResou
                                 + "      4326\n"
                                 + "    ),\n"
                                 + "    ST_GeographyFromText('POINT(-122.3452 47.5925)'),\n"
-                                + "    '192.168.1.1'\n"
+                                + "    '192.168.1.1',\n"
                                 + "    'T'\n"
                                 + "  )");
             }
