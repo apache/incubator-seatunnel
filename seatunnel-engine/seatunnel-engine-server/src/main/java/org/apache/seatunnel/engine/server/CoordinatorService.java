@@ -24,6 +24,7 @@ import org.apache.seatunnel.api.common.metrics.RawJobMetrics;
 import org.apache.seatunnel.api.event.EventHandler;
 import org.apache.seatunnel.api.event.EventProcessor;
 import org.apache.seatunnel.api.tracing.MDCExecutorService;
+import org.apache.seatunnel.api.tracing.MDCScheduledExecutorService;
 import org.apache.seatunnel.api.tracing.MDCTracer;
 import org.apache.seatunnel.common.utils.ExceptionUtils;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
@@ -171,9 +172,7 @@ public class CoordinatorService {
 
     private IMap<Long, HashMap<TaskLocation, SeaTunnelMetricsContext>> metricsImap;
 
-    /**
-     * If this node is a master node
-     */
+    /** If this node is a master node */
     private volatile boolean isActive = false;
 
     private ExecutorService executorService;
@@ -342,9 +341,9 @@ public class CoordinatorService {
 
     private boolean jobMasterCompletedSuccessfully(JobMaster jobMaster, PendingSourceState state) {
         return (!jobMaster.getJobMasterCompleteFuture().isCompletedExceptionally()
-                && state == PendingSourceState.RESTORE)
+                        && state == PendingSourceState.RESTORE)
                 || (!jobMaster.getJobMasterCompleteFuture().isCancelled()
-                && state == PendingSourceState.SUBMIT);
+                        && state == PendingSourceState.SUBMIT);
     }
 
     private JobEventProcessor createJobEventProcessor(
@@ -590,9 +589,7 @@ public class CoordinatorService {
         }
     }
 
-    /**
-     * Lazy load for resource manager
-     */
+    /** Lazy load for resource manager */
     public ResourceManager getResourceManager() {
         if (resourceManager == null) {
             synchronized (this) {
@@ -608,9 +605,7 @@ public class CoordinatorService {
         return resourceManager;
     }
 
-    /**
-     * call by client to submit job
-     */
+    /** call by client to submit job */
     public PassiveCompletableFuture<Void> submitJob(
             long jobId, Data jobImmutableInformation, boolean isStartWithSavePoint) {
         CompletableFuture<Void> jobSubmitFuture = new CompletableFuture<>();
@@ -650,7 +645,7 @@ public class CoordinatorService {
                     try {
                         if (!isStartWithSavePoint
                                 && getJobHistoryService().getJobMetrics(jobId)
-                                != JobMetrics.empty()) {
+                                        != JobMetrics.empty()) {
                             throw new JobException(
                                     String.format(
                                             "The job id %s has already been submitted and is not starting with a savepoint.",
@@ -890,9 +885,7 @@ public class CoordinatorService {
         clearCoordinatorService();
     }
 
-    /**
-     * return true if this node is a master node and the coordinator service init finished.
-     */
+    /** return true if this node is a master node and the coordinator service init finished. */
     public boolean isCoordinatorActive() {
         return isActive;
     }
@@ -923,8 +916,8 @@ public class CoordinatorService {
                     if (null != deployAddress
                             && deployAddress.equals(lostAddress)
                             && (executionState.equals(ExecutionState.DEPLOYING)
-                            || executionState.equals(ExecutionState.RUNNING)
-                            || executionState.equals(ExecutionState.CANCELING))) {
+                                    || executionState.equals(ExecutionState.RUNNING)
+                                    || executionState.equals(ExecutionState.CANCELING))) {
                         TaskGroupLocation taskGroupLocation = physicalVertex.getTaskGroupLocation();
                         physicalVertex.updateStateByExecutionService(
                                 new TaskExecutionState(
@@ -1049,7 +1042,7 @@ public class CoordinatorService {
 
         long rejectionCount =
                 ((ThreadPoolStatus.RejectionCountingHandler)
-                        threadPoolExecutor.getRejectedExecutionHandler())
+                                threadPoolExecutor.getRejectedExecutionHandler())
                         .getRejectionCount();
         long queueTaskSize = threadPoolExecutor.getQueue().size();
         return new ThreadPoolStatus(

@@ -20,6 +20,7 @@ package org.apache.seatunnel.engine.server.dag.physical;
 import org.apache.seatunnel.common.utils.ExceptionUtils;
 import org.apache.seatunnel.common.utils.RetryUtils;
 import org.apache.seatunnel.engine.common.Constant;
+import org.apache.seatunnel.engine.common.config.JobConfig;
 import org.apache.seatunnel.engine.common.exception.SeaTunnelEngineException;
 import org.apache.seatunnel.engine.common.utils.ExceptionUtil;
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
@@ -31,6 +32,8 @@ import org.apache.seatunnel.engine.core.job.PipelineStatus;
 import org.apache.seatunnel.engine.server.execution.TaskGroupLocation;
 import org.apache.seatunnel.engine.server.master.JobMaster;
 import org.apache.seatunnel.engine.server.resourcemanager.resource.SlotProfile;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.hazelcast.map.IMap;
 import lombok.NonNull;
@@ -46,6 +49,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static org.apache.seatunnel.api.env.EnvCommonOptions.PIPELINE_PARALLELISM;
+import static org.apache.seatunnel.api.env.EnvCommonOptions.PIPELINE_WAIT_SECONDS;
 
 @Slf4j
 public class PhysicalPlan {
@@ -150,7 +156,8 @@ public class PhysicalPlan {
                         .map(JobConfig::getEnvOptions)
                         .map(a -> a.get(PIPELINE_WAIT_SECONDS.key()))
                         .orElse(null);
-        if (pipelineWaitSecondsObj != null && StringUtils.isNumeric(pipelineWaitSecondsObj.toString())) {
+        if (pipelineWaitSecondsObj != null
+                && StringUtils.isNumeric(pipelineWaitSecondsObj.toString())) {
             pipelineWaitSeconds = Integer.parseInt(pipelineWaitSecondsObj.toString());
         } else {
             pipelineWaitSeconds = PIPELINE_WAIT_SECONDS.defaultValue();

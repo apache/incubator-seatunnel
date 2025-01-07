@@ -17,66 +17,137 @@
 
 package org.apache.seatunnel.engine.server;
 
-import com.hazelcast.map.IMap;
 import org.apache.seatunnel.engine.common.Constant;
-import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
 import org.apache.seatunnel.engine.core.job.JobStatus;
 import org.apache.seatunnel.engine.core.job.PipelineStatus;
 import org.apache.seatunnel.engine.server.dag.physical.PipelineLocation;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.hazelcast.map.IMap;
+import lombok.Data;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.awaitility.Awaitility.await;
 
-public class PipelineParallelTest
-        extends AbstractSeaTunnelServerTest {
-    public static String CONF_PATH =
-            "fakesource_to_console_pipeline_parallel.conf";
-    public static String CONF_PATH2 =
-            "fakesource_to_console_pipeline_parallel2.conf";
-
+public class PipelineParallelTest extends AbstractSeaTunnelServerTest {
+    public static String CONF_PATH = "fakesource_to_console_pipeline_parallel.conf";
+    public static String CONF_PATH2 = "fakesource_to_console_pipeline_parallel2.conf";
 
     @Test
     public void testPipelineParallelStart() {
         long jobId = System.currentTimeMillis();
         // ipeline_parallelism = 3
         // pipeline_wait_seconds = 7
+        System.out.println("parallel jobId: " + jobId);
         startJob(jobId, CONF_PATH, false);
 
-        AtomicReference<List<Long>> list = new AtomicReference<>(new ArrayList<>());
+        Map<Integer, Long> scheduleTimeMap = new HashMap<>();
+        Map<Integer, Long> finishTimeMap = new HashMap<>();
         await().atMost(180000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () -> {
-                            long count = list.get().stream().filter(a -> a > 0).count();
+                            long count = finishTimeMap.size();
                             if (count < 9) {
-                                IMap<Object, Long[]> map = nodeEngine.getHazelcastInstance().getMap(Constant.IMAP_STATE_TIMESTAMPS);
+                                IMap<Object, Long[]> map =
+                                        nodeEngine
+                                                .getHazelcastInstance()
+                                                .getMap(Constant.IMAP_STATE_TIMESTAMPS);
                                 if (map.get(jobId) != null) {
-                                    list.set(new ArrayList<>());
                                     for (int i = 1; i <= 10; i++) {
-                                        PipelineLocation pipelineLocation = new PipelineLocation(jobId, i);
-                                        long l = Optional.ofNullable(map.get(pipelineLocation)).map(a -> a[PipelineStatus.SCHEDULED.ordinal()]).orElse(0L);
-                                        list.get().add(l);
+                                        PipelineLocation pipelineLocation =
+                                                new PipelineLocation(jobId, i);
+                                        long l =
+                                                Optional.ofNullable(map.get(pipelineLocation))
+                                                        .map(
+                                                                a ->
+                                                                        a[
+                                                                                PipelineStatus
+                                                                                        .SCHEDULED
+                                                                                        .ordinal()])
+                                                        .orElse(0L);
+                                        if (l > 0 && scheduleTimeMap.getOrDefault(i, 0L) == 0) {
+                                            scheduleTimeMap.put(i, l);
+                                        }
+
+                                        long l1 =
+                                                Optional.ofNullable(map.get(pipelineLocation))
+                                                        .map(
+                                                                a ->
+                                                                        a[
+                                                                                PipelineStatus
+                                                                                        .FINISHED
+                                                                                        .ordinal()])
+                                                        .orElse(0L);
+                                        if (l1 > 0 && finishTimeMap.getOrDefault(i, 0L) == 0) {
+                                            finishTimeMap.put(i, l1);
+                                        }
                                     }
-                                    list.get().sort((a, b) -> (int) (a - b));
-                                    count = list.get().stream().filter(a -> a > 0).count();
+                                    count = finishTimeMap.size();
                                 }
                             }
-                            Assertions.assertEquals(
-                                    server.getCoordinatorService().getJobStatus(jobId),
-                                    JobStatus.FINISHED);
+                            JobStatus jobStatus =
+                                    server.getCoordinatorService()
+                                            .getJobHistoryService()
+                                            .getJobDetailState(jobId)
+                                            .getJobStatus();
+                            Assertions.assertEquals(JobStatus.FINISHED, jobStatus);
                             Assertions.assertTrue(count >= 9);
-                            Assertions.assertTrue(list.get().get(6) - list.get().get(3) > 7000);
-                            Assertions.assertTrue(list.get().get(9) - list.get().get(6) > 7000);
-                            Assertions.assertTrue(list.get().get(9) - list.get().get(8) < 7000);
-                            System.out.println("parallel time: " + list);
-                        });
 
+                            List<A> li = new ArrayList<>();
+                            List<A> finalLi = li;
+                            scheduleTimeMap.forEach(
+                                    (a, b) -> {
+                                        A aa = new A();
+                                        aa.pipelineID = a;
+                                        aa.scheduleTime = b;
+                                        aa.finishTime = finishTimeMap.get(a);
+                                        finalLi.add(aa);
+                                    });
+                            li =
+                                    li.stream()
+                                            .sorted(
+                                                    (a, b) ->
+                                                            Math.toIntExact(
+                                                                    a.getScheduleTime()
+                                                                            - b.getScheduleTime()))
+                                            .collect(Collectors.toList());
+                            System.out.println("pipeline schedule time and finish time: " + li);
+                            for (int index = li.size() - 1; index > 3; index--) {
+                                boolean b =
+                                        li.get(index).getScheduleTime()
+                                                > findMin(
+                                                        li.get(index - 1).getFinishTime(),
+                                                        li.get(index - 2).getFinishTime(),
+                                                        li.get(index - 3).getFinishTime());
+                                Assertions.assertTrue(b);
+                            }
+                        });
+    }
+
+    @Data
+    static class A {
+        Integer pipelineID;
+        Long scheduleTime;
+        Long finishTime;
+    }
+
+    public static long findMin(Long... l) {
+        long l1 = l[0];
+        for (int i = 1; i < l.length; i++) {
+            if (l[i] < l1) {
+                l1 = l[i];
+            }
+        }
+        return l1;
     }
 
     @Test
@@ -86,35 +157,88 @@ public class PipelineParallelTest
         // pipeline_wait_seconds = 10
         startJob(jobId, CONF_PATH2, false);
 
-        AtomicReference<List<Long>> list = new AtomicReference<>(new ArrayList<>());
-        await().atMost(240000, TimeUnit.MILLISECONDS)
+        Map<Integer, Long> scheduleTimeMap = new HashMap<>();
+        Map<Integer, Long> finishTimeMap = new HashMap<>();
+        await().atMost(180000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () -> {
-                            long count = list.get().stream().filter(a -> a > 0).count();
-                            if (count < 8) {
-                                IMap<Object, Long[]> map = nodeEngine.getHazelcastInstance().getMap(Constant.IMAP_STATE_TIMESTAMPS);
+                            long count = finishTimeMap.size();
+                            if (count < 9) {
+                                IMap<Object, Long[]> map =
+                                        nodeEngine
+                                                .getHazelcastInstance()
+                                                .getMap(Constant.IMAP_STATE_TIMESTAMPS);
                                 if (map.get(jobId) != null) {
-                                    list.set(new ArrayList<>());
                                     for (int i = 1; i <= 10; i++) {
-                                        PipelineLocation pipelineLocation = new PipelineLocation(jobId, i);
-                                        long l = Optional.ofNullable(map.get(pipelineLocation)).map(a -> a[PipelineStatus.SCHEDULED.ordinal()]).orElse(0L);
-                                        list.get().add(l);
+                                        PipelineLocation pipelineLocation =
+                                                new PipelineLocation(jobId, i);
+                                        long l =
+                                                Optional.ofNullable(map.get(pipelineLocation))
+                                                        .map(
+                                                                a ->
+                                                                        a[
+                                                                                PipelineStatus
+                                                                                        .SCHEDULED
+                                                                                        .ordinal()])
+                                                        .orElse(0L);
+                                        if (l > 0 && scheduleTimeMap.getOrDefault(i, 0L) == 0) {
+                                            scheduleTimeMap.put(i, l);
+                                        }
+
+                                        long l1 =
+                                                Optional.ofNullable(map.get(pipelineLocation))
+                                                        .map(
+                                                                a ->
+                                                                        a[
+                                                                                PipelineStatus
+                                                                                        .FINISHED
+                                                                                        .ordinal()])
+                                                        .orElse(0L);
+                                        if (l1 > 0 && finishTimeMap.getOrDefault(i, 0L) == 0) {
+                                            finishTimeMap.put(i, l1);
+                                        }
                                     }
-                                    list.get().sort((a, b) -> (int) (a - b));
-                                    count = list.get().stream().filter(a -> a > 0).count();
+                                    count = finishTimeMap.size();
                                 }
                             }
-                            Assertions.assertEquals(
-                                    server.getCoordinatorService().getJobStatus(jobId),
-                                    JobStatus.FINISHED);
+                            JobStatus jobStatus =
+                                    server.getCoordinatorService()
+                                            .getJobHistoryService()
+                                            .getJobDetailState(jobId)
+                                            .getJobStatus();
+                            Assertions.assertEquals(JobStatus.FINISHED, jobStatus);
+                            Assertions.assertTrue(count >= 9);
 
-                            Assertions.assertTrue(count >= 8);
-                            Assertions.assertTrue(list.get().get(5) - list.get().get(1) > 10000);
-                            Assertions.assertTrue(list.get().get(9) - list.get().get(5) > 10000);
-                            Assertions.assertTrue(list.get().get(9) - list.get().get(8) < 10000);
-                            System.out.println("parallel2 time: " + list);
+                            List<A> li = new ArrayList<>();
+                            List<A> finalLi = li;
+                            scheduleTimeMap.forEach(
+                                    (a, b) -> {
+                                        A aa = new A();
+                                        aa.pipelineID = a;
+                                        aa.scheduleTime = b;
+                                        aa.finishTime = finishTimeMap.get(a);
+                                        finalLi.add(aa);
+                                    });
+                            System.out.println("pipeline schedule time and finish time: " + li);
+
+                            li =
+                                    li.stream()
+                                            .sorted(
+                                                    (a, b) ->
+                                                            Math.toIntExact(
+                                                                    a.getScheduleTime()
+                                                                            - b.getScheduleTime()))
+                                            .collect(Collectors.toList());
+                            for (int index = li.size() - 1; index > 4; index--) {
+                                boolean b =
+                                        li.get(index).getScheduleTime()
+                                                > findMin(
+                                                        li.get(index - 1).getFinishTime(),
+                                                        li.get(index - 2).getFinishTime(),
+                                                        li.get(index - 3).getFinishTime(),
+                                                        li.get(index - 4).getFinishTime());
+                                Assertions.assertTrue(b);
+                            }
                         });
-
     }
-
 }
