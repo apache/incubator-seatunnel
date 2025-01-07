@@ -19,28 +19,23 @@ package org.apache.seatunnel.api.tracing;
 
 import java.util.function.Supplier;
 
-/** Runnable that sets MDC context before calling the delegate and clears it afterwards. */
-public class MDCRunnable implements Runnable {
-    private final Supplier<MDCContext> contextSupplier;
-    private final Runnable delegate;
+public class MDCSupplier<T> implements Supplier<T> {
+    private final MDCContext context;
+    private final Supplier<T> delegate;
 
-    public MDCRunnable(Runnable delegate) {
+    public MDCSupplier(Supplier<T> delegate) {
         this(MDCContext.current(), delegate);
     }
 
-    public MDCRunnable(MDCContext context, Runnable delegate) {
-        this(() -> context, delegate);
-    }
-
-    public MDCRunnable(Supplier<MDCContext> contextSupplier, Runnable delegate) {
-        this.contextSupplier = contextSupplier;
+    public MDCSupplier(MDCContext context, Supplier<T> delegate) {
+        this.context = context;
         this.delegate = delegate;
     }
 
     @Override
-    public void run() {
-        try (MDCContext ignored = contextSupplier.get().activate()) {
-            delegate.run();
+    public T get() {
+        try (MDCContext ignored = context.activate()) {
+            return delegate.get();
         }
     }
 }
