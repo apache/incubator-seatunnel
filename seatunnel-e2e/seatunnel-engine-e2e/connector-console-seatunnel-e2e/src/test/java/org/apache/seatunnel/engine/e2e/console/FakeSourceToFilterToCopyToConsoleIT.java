@@ -18,6 +18,7 @@
 package org.apache.seatunnel.engine.e2e.console;
 
 import org.apache.seatunnel.engine.e2e.SeaTunnelEngineContainer;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container;
