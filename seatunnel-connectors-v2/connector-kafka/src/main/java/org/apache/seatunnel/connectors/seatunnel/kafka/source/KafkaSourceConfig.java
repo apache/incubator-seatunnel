@@ -255,10 +255,13 @@ public class KafkaSourceConfig implements Serializable {
                     .setCatalogTable(catalogTable)
                     .build();
         }
-
+        boolean ignoreParseErrors =
+                readonlyConfig
+                        .get(MESSAGE_FORMAT_ERROR_HANDLE_WAY_OPTION)
+                        .equals(MessageFormatErrorHandleWay.SKIP);
         switch (format) {
             case JSON:
-                return new JsonDeserializationSchema(catalogTable, false, false);
+                return new JsonDeserializationSchema(catalogTable, false, ignoreParseErrors);
             case TEXT:
                 String delimiter = readonlyConfig.get(FIELD_DELIMITER);
                 return TextDeserializationSchema.builder()
@@ -267,15 +270,15 @@ public class KafkaSourceConfig implements Serializable {
                         .build();
             case CANAL_JSON:
                 return CanalJsonDeserializationSchema.builder(catalogTable)
-                        .setIgnoreParseErrors(true)
+                        .setIgnoreParseErrors(ignoreParseErrors)
                         .build();
             case OGG_JSON:
                 return OggJsonDeserializationSchema.builder(catalogTable)
-                        .setIgnoreParseErrors(true)
+                        .setIgnoreParseErrors(ignoreParseErrors)
                         .build();
             case MAXWELL_JSON:
                 return MaxWellJsonDeserializationSchema.builder(catalogTable)
-                        .setIgnoreParseErrors(true)
+                        .setIgnoreParseErrors(ignoreParseErrors)
                         .build();
 
             case COMPATIBLE_KAFKA_CONNECT_JSON:
@@ -286,10 +289,11 @@ public class KafkaSourceConfig implements Serializable {
                         readonlyConfig.get(
                                 KafkaConnectJsonFormatOptions.VALUE_CONVERTER_SCHEMA_ENABLED);
                 return new CompatibleKafkaConnectDeserializationSchema(
-                        catalogTable, keySchemaEnable, valueSchemaEnable, false, false);
+                        catalogTable, keySchemaEnable, valueSchemaEnable, false, ignoreParseErrors);
             case DEBEZIUM_JSON:
                 boolean includeSchema = readonlyConfig.get(DEBEZIUM_RECORD_INCLUDE_SCHEMA);
-                return new DebeziumJsonDeserializationSchema(catalogTable, true, includeSchema);
+                return new DebeziumJsonDeserializationSchema(
+                        catalogTable, ignoreParseErrors, includeSchema);
             case AVRO:
                 return new AvroDeserializationSchema(catalogTable);
             case PROTOBUF:
