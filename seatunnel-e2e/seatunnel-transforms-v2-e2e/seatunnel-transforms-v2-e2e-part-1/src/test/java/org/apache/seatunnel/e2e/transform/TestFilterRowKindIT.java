@@ -40,7 +40,7 @@ public class TestFilterRowKindIT extends TestSuiteBase {
                 container.executeJob("/filter_row_kind_include_insert.conf");
         Assertions.assertEquals(0, execResult3.getExitCode());
 
-        Container.ExecResult execResult4 = container.executeJob("/fake-filter-copy-console.json");
+        Container.ExecResult execResult4 = container.executeJob("/filter_row_to_next_transform.json");
         Assertions.assertEquals(0, execResult4.getExitCode());
     }
 
