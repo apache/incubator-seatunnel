@@ -25,9 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -37,7 +39,8 @@ public class FileSourceSplitEnumerator
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSourceSplitEnumerator.class);
 
     private final Context<FileSourceSplit> context;
-    private final Set<FileSourceSplit> allSplit = new HashSet<>();
+    private final Set<FileSourceSplit> allSplit =
+            new TreeSet<>(Comparator.comparing(FileSourceSplit::splitId));
     private Set<FileSourceSplit> assignedSplit;
     private final List<String> filePaths;
     private final AtomicInteger assignCount = new AtomicInteger(0);
