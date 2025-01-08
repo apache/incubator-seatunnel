@@ -274,7 +274,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
             throws IOException, InterruptedException {
         DefaultSeaTunnelRowSerializer serializer =
                 DefaultSeaTunnelRowSerializer.create(
-                        "test_topic_json",
+                        "test.topic.json.dot",
                         SEATUNNEL_ROW_TYPE,
                         DEFAULT_FORMAT,
                         DEFAULT_FIELD_DELIMITER,
@@ -367,71 +367,71 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                 container.executeJob("/avro/fake_source_to_kafka_avro_format.conf");
         Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
         String[] subField = {
-            "c_map",
-            "c_array",
-            "c_string",
-            "c_boolean",
-            "c_tinyint",
-            "c_smallint",
-            "c_int",
-            "c_bigint",
-            "c_float",
-            "c_double",
-            "c_bytes",
-            "c_date",
-            "c_decimal",
-            "c_timestamp"
+                "c_map",
+                "c_array",
+                "c_string",
+                "c_boolean",
+                "c_tinyint",
+                "c_smallint",
+                "c_int",
+                "c_bigint",
+                "c_float",
+                "c_double",
+                "c_bytes",
+                "c_date",
+                "c_decimal",
+                "c_timestamp"
         };
         SeaTunnelDataType<?>[] subFieldTypes = {
-            new MapType<>(BasicType.STRING_TYPE, BasicType.STRING_TYPE),
-            ArrayType.INT_ARRAY_TYPE,
-            BasicType.STRING_TYPE,
-            BasicType.BOOLEAN_TYPE,
-            BasicType.BYTE_TYPE,
-            BasicType.SHORT_TYPE,
-            BasicType.INT_TYPE,
-            BasicType.LONG_TYPE,
-            BasicType.FLOAT_TYPE,
-            BasicType.DOUBLE_TYPE,
-            PrimitiveByteArrayType.INSTANCE,
-            LocalTimeType.LOCAL_DATE_TYPE,
-            new DecimalType(38, 18),
-            LocalTimeType.LOCAL_DATE_TIME_TYPE
+                new MapType<>(BasicType.STRING_TYPE, BasicType.STRING_TYPE),
+                ArrayType.INT_ARRAY_TYPE,
+                BasicType.STRING_TYPE,
+                BasicType.BOOLEAN_TYPE,
+                BasicType.BYTE_TYPE,
+                BasicType.SHORT_TYPE,
+                BasicType.INT_TYPE,
+                BasicType.LONG_TYPE,
+                BasicType.FLOAT_TYPE,
+                BasicType.DOUBLE_TYPE,
+                PrimitiveByteArrayType.INSTANCE,
+                LocalTimeType.LOCAL_DATE_TYPE,
+                new DecimalType(38, 18),
+                LocalTimeType.LOCAL_DATE_TIME_TYPE
         };
         SeaTunnelRowType subRow = new SeaTunnelRowType(subField, subFieldTypes);
         String[] fieldNames = {
-            "c_map",
-            "c_array",
-            "c_string",
-            "c_boolean",
-            "c_tinyint",
-            "c_smallint",
-            "c_int",
-            "c_bigint",
-            "c_float",
-            "c_double",
-            "c_bytes",
-            "c_date",
-            "c_decimal",
-            "c_timestamp",
-            "c_row"
+                "c_map",
+                "c_array",
+                "c_string",
+                "c_boolean",
+                "c_tinyint",
+                "c_smallint",
+                "c_int",
+                "c_bigint",
+                "c_float",
+                "c_double",
+                "c_bytes",
+                "c_date",
+                "c_decimal",
+                "c_timestamp",
+                "c_row"
         };
         SeaTunnelDataType<?>[] fieldTypes = {
-            new MapType<>(BasicType.STRING_TYPE, BasicType.STRING_TYPE),
-            ArrayType.INT_ARRAY_TYPE,
-            BasicType.STRING_TYPE,
-            BasicType.BOOLEAN_TYPE,
-            BasicType.BYTE_TYPE,
-            BasicType.SHORT_TYPE,
-            BasicType.INT_TYPE,
-            BasicType.LONG_TYPE,
-            BasicType.FLOAT_TYPE,
-            BasicType.DOUBLE_TYPE,
-            PrimitiveByteArrayType.INSTANCE,
-            LocalTimeType.LOCAL_DATE_TYPE,
-            new DecimalType(38, 18),
-            LocalTimeType.LOCAL_DATE_TIME_TYPE,
-            subRow
+                new MapType<>(BasicType.STRING_TYPE, BasicType.STRING_TYPE),
+                ArrayType.INT_ARRAY_TYPE,
+                BasicType.STRING_TYPE,
+                BasicType.BOOLEAN_TYPE,
+                BasicType.BYTE_TYPE,
+                BasicType.SHORT_TYPE,
+                BasicType.INT_TYPE,
+                BasicType.LONG_TYPE,
+                BasicType.FLOAT_TYPE,
+                BasicType.DOUBLE_TYPE,
+                PrimitiveByteArrayType.INSTANCE,
+                LocalTimeType.LOCAL_DATE_TYPE,
+                new DecimalType(38, 18),
+                LocalTimeType.LOCAL_DATE_TIME_TYPE,
+                subRow
         };
         SeaTunnelRowType fake_source_row_type = new SeaTunnelRowType(fieldNames, fieldTypes);
         CatalogTable catalogTable =
@@ -511,7 +511,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                             Collections.singletonMap("key", Short.parseShort("1")),
                             (Map<String, Short>) row.getField(1));
                     Assertions.assertArrayEquals(
-                            new Byte[] {Byte.parseByte("1")}, (Byte[]) row.getField(2));
+                            new Byte[]{Byte.parseByte("1")}, (Byte[]) row.getField(2));
                     Assertions.assertEquals("string", row.getField(3).toString());
                     Assertions.assertEquals(false, row.getField(4));
                     Assertions.assertEquals(Byte.parseByte("1"), row.getField(5));
@@ -540,37 +540,37 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
         // Define the SeaTunnelRowType for the address field
         SeaTunnelRowType addressType =
                 new SeaTunnelRowType(
-                        new String[] {"city", "state", "street"},
-                        new SeaTunnelDataType<?>[] {
-                            BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.STRING_TYPE
+                        new String[]{"city", "state", "street"},
+                        new SeaTunnelDataType<?>[]{
+                                BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.STRING_TYPE
                         });
 
         // Define the SeaTunnelRowType for the main schema
         SeaTunnelRowType seaTunnelRowType =
                 new SeaTunnelRowType(
-                        new String[] {
-                            "c_int32",
-                            "c_int64",
-                            "c_float",
-                            "c_double",
-                            "c_bool",
-                            "c_string",
-                            "c_bytes",
-                            "Address",
-                            "attributes",
-                            "phone_numbers"
+                        new String[]{
+                                "c_int32",
+                                "c_int64",
+                                "c_float",
+                                "c_double",
+                                "c_bool",
+                                "c_string",
+                                "c_bytes",
+                                "Address",
+                                "attributes",
+                                "phone_numbers"
                         },
-                        new SeaTunnelDataType<?>[] {
-                            BasicType.INT_TYPE,
-                            BasicType.LONG_TYPE,
-                            BasicType.FLOAT_TYPE,
-                            BasicType.DOUBLE_TYPE,
-                            BasicType.BOOLEAN_TYPE,
-                            BasicType.STRING_TYPE,
-                            PrimitiveByteArrayType.INSTANCE,
-                            addressType,
-                            new MapType<>(BasicType.STRING_TYPE, BasicType.FLOAT_TYPE),
-                            ArrayType.STRING_ARRAY_TYPE
+                        new SeaTunnelDataType<?>[]{
+                                BasicType.INT_TYPE,
+                                BasicType.LONG_TYPE,
+                                BasicType.FLOAT_TYPE,
+                                BasicType.DOUBLE_TYPE,
+                                BasicType.BOOLEAN_TYPE,
+                                BasicType.STRING_TYPE,
+                                PrimitiveByteArrayType.INSTANCE,
+                                addressType,
+                                new MapType<>(BasicType.STRING_TYPE, BasicType.FLOAT_TYPE),
+                                ArrayType.STRING_ARRAY_TYPE
                         });
 
         // Parse the configuration file
@@ -745,7 +745,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                             () -> Assertions.assertEquals("test data", row.getField(5).toString()),
                             () ->
                                     Assertions.assertArrayEquals(
-                                            new byte[] {1, 2, 3}, (byte[]) row.getField(6)),
+                                            new byte[]{1, 2, 3}, (byte[]) row.getField(6)),
                             () -> Assertions.assertEquals(expectedAddress, row.getField(7)),
                             () -> Assertions.assertEquals(expectedAttributesMap, row.getField(8)),
                             () ->
@@ -900,7 +900,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
         Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
 
         try (KafkaConsumer<byte[], byte[]> consumer =
-                new KafkaConsumer<>(kafkaByteConsumerConfig())) {
+                     new KafkaConsumer<>(kafkaByteConsumerConfig())) {
             consumer.subscribe(Arrays.asList("verify_protobuf_transform"));
             Map<TopicPartition, Long> offsets =
                     consumer.endOffsets(
@@ -1055,22 +1055,22 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
             for (int i = start; i < end; i++) {
                 SeaTunnelRow row =
                         new SeaTunnelRow(
-                                new Object[] {
-                                    Long.valueOf(i),
-                                    Collections.singletonMap("key", Short.parseShort("1")),
-                                    new Byte[] {Byte.parseByte("1")},
-                                    "string",
-                                    Boolean.FALSE,
-                                    Byte.parseByte("1"),
-                                    Short.parseShort("1"),
-                                    Integer.parseInt("1"),
-                                    Long.parseLong("1"),
-                                    Float.parseFloat("1.1"),
-                                    Double.parseDouble("1.1"),
-                                    BigDecimal.valueOf(11, 1),
-                                    "test".getBytes(),
-                                    LocalDate.of(2024, 1, 1),
-                                    LocalDateTime.of(2024, 1, 1, 12, 59, 23)
+                                new Object[]{
+                                        Long.valueOf(i),
+                                        Collections.singletonMap("key", Short.parseShort("1")),
+                                        new Byte[]{Byte.parseByte("1")},
+                                        "string",
+                                        Boolean.FALSE,
+                                        Byte.parseByte("1"),
+                                        Short.parseShort("1"),
+                                        Integer.parseInt("1"),
+                                        Long.parseLong("1"),
+                                        Float.parseFloat("1.1"),
+                                        Double.parseDouble("1.1"),
+                                        BigDecimal.valueOf(11, 1),
+                                        "test".getBytes(),
+                                        LocalDate.of(2024, 1, 1),
+                                        LocalDateTime.of(2024, 1, 1, 12, 59, 23)
                                 });
                 ProducerRecord<byte[], byte[]> producerRecord = converter.convert(row);
                 producer.send(producerRecord).get();
@@ -1083,39 +1083,39 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
 
     private static final SeaTunnelRowType SEATUNNEL_ROW_TYPE =
             new SeaTunnelRowType(
-                    new String[] {
-                        "id",
-                        "c_map",
-                        "c_array",
-                        "c_string",
-                        "c_boolean",
-                        "c_tinyint",
-                        "c_smallint",
-                        "c_int",
-                        "c_bigint",
-                        "c_float",
-                        "c_double",
-                        "c_decimal",
-                        "c_bytes",
-                        "c_date",
-                        "c_timestamp"
+                    new String[]{
+                            "id",
+                            "c_map",
+                            "c_array",
+                            "c_string",
+                            "c_boolean",
+                            "c_tinyint",
+                            "c_smallint",
+                            "c_int",
+                            "c_bigint",
+                            "c_float",
+                            "c_double",
+                            "c_decimal",
+                            "c_bytes",
+                            "c_date",
+                            "c_timestamp"
                     },
-                    new SeaTunnelDataType[] {
-                        BasicType.LONG_TYPE,
-                        new MapType(BasicType.STRING_TYPE, BasicType.SHORT_TYPE),
-                        ArrayType.BYTE_ARRAY_TYPE,
-                        BasicType.STRING_TYPE,
-                        BasicType.BOOLEAN_TYPE,
-                        BasicType.BYTE_TYPE,
-                        BasicType.SHORT_TYPE,
-                        BasicType.INT_TYPE,
-                        BasicType.LONG_TYPE,
-                        BasicType.FLOAT_TYPE,
-                        BasicType.DOUBLE_TYPE,
-                        new DecimalType(2, 1),
-                        PrimitiveByteArrayType.INSTANCE,
-                        LocalTimeType.LOCAL_DATE_TYPE,
-                        LocalTimeType.LOCAL_DATE_TIME_TYPE
+                    new SeaTunnelDataType[]{
+                            BasicType.LONG_TYPE,
+                            new MapType(BasicType.STRING_TYPE, BasicType.SHORT_TYPE),
+                            ArrayType.BYTE_ARRAY_TYPE,
+                            BasicType.STRING_TYPE,
+                            BasicType.BOOLEAN_TYPE,
+                            BasicType.BYTE_TYPE,
+                            BasicType.SHORT_TYPE,
+                            BasicType.INT_TYPE,
+                            BasicType.LONG_TYPE,
+                            BasicType.FLOAT_TYPE,
+                            BasicType.DOUBLE_TYPE,
+                            new DecimalType(2, 1),
+                            PrimitiveByteArrayType.INSTANCE,
+                            LocalTimeType.LOCAL_DATE_TYPE,
+                            LocalTimeType.LOCAL_DATE_TIME_TYPE
                     });
 
     private Map<String, String> getKafkaConsumerData(String topicName) {
@@ -1183,7 +1183,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
     private List<SeaTunnelRow> getKafkaSTRow(String topicName, ConsumerRecordConverter converter) {
         List<SeaTunnelRow> data = new ArrayList<>();
         try (KafkaConsumer<byte[], byte[]> consumer =
-                new KafkaConsumer<>(kafkaByteConsumerConfig())) {
+                     new KafkaConsumer<>(kafkaByteConsumerConfig())) {
             consumer.subscribe(Arrays.asList(topicName));
             Map<TopicPartition, Long> offsets =
                     consumer.endOffsets(Arrays.asList(new TopicPartition(topicName, 0)));
@@ -1243,35 +1243,35 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
     private SeaTunnelRowType buildSeaTunnelRowType() {
         SeaTunnelRowType addressType =
                 new SeaTunnelRowType(
-                        new String[] {"city", "state", "street"},
-                        new SeaTunnelDataType<?>[] {
-                            BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.STRING_TYPE
+                        new String[]{"city", "state", "street"},
+                        new SeaTunnelDataType<?>[]{
+                                BasicType.STRING_TYPE, BasicType.STRING_TYPE, BasicType.STRING_TYPE
                         });
 
         return new SeaTunnelRowType(
-                new String[] {
-                    "c_int32",
-                    "c_int64",
-                    "c_float",
-                    "c_double",
-                    "c_bool",
-                    "c_string",
-                    "c_bytes",
-                    "Address",
-                    "attributes",
-                    "phone_numbers"
+                new String[]{
+                        "c_int32",
+                        "c_int64",
+                        "c_float",
+                        "c_double",
+                        "c_bool",
+                        "c_string",
+                        "c_bytes",
+                        "Address",
+                        "attributes",
+                        "phone_numbers"
                 },
-                new SeaTunnelDataType<?>[] {
-                    BasicType.INT_TYPE,
-                    BasicType.LONG_TYPE,
-                    BasicType.FLOAT_TYPE,
-                    BasicType.DOUBLE_TYPE,
-                    BasicType.BOOLEAN_TYPE,
-                    BasicType.STRING_TYPE,
-                    PrimitiveByteArrayType.INSTANCE,
-                    addressType,
-                    new MapType<>(BasicType.STRING_TYPE, BasicType.FLOAT_TYPE),
-                    ArrayType.STRING_ARRAY_TYPE
+                new SeaTunnelDataType<?>[]{
+                        BasicType.INT_TYPE,
+                        BasicType.LONG_TYPE,
+                        BasicType.FLOAT_TYPE,
+                        BasicType.DOUBLE_TYPE,
+                        BasicType.BOOLEAN_TYPE,
+                        BasicType.STRING_TYPE,
+                        PrimitiveByteArrayType.INSTANCE,
+                        addressType,
+                        new MapType<>(BasicType.STRING_TYPE, BasicType.FLOAT_TYPE),
+                        ArrayType.STRING_ARRAY_TYPE
                 });
     }
 }

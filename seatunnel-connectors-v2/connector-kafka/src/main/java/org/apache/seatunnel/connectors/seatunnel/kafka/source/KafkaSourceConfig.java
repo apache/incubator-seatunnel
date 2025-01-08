@@ -84,14 +84,22 @@ public class KafkaSourceConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Getter private final String bootstrap;
-    @Getter private final Map<TablePath, ConsumerMetadata> mapMetadata;
-    @Getter private final boolean commitOnCheckpoint;
-    @Getter private final Properties properties;
-    @Getter private final long discoveryIntervalMillis;
-    @Getter private final MessageFormatErrorHandleWay messageFormatErrorHandleWay;
-    @Getter private final String consumerGroup;
-    @Getter private final long pollTimeout;
+    @Getter
+    private final String bootstrap;
+    @Getter
+    private final Map<TablePath, ConsumerMetadata> mapMetadata;
+    @Getter
+    private final boolean commitOnCheckpoint;
+    @Getter
+    private final Properties properties;
+    @Getter
+    private final long discoveryIntervalMillis;
+    @Getter
+    private final MessageFormatErrorHandleWay messageFormatErrorHandleWay;
+    @Getter
+    private final String consumerGroup;
+    @Getter
+    private final long pollTimeout;
 
     public KafkaSourceConfig(ReadonlyConfig readonlyConfig) {
         this.bootstrap = readonlyConfig.get(BOOTSTRAP_SERVERS);
@@ -134,7 +142,7 @@ public class KafkaSourceConfig implements Serializable {
         return consumerMetadataList.stream()
                 .collect(
                         Collectors.toMap(
-                                consumerMetadata -> TablePath.of(consumerMetadata.getTopic()),
+                                consumerMetadata -> TablePath.of(null, null, consumerMetadata.getTopic()),
                                 consumerMetadata -> consumerMetadata));
     }
 
@@ -205,7 +213,7 @@ public class KafkaSourceConfig implements Serializable {
     private CatalogTable createCatalogTable(ReadonlyConfig readonlyConfig) {
         Optional<Map<String, Object>> schemaOptions =
                 readonlyConfig.getOptional(TableSchemaOptions.SCHEMA);
-        TablePath tablePath = TablePath.of(readonlyConfig.get(TOPIC));
+        TablePath tablePath = TablePath.of(null, null, readonlyConfig.get(TOPIC));
         TableSchema tableSchema;
         if (schemaOptions.isPresent()) {
             tableSchema = new ReadonlyConfigParser().parse(readonlyConfig);
@@ -216,9 +224,9 @@ public class KafkaSourceConfig implements Serializable {
                                     PhysicalColumn.of(
                                             "content",
                                             new SeaTunnelRowType(
-                                                    new String[] {"content"},
-                                                    new SeaTunnelDataType<?>[] {
-                                                        BasicType.STRING_TYPE
+                                                    new String[]{"content"},
+                                                    new SeaTunnelDataType<?>[]{
+                                                            BasicType.STRING_TYPE
                                                     }),
                                             0,
                                             false,
