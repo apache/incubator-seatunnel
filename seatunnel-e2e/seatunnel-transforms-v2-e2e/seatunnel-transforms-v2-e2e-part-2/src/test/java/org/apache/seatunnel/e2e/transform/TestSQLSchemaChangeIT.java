@@ -19,6 +19,7 @@ package org.apache.seatunnel.e2e.transform;
 
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 
 import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.MySqlContainer;
@@ -26,6 +27,7 @@ import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.MySqlVersio
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.UniqueDatabase;
 import org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsRestClient;
 import org.apache.seatunnel.e2e.common.TestResource;
+import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
@@ -41,7 +43,6 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.lifecycle.Startables;
-import org.testcontainers.shaded.com.google.common.collect.Lists;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.DockerLoggerFactory;
 
@@ -98,7 +99,8 @@ public class TestSQLSchemaChangeIT extends TestSuiteBase implements TestResource
         log.info("Elasticsearch container started");
         esRestClient =
                 EsRestClient.createInstance(
-                        Lists.newArrayList("https://" + container.getHttpHostAddress()),
+                        org.apache.seatunnel.shade.com.google.common.collect.Lists.newArrayList(
+                                "https://" + container.getHttpHostAddress()),
                         Optional.of("elastic"),
                         Optional.of("elasticsearch"),
                         false,
