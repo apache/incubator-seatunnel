@@ -286,6 +286,7 @@ public final class SeaTunnelRow implements Serializable {
                 return 24;
             case "LocalTime":
                 return 12;
+            case "Timestamp":
             case "LocalDateTime":
             case "OffsetDateTime":
                 return 48;
