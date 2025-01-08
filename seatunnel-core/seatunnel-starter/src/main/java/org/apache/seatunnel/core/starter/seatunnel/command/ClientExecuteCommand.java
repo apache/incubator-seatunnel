@@ -43,12 +43,12 @@ import org.apache.seatunnel.engine.core.job.JobResult;
 import org.apache.seatunnel.engine.core.job.JobStatus;
 import org.apache.seatunnel.engine.server.SeaTunnelNodeContext;
 
-import com.hazelcast.internal.util.ConcurrencyUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.impl.HazelcastInstanceFactory;
+import com.hazelcast.internal.util.ConcurrencyUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
