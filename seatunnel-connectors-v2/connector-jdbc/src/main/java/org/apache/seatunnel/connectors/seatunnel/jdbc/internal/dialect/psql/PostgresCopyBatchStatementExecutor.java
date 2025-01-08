@@ -14,8 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor;
 
+package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql;
+
+import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -23,66 +25,80 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorException;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.connection.JdbcConnectionProvider;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.CopyBatchStatementExecutor;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.QuoteMode;
+
+import org.postgresql.PGConnection;
+
+import com.google.auto.service.AutoService;
+import lombok.Getter;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
-import java.lang.reflect.InvocationTargetException;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class CopyManagerBatchStatementExecutor implements JdbcBatchStatementExecutor<SeaTunnelRow> {
+@AutoService(CopyBatchStatementExecutor.class)
+public class PostgresCopyBatchStatementExecutor implements CopyBatchStatementExecutor {
 
-    private final String copySql;
-    private final TableSchema tableSchema;
-    CopyManagerProxy copyManagerProxy;
-    CSVFormat csvFormat = CSVFormat.POSTGRESQL_CSV;
+    private static final String COMMA = ",";
+    private static final String DOUBLE_QUOTE = Character.valueOf('"').toString();
+    private static final char LF = '\n';
+    private static final String EMPTY = "";
+
+    protected String copySql;
+    @Getter protected TableSchema tableSchema;
+    private Connection connection;
+    CSVFormat csvFormat =
+            CSVFormat.DEFAULT
+                    .builder()
+                    .setDelimiter(COMMA)
+                    .setEscape(null)
+                    .setIgnoreEmptyLines(false)
+                    .setQuote(null)
+                    .setRecordSeparator(LF)
+                    .setNullString(EMPTY)
+                    .setQuoteMode(QuoteMode.ALL_NON_NULL)
+                    .build();
     CSVPrinter csvPrinter;
 
-    public CopyManagerBatchStatementExecutor(String copySql, TableSchema tableSchema) {
-        this.copySql = copySql;
-        this.tableSchema = tableSchema;
-    }
+    @Getter private boolean flushed = true;
 
-    public static void copyManagerProxyChecked(JdbcConnectionProvider connectionProvider) {
-        try (Connection connection = connectionProvider.getConnection()) {
-            new CopyManagerProxy(connection);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new JdbcConnectorException(
-                    JdbcConnectorErrorCode.NO_SUPPORT_OPERATION_FAILED,
-                    "unable to open CopyManager Operation in this JDBC writer. Please configure option use_copy_statement = false.",
-                    e);
-        } catch (SQLException e) {
-            throw new JdbcConnectorException(
-                    JdbcConnectorErrorCode.CREATE_DRIVER_FAILED, "unable to open JDBC writer", e);
-        }
+    @Override
+    public void init(TablePath tablePath, TableSchema tableSchema) {
+        JdbcDialect dialect = new PostgresDialect();
+        this.tableSchema = tableSchema;
+        String tableName = dialect.extractTableName(tablePath);
+        String columns =
+                Arrays.stream(tableSchema.getFieldNames())
+                        .map(dialect::quoteIdentifier)
+                        .collect(Collectors.joining(",", "(", ")"));
+        this.copySql = String.format("COPY %s %s FROM STDIN WITH CSV", tableName, columns);
     }
 
     @Override
-    public void prepareStatements(Connection connection) throws SQLException {
+    public void prepareStatements(Connection connection) {
         try {
-            this.copyManagerProxy = new CopyManagerProxy(connection);
+            this.connection = connection;
             this.csvPrinter = new CSVPrinter(new StringBuilder(), csvFormat);
-        } catch (NoSuchMethodException
-                | IllegalAccessException
-                | InvocationTargetException
-                | IOException e) {
+        } catch (IOException e) {
             throw new JdbcConnectorException(
                     JdbcConnectorErrorCode.NO_SUPPORT_OPERATION_FAILED,
-                    "unable to open CopyManager Operation in this JDBC writer. Please configure option use_copy_statement = false.",
+                    "unable to open CopyManager Operation in this JDBC writer.",
                     e);
-        } catch (SQLException e) {
-            throw new JdbcConnectorException(
-                    JdbcConnectorErrorCode.CREATE_DRIVER_FAILED, "unable to open JDBC writer", e);
         }
     }
 
@@ -90,12 +106,13 @@ public class CopyManagerBatchStatementExecutor implements JdbcBatchStatementExec
     public void addToBatch(SeaTunnelRow record) throws SQLException {
         try {
             this.csvPrinter.printRecord(toExtract(record));
+            flushed = false;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private List<Object> toExtract(SeaTunnelRow record) {
+    protected List<Object> toExtract(SeaTunnelRow record) {
         SeaTunnelRowType rowType = tableSchema.toPhysicalRowDataType();
         List<Object> csvRecord = new ArrayList<>();
         for (int fieldIndex = 0; fieldIndex < rowType.getTotalFields(); fieldIndex++) {
@@ -106,49 +123,52 @@ public class CopyManagerBatchStatementExecutor implements JdbcBatchStatementExec
                 continue;
             }
             switch (seaTunnelDataType.getSqlType()) {
-                case STRING:
-                    csvRecord.add((String) record.getField(fieldIndex));
-                    break;
                 case BOOLEAN:
-                    csvRecord.add((Boolean) record.getField(fieldIndex));
-                    break;
                 case TINYINT:
-                    csvRecord.add((Byte) record.getField(fieldIndex));
-                    break;
                 case SMALLINT:
-                    csvRecord.add((Short) record.getField(fieldIndex));
-                    break;
                 case INT:
-                    csvRecord.add((Integer) record.getField(fieldIndex));
-                    break;
                 case BIGINT:
-                    csvRecord.add((Long) record.getField(fieldIndex));
-                    break;
                 case FLOAT:
-                    csvRecord.add((Float) record.getField(fieldIndex));
-                    break;
                 case DOUBLE:
-                    csvRecord.add((Double) record.getField(fieldIndex));
-                    break;
                 case DECIMAL:
-                    csvRecord.add((BigDecimal) record.getField(fieldIndex));
+                    csvRecord.add(record.getField(fieldIndex));
                     break;
                 case DATE:
                     LocalDate localDate = (LocalDate) record.getField(fieldIndex);
-                    csvRecord.add((java.sql.Date) java.sql.Date.valueOf(localDate));
+                    csvRecord.add(java.sql.Date.valueOf(localDate));
                     break;
                 case TIME:
                     LocalTime localTime = (LocalTime) record.getField(fieldIndex);
-                    csvRecord.add((java.sql.Time) java.sql.Time.valueOf(localTime));
+                    csvRecord.add(java.sql.Time.valueOf(localTime));
                     break;
                 case TIMESTAMP:
                     LocalDateTime localDateTime = (LocalDateTime) record.getField(fieldIndex);
-                    csvRecord.add((java.sql.Timestamp) java.sql.Timestamp.valueOf(localDateTime));
+                    csvRecord.add(java.sql.Timestamp.valueOf(localDateTime));
                     break;
                 case BYTES:
-                    csvRecord.add(
-                            org.apache.commons.codec.binary.Base64.encodeBase64String(
-                                    (byte[]) record.getField(fieldIndex)));
+                    StringBuilder hexString = new StringBuilder("\\x");
+                    for (byte b : (byte[]) record.getField(fieldIndex)) {
+                        hexString.append(String.format("%02x", b));
+                    }
+                    csvRecord.add(hexString.toString());
+                    break;
+                case STRING:
+                    Object val = record.getField(fieldIndex);
+                    if (val != null) {
+                        String strVal = val.toString();
+                        boolean containsQuote = strVal.contains(DOUBLE_QUOTE);
+                        if (strVal.contains(COMMA) || containsQuote) {
+                            strVal =
+                                    containsQuote
+                                            ? strVal.replace(
+                                                    DOUBLE_QUOTE, DOUBLE_QUOTE + DOUBLE_QUOTE)
+                                            : strVal;
+                            strVal = DOUBLE_QUOTE + strVal + DOUBLE_QUOTE;
+                        }
+                        csvRecord.add(strVal);
+                    } else {
+                        csvRecord.add(null);
+                    }
                     break;
                 case NULL:
                     csvRecord.add(null);
@@ -165,19 +185,24 @@ public class CopyManagerBatchStatementExecutor implements JdbcBatchStatementExec
         return csvRecord;
     }
 
+    private long doCopy(String sql, Reader reader) throws SQLException, IOException {
+        PGConnection pgConnection = connection.unwrap(PGConnection.class);
+        return pgConnection.getCopyAPI().copyIn(sql, reader);
+    }
+
     @Override
     public void executeBatch() throws SQLException {
         try {
             this.csvPrinter.flush();
-            this.copyManagerProxy.doCopy(
-                    copySql, new StringReader(this.csvPrinter.getOut().toString()));
-        } catch (InvocationTargetException | IllegalAccessException | IOException e) {
+            doCopy(copySql, new StringReader(this.csvPrinter.getOut().toString()));
+        } catch (SQLException | IOException e) {
             throw new JdbcConnectorException(
                     CommonErrorCodeDeprecated.SQL_OPERATION_FAILED, "Sql command: " + copySql);
         } finally {
             try {
                 this.csvPrinter.close();
                 this.csvPrinter = new CSVPrinter(new StringBuilder(), csvFormat);
+                flushed = true;
             } catch (Exception ignore) {
             }
         }
@@ -185,11 +210,15 @@ public class CopyManagerBatchStatementExecutor implements JdbcBatchStatementExec
 
     @Override
     public void closeStatements() throws SQLException {
-        this.copyManagerProxy = null;
         try {
             this.csvPrinter.close();
             this.csvPrinter = null;
         } catch (Exception ignore) {
         }
+    }
+
+    @Override
+    public String dialectName() {
+        return DatabaseIdentifier.POSTGRESQL;
     }
 }

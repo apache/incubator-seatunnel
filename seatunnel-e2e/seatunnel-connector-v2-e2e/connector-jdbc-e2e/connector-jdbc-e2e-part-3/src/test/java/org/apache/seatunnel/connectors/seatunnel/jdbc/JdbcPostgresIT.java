@@ -75,10 +75,11 @@ public class JdbcPostgresIT extends TestSuiteBase implements TestResource {
     private static final List<String> PG_CONFIG_FILE_LIST =
             Lists.newArrayList(
                     "/jdbc_postgres_source_and_sink.conf",
-                    "/jdbc_postgres_source_and_sink_copy_stmt.conf",
                     "/jdbc_postgres_source_and_sink_parallel.conf",
                     "/jdbc_postgres_source_and_sink_parallel_upper_lower.conf",
-                    "/jdbc_postgres_source_and_sink_xa.conf");
+                    "/jdbc_postgres_source_and_sink_xa.conf",
+                    "/jdbc_postgres_source_and_sink_copy.conf",
+                    "/jdbc_postgres_source_and_sink_copy_sql.conf");
     private PostgreSQLContainer<?> POSTGRESQL_CONTAINER;
     private static final String PG_SOURCE_DDL =
             "CREATE TABLE IF NOT EXISTS pg_e2e_source_table (\n"
@@ -334,7 +335,8 @@ public class JdbcPostgresIT extends TestSuiteBase implements TestResource {
                         CONFIG_FILE
                                 + " job run failed in "
                                 + container.getClass().getSimpleName()
-                                + ".");
+                                + ", cause: "
+                                + execResult.getStderr());
                 Assertions.assertIterableEquals(querySql(SOURCE_SQL), querySql(SINK_SQL));
             } finally {
                 executeSQL("truncate table pg_e2e_sink_table");

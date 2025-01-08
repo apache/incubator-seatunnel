@@ -177,6 +177,46 @@ public class PostgresDialect implements JdbcDialect {
     }
 
     @Override
+    public Optional<String> getMergeStatement(
+            String sourceSQL,
+            String database,
+            String tableName,
+            String[] fieldNames,
+            String[] uniqueKeyFields,
+            boolean isPrimaryKeyUpdated) {
+        String uniqueColumns =
+                Arrays.stream(uniqueKeyFields)
+                        .map(this::quoteIdentifier)
+                        .collect(Collectors.joining(", "));
+        String updateClause =
+                Arrays.stream(fieldNames)
+                        .filter(
+                                fieldName ->
+                                        isPrimaryKeyUpdated
+                                                || !Arrays.asList(uniqueKeyFields)
+                                                        .contains(fieldName))
+                        .map(
+                                fieldName ->
+                                        quoteIdentifier(fieldName)
+                                                + "=EXCLUDED."
+                                                + quoteIdentifier(fieldName))
+                        .collect(Collectors.joining(", "));
+        String columns =
+                Arrays.stream(fieldNames)
+                        .map(this::quoteIdentifier)
+                        .collect(Collectors.joining(", "));
+        String insertIntoBySQLStatement =
+                String.format(
+                        "INSERT INTO %s (%s) %s",
+                        tableIdentifier(database, tableName), columns, sourceSQL);
+        String mergeSQL =
+                String.format(
+                        "%s ON CONFLICT (%s) DO UPDATE SET %s",
+                        insertIntoBySQLStatement, uniqueColumns, updateClause);
+        return Optional.of(mergeSQL);
+    }
+
+    @Override
     public PreparedStatement creatPreparedStatement(
             Connection connection, String queryTemplate, int fetchSize) throws SQLException {
         // use cursor mode, reference:

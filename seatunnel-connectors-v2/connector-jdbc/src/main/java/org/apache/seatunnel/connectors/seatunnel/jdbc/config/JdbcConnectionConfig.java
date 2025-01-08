@@ -170,6 +170,8 @@ public class JdbcConnectionConfig implements Serializable {
         public String kerberosKeytabPath;
         public String krb5Path = JdbcOptions.KRB5_PATH.defaultValue();
 
+        public String tempTableName;
+
         private Builder() {}
 
         public Builder url(String url) {

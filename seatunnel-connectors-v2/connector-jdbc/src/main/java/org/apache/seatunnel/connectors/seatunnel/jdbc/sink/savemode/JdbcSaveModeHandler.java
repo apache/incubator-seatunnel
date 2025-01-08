@@ -30,21 +30,43 @@ import lombok.extern.slf4j.Slf4j;
 public class JdbcSaveModeHandler extends DefaultSaveModeHandler {
     public boolean createIndex;
 
+    private final TablePath tempTablePath;
+
+    private final CatalogTable tempCatalogTable;
+
     public JdbcSaveModeHandler(
             SchemaSaveMode schemaSaveMode,
             DataSaveMode dataSaveMode,
             Catalog catalog,
             TablePath tablePath,
             CatalogTable catalogTable,
+            TablePath tempTablePath,
+            CatalogTable tempCatalogTable,
             String customSql,
             boolean createIndex) {
         super(schemaSaveMode, dataSaveMode, catalog, tablePath, catalogTable, customSql);
         this.createIndex = createIndex;
+        this.tempTablePath = tempTablePath;
+        this.tempCatalogTable = tempCatalogTable;
     }
 
     @Override
     protected void createTable() {
-        super.createTablePreCheck();
+        createTablePreCheck(tablePath, catalog, catalogTable);
         catalog.createTable(tablePath, catalogTable, true, createIndex);
+    }
+
+    @Override
+    protected void createSchemaWhenNotExist() {
+        if (!tableExists()) {
+            createTable();
+        }
+        if (tempTablePath != null && tempCatalogTable != null) {
+            if (!catalog.tableExists(tempTablePath)) {
+                DefaultSaveModeHandler.createTablePreCheck(
+                        tempTablePath, catalog, tempCatalogTable);
+                catalog.createTable(tempTablePath, tempCatalogTable, true, true);
+            }
+        }
     }
 }

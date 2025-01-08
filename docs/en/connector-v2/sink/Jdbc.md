@@ -29,7 +29,7 @@ support `Xa transactions`. You can set `is_exactly_once=true` to enable it.
 
 ## Options
 
-|                   Name                    |  Type   | Required |           Default            |
+| Name                                      |  Type   | Required | Default                      |
 |-------------------------------------------|---------|----------|------------------------------|
 | url                                       | String  | Yes      | -                            |
 | driver                                    | String  | Yes      | -                            |
@@ -57,8 +57,12 @@ support `Xa transactions`. You can set `is_exactly_once=true` to enable it.
 | data_save_mode                            | Enum    | No       | APPEND_DATA                  |
 | custom_sql                                | String  | No       | -                            |
 | enable_upsert                             | Boolean | No       | true                         |
-| use_copy_statement                        | Boolean | No       | false                        |
 | create_index                              | Boolean | No       | true                         |
+| use_copy_statement                        | Boolean | No       | false                        |
+| write_mode                                | Enum    | No       | sql                          |
+| temp_table_name                           | String  | No       | -                            |
+| temp_column_batch_code                    | String  | No       | -                            |
+| temp_column_row_kind                      | String  | No       | -                            |
 
 ### driver [string]
 
@@ -203,17 +207,35 @@ When data_save_mode selects CUSTOM_PROCESSING, you should fill in the CUSTOM_SQL
 
 Enable upsert by primary_keys exist, If the task has no key duplicate data, setting this parameter to `false` can speed up data import
 
-### use_copy_statement [boolean]
-
-Use `COPY ${table} FROM STDIN` statement to import data. Only drivers with `getCopyAPI()` method connections are supported.  e.g.: Postgresql driver `org.postgresql.Driver`.
-
-NOTICE: `MAP`, `ARRAY`, `ROW` types are not supported.
-
 ### create_index [boolean]
 
 Create the index(contains primary key and any other indexes) or not when auto-create table. You can use this option to improve the performance of jdbc writes when migrating large tables.
 
 Notice: Note that this will sacrifice read performance, so you'll need to manually create indexes after the table migration to improve read performance
+
+### write_mode [Enum]
+
+The write modes support five modes: SQL, COPY, COPY_SQL, MERGE, COPY_MERGE.
+
+- SQL (default): The traditional SQL mode using JDBC, supporting both full and incremental writes.
+- COPY: Import data using the COPY command (requires DB support such as Postgres), only supports full writes.
+- COPY_SQL: Import data using the COPY command (requires DB support), and dynamically switch to SQL mode for writing if there is incremental data.
+- MERGE: Import into a temporary table using the COPY command (requires DB support), and then MERGE into the target table (requires DB support), supporting both full and incremental writes.
+- COPY_MERGE: Use the COPY command to import full data into the target table (requires DB support); if there is incremental data, dynamically switch to using the COPY command to import into a temporary table, and then MERGE into the target table (requires DB support), supporting both full and incremental writes.
+
+NOTICE: when use MERGE/COPY_MERGE write mode, it will create a temporary table with the same structure as the target table automatically.
+
+### temp_table_name [String]
+
+The temporary table name used in the MERGE/COPY_MERGE write mode. If not specified, the system will generate by origin table name with suffix `_tmp`.
+
+### temp_column_batch_code [String]
+
+The temporary column used to batch write data in the MERGE/COPY_MERGE write mode. If not specified, the system will default to `__st_batch_code` column.
+
+### temp_column_row_kind [String]
+
+The temporary column used to identify the type of data in the MERGE/COPY_MERGE write mode. If not specified, the system will default to `__st_row_kind` column.
 
 ## tips
 

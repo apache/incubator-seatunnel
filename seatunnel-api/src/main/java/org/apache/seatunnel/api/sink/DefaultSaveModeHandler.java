@@ -172,7 +172,8 @@ public class DefaultSaveModeHandler implements SaveModeHandler {
         catalog.dropTable(tablePath, true);
     }
 
-    protected void createTablePreCheck() {
+    public static void createTablePreCheck(
+            TablePath tablePath, Catalog catalog, CatalogTable catalogTable) {
         if (!catalog.databaseExists(tablePath.getDatabaseName())) {
             try {
                 log.info(
@@ -199,7 +200,7 @@ public class DefaultSaveModeHandler implements SaveModeHandler {
     }
 
     protected void createTable() {
-        createTablePreCheck();
+        createTablePreCheck(tablePath, catalog, catalogTable);
         catalog.createTable(tablePath, catalogTable, true);
         isNewTableCreated = true;
     }

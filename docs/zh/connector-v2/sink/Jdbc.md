@@ -56,6 +56,11 @@
 | custom_sql                                | String  | 否    | -                            |
 | enable_upsert                             | Boolean | 否    | true                         |
 | use_copy_statement                        | Boolean | 否    | false                        |
+| write_mode                                | Enum    | 否    | sql                          |
+| temp_table_name                           | String  | 否    | -                            |
+| temp_column_batch_code                    | String  | 否    | -                            |
+| temp_column_row_kind                      | String  | 否    | -                            |
+
 
 ### driver [string]
 
@@ -197,12 +202,28 @@ Sink插件常用参数，请参考 [Sink常用选项](../sink-common-options.md)
 
 启用通过主键更新插入，如果任务没有key重复数据，设置该参数为 false 可以加快数据导入速度
 
-### use_copy_statement [boolean]
+### write_mode [Enum]
 
-使用 `COPY ${table} FROM STDIN` 语句导入数据。仅支持具有 `getCopyAPI()` 方法连接的驱动程序。例如：Postgresql
-驱动程序 `org.postgresql.Driver`
+写入模式支持五种模式：SQL, COPY, COPY_SQL, MERGE, COPY_MERGE
+- SQL（默认）: 传统使用JDBC的SQL模式，支持全量和增量的写入
+- COPY: 使用COPY命令导入数据（需数据库支持如Postgres），仅支持全量写入
+- COPY_SQL: 使用COPY命令导入数据（需数据库支持），如果有增量数据动态切换为SQL模式写入
+- MERGE: 使用COPY命令导入临时表（需数据库支持），然后MERGE到目标表（需数据库支持），支持全量和增量的写入
+- COPY_MERGE: 使用COPY命令将全量数据导入目标表（需数据库支持）；如果有增量数据动态切换为使用COPY命令导入到临时表，然后MERGE到目标表（需数据库支持），支持全量和增量的写入
 
-注意：不支持 `MAP`、`ARRAY`、`ROW`类型
+注意: 当使用 MERGE/COPY_MERGE 写入模式时，它将自动创建一个与目标表结构相同的临时表。
+
+### temp_table_name [String]
+
+在 MERGE/COPY_MERGE 写入模式中使用的临时表名称。如果未指定，系统将根据原始表名称生成，并添加后缀 `_tmp`。
+
+### temp_column_batch_code [String]
+
+在 MERGE/COPY_MERGE 写入模式中用于批量写入数据的临时列。如果未指定，系统将默认使用 `__st_batch_code` 作为列名。
+
+### temp_column_row_kind [String]
+
+在 MERGE/COPY_MERGE 写入模式中用于识别数据类型的临时列。如果未指定，系统将默认使用 `__st_row_kind` 作为列名。 
 
 ## tips
 
