@@ -71,7 +71,7 @@ Example 4：Add new fields
 ### Data Transform
 
 After datatype transformed, Transform will receive data-row input from upstream(source or transform),
-edit into data-row with [New Datatype](#DataType transform) and output to downstream (sink or transform).
+edit into data-row with new datatype and output to downstream (sink or transform).
 This process is called data transform.
 
 ### Translation
@@ -103,207 +103,145 @@ Data translation:
 
 ## Core APIs
 
+### TableTransformFactory
+
+- Used to create a factory class for transform, through which transform instances are created using the `createTransform` method.
+- `factoryIdentifier` is used to identify the name of the current Factory, which is also configured in the configuration file to distinguish different transform.
+- `optionRule` is used to define the parameters supported by the current transform. This method can be used to define the logic of the parameters, such as which parameters are required, which are optional, which are mutually exclusive, etc.
+  SeaTunnel will use `OptionRule` to verify the validity of the user's configuration. Please refer to the `Option` below.
+- Make sure to add the `@AutoService(Factory.class)` annotation to `TableTransformFactory`.
+
+We can receive catalog table input from upstream and the transform configuration from `TableTransformFactoryContext`.
+
+```java
+    @Override
+    public TableTransform createTransform(TableTransformFactoryContext context) {
+        return () ->
+                new SQLMultiCatalogFlatMapTransform(
+                        context.getCatalogTables(), context.getOptions());
+    }
+```
+
 ### SeaTunnelTransform
 
 `SeaTunnelTransform` provides all major and primary APIs, you can subclass it to do whatever transform.
 
-1. Receive datatype input from upstream.
+1. Get the produced catalog table list of this transform.
 
-```java
-/**
- * Set the data type info of input data.
- *
- * @param inputDataType The data type info of upstream input.
- */
- void setTypeInfo(SeaTunnelDataType<T> inputDataType);
-```
+   ```java
+   List<CatalogTable> getProducedCatalogTables();
+   ```
+   
+   or get the produced catalog table of this transform.
+   
+   ```java
+   CatalogTable getProducedCatalogTable();
+   ```
 
-2. Outputs new datatype to downstream.
+2. Handle the SchemaChangeEvent if the transform needs to change the schema.
 
-```java
-/**
- * Get the data type of the records produced by this transform.
- *
- * @return Produced data type.
- */
-SeaTunnelDataType<T> getProducedType();
-```
+   ```java
+       default SchemaChangeEvent mapSchemaChangeEvent(SchemaChangeEvent schemaChangeEvent) {
+      return schemaChangeEvent;
+   }
+   ```
 
-3. Edit input data and outputs new data to downstream.
+3. Edit input data and outputs new data to downstream with `SeaTunnelMapTransform`.
 
-```java
-/**
- * Transform input data to {@link this#getProducedType()} types data.
- *
- * @param row the data need be transform.
- * @return transformed data.
- */
-T map(T row);
-```
+   ```java
+    T map(T row);
+   ```
+   
+4. Or edit input data and outputs new data to downstream with `SeaTunnelFlatMapTransform`.
+
+   ```java
+    List<T> flatMap(T row);
+   ```
 
 ### SingleFieldOutputTransform
 
 `SingleFieldOutputTransform` abstract single field change operator
 
-1. Define output field
+1. Define output field column
+   
+   ```java
+   protected abstract Column getOutputColumn();
+   ```
 
-```java
-/**
- * Outputs new field
- *
- * @return
- */
-protected abstract String getOutputFieldName();
-```
-
-2. Define output field datatype
-
-```java
-/**
- * Outputs new field datatype
- *
- * @return
- */
-protected abstract SeaTunnelDataType getOutputFieldDataType();
-```
-
-3. Define output field value
-
-```java
-/**
- * Outputs new field value
- * 
- * @param inputRow The inputRow of upstream input.
- * @return
- */
-protected abstract Object getOutputFieldValue(SeaTunnelRowAccessor inputRow);
-```
+2. Define output field value
+   
+   ```java
+   protected abstract Object getOutputFieldValue(SeaTunnelRowAccessor inputRow);
+   ```
 
 ### MultipleFieldOutputTransform
 
 `MultipleFieldOutputTransform` abstract multiple fields change operator
 
-1. Define output fields
+1. Define output fields column
 
-```java
-/**
- * Outputs new fields
- *
- * @return
- */
-protected abstract String[] getOutputFieldNames();
-```
+   ```java
+   protected abstract Column[] getOutputColumns();
+   ```
 
-2. Define output fields datatype
+2. Define output field values
 
-```java
-/**
- * Outputs new fields datatype
- *
- * @return
- */
-protected abstract SeaTunnelDataType[] getOutputFieldDataTypes();
-```
-
-3. Define output field values
-
-```java
-/**
- * Outputs new fields value
- *
- * @param inputRow The inputRow of upstream input.
- * @return
- */
-protected abstract Object[] getOutputFieldValues(SeaTunnelRowAccessor inputRow);
-```
+   ```java
+   protected abstract Object[] getOutputFieldValues(SeaTunnelRowAccessor inputRow);
+   ```
 
 ### AbstractSeaTunnelTransform
 
-`AbstractSeaTunnelTransform` abstract datatype & fields change operator
+`AbstractSeaTunnelTransform` abstract datatype, table path and fields change operator
 
 1. Transform input row type and outputs new row type
-
-```java
-/**
- * Outputs transformed row type.
- *
- * @param inputRowType upstream input row type
- * @return
- */
-protected abstract SeaTunnelRowType transformRowType(SeaTunnelRowType inputRowType);
-```
+   
+   ```java
+   protected abstract TableSchema transformTableSchema();
+   ```
 
 2. Transform input row data and outputs new row data
 
-```java
-/**
- * Outputs transformed row data.
- * 
- * @param inputRow upstream input row data
- * @return
- */
-protected abstract SeaTunnelRow transformRow(SeaTunnelRow inputRow);
-```
+   ```java
+   protected abstract R transformRow(SeaTunnelRow inputRow);
+   ```
+
+3. Transform input catalog table path and outputs new catalog table path
+
+   ```java
+   protected abstract TableIdentifier transformTableIdentifier();
+   ```
+   
+### AbstractCatalogSupportFlatMapTransform & AbstractCatalogSupportMapTransform
+
+Contains the basic implementation of transform common functions and the advanced encapsulation of transform functions. 
+You can quickly implement transform development by implementing this class.
+
+### AbstractMultiCatalogFlatMapTransform & AbstractMultiCatalogMapTransform
+
+The multi-table version of AbstractCatalogSupportFlatMapTransform & AbstractCatalogSupportMapTransform.
+Contains the encapsulation of multi-table transform. For more information about multi-table transform, please refer to [transform-multi-table.md](../transform-v2/transform-multi-table.md)
 
 ## Develop A Transform
 
 It must implement one of the following APIs:
-- SeaTunnelTransform
+- SeaTunnelMapTransform
+- SeaTunnelFlatMapTransform
 - AbstractSeaTunnelTransform
+- AbstractCatalogSupportFlatMapTransform
+- AbstractCatalogSupportMapTransform
+- AbstractMultiCatalogFlatMapTransform
+- AbstractMultiCatalogMapTransform
 - SingleFieldOutputTransform
 - MultipleFieldOutputTransform
 
 Add implement subclass into module `seatunnel-transforms-v2`.
 
-### Example: copy field to new field
+Add transform info to `plugin-mapping.propertie`s file in seatunnel root path.
 
-```java
-@AutoService(SeaTunnelTransform.class)
-public class CopyFieldTransform extends SingleFieldOutputTransform {
+### Example
 
-    private String srcField;
-    private int srcFieldIndex;
-    private SeaTunnelDataType srcFieldDataType;
-    private String destField;
-
-    @Override
-    public String getPluginName() {
-        return "Copy";
-    }
-
-    @Override
-    protected void setConfig(Config pluginConfig) {
-        this.srcField = pluginConfig.getString("src_field");
-        this.destField = pluginConfig.getString("dest_fields");
-    }
-
-    @Override
-    protected void setInputRowType(SeaTunnelRowType inputRowType) {
-        srcFieldIndex = inputRowType.indexOf(srcField);
-        srcFieldDataType = inputRowType.getFieldType(srcFieldIndex);
-    }
-
-    @Override
-    protected String getOutputFieldName() {
-        return destField;
-    }
-
-    @Override
-    protected SeaTunnelDataType getOutputFieldDataType() {
-        return srcFieldDataType;
-    }
-
-    @Override
-    protected Object getOutputFieldValue(SeaTunnelRowAccessor inputRow) {
-        return inputRow.getField(srcFieldIndex);
-    }
-}
-```
-
-1. The `getPluginName` method is used to identify the transform name.
-2. The @AutoService is used to generate the `META-INF/services/org.apache.seatunnel.api.transform.SeaTunnelTransform`
-   file automatically.
-3. The `setConfig` method is used to inject user configs.
+Please refer the [source code of transform](https://github.com/apache/seatunnel/tree/dev/seatunnel-transforms-v2/src/main/java/org/apache/seatunnel/transform)
 
 ## Transform Test Tool
 
