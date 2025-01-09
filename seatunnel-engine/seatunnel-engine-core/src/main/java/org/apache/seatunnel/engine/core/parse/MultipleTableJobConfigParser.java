@@ -666,8 +666,6 @@ public class MultipleTableJobConfigParser {
         sinkActions.forEach(
                 action -> {
                     SeaTunnelSink sink = action.getSink();
-                    //                    String tableId =
-                    // action.getConfig().getMultipleRowTableId();
                     TablePath tablePath = action.getConfig().getTablePath();
                     sinks.put(tablePath, sink);
                 });
