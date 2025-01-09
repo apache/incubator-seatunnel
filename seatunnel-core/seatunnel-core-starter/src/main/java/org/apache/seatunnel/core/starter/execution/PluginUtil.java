@@ -28,6 +28,7 @@ import org.apache.seatunnel.api.sink.SeaTunnelSink;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.CatalogTableUtil;
+import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.connector.TableSource;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.FactoryException;
@@ -184,7 +185,7 @@ public class PluginUtil {
             return sink;
         } else {
             if (catalogTables.size() > 1) {
-                Map<String, SeaTunnelSink> sinks = new HashMap<>();
+                Map<TablePath, SeaTunnelSink> sinks = new HashMap<>();
                 ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(sinkConfig);
                 catalogTables.forEach(
                         catalogTable -> {
@@ -202,7 +203,7 @@ public class PluginUtil {
                                             .createSink(context)
                                             .createSink();
                             action.setJobContext(jobContext);
-                            sinks.put(catalogTable.getTablePath().toString(), action);
+                            sinks.put(catalogTable.getTablePath(), action);
                         });
                 return FactoryUtil.createMultiTableSink(sinks, readonlyConfig, classLoader);
             }
