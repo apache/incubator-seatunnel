@@ -18,6 +18,16 @@
 该接收器用于将数据写入到StarRocks中。支持批和流两种模式。
 StarRocks数据接收器内部实现采用了缓存，通过stream load将数据批导入。
 
+## 依赖
+
+### 对于 Spark/Flink
+
+> 1. 你需要下载 [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) 并添加到目录 `${SEATUNNEL_HOME}/plugins/`.
+
+### 对于 SeaTunnel Zeta
+
+> 1. 你需要下载 [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) 并添加到目录 `${SEATUNNEL_HOME}/lib/`.
+
 ## 接收器选项
 
 |             名称              |   类型    | 是否必须 |             默认值              |                                                     Description                                                     |

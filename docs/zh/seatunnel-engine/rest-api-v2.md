@@ -850,3 +850,16 @@ sink {
 获取日志文件内容：`http://localhost:5801/log/job-898380162133917698.log``
 
 </details>
+
+### 获取节点指标信息
+
+<details>
+ <summary>
+    <code>GET</code> <code><b>/metrics</b></code>  
+    <code>GET</code> <code><b>/openmetrics</b></code>
+</summary>
+你需要先打开`Telemetry`才能获取集群指标信息。否则将返回空信息。
+
+更多关于`Telemetry`的信息可以在[Telemetry](telemetry.md)文档中找到。
+
+</details>
