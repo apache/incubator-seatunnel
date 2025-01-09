@@ -30,6 +30,7 @@ import org.apache.seatunnel.api.sink.SupportMultiTableSink;
 import org.apache.seatunnel.api.sink.SupportSaveMode;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
+import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.FactoryUtil;
 import org.apache.seatunnel.api.table.factory.TableSinkFactory;
@@ -106,7 +107,7 @@ public class SinkExecuteProcessor
                     fromSourceTable(sinkConfig, upstreamDataStreams).orElse(input);
             Optional<? extends Factory> factory = plugins.get(i);
             boolean fallBack = !factory.isPresent() || isFallback(factory.get());
-            Map<String, SeaTunnelSink> sinks = new HashMap<>();
+            Map<TablePath, SeaTunnelSink> sinks = new HashMap<>();
             if (fallBack) {
                 for (CatalogTable catalogTable : stream.getCatalogTables()) {
                     SeaTunnelSink fallBackSink =
@@ -122,8 +123,7 @@ public class SinkExecuteProcessor
                     fallBackSink.setTypeInfo(sourceType);
                     handleSaveMode(fallBackSink);
                     TableIdentifier tableId = catalogTable.getTableId();
-                    String tableIdName = tableId.toTablePath().toString();
-                    sinks.put(tableIdName, fallBackSink);
+                    sinks.put(tableId.toTablePath(), fallBackSink);
                 }
             } else {
                 for (CatalogTable catalogTable : stream.getCatalogTables()) {
@@ -141,8 +141,7 @@ public class SinkExecuteProcessor
                     seaTunnelSink.setJobContext(jobContext);
                     handleSaveMode(seaTunnelSink);
                     TableIdentifier tableId = catalogTable.getTableId();
-                    String tableIdName = tableId.toTablePath().toString();
-                    sinks.put(tableIdName, seaTunnelSink);
+                    sinks.put(tableId.toTablePath(), seaTunnelSink);
                 }
             }
             SeaTunnelSink sink =
@@ -168,7 +167,9 @@ public class SinkExecuteProcessor
 
     // if not support multi table, rollback
     public SeaTunnelSink tryGenerateMultiTableSink(
-            Map<String, SeaTunnelSink> sinks, ReadonlyConfig sinkConfig, ClassLoader classLoader) {
+            Map<TablePath, SeaTunnelSink> sinks,
+            ReadonlyConfig sinkConfig,
+            ClassLoader classLoader) {
         if (sinks.values().stream().anyMatch(sink -> !(sink instanceof SupportMultiTableSink))) {
             log.info("Unsupported multi table sink api, rollback to sink template");
             // choose the first sink
