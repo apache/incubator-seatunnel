@@ -15,24 +15,27 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.e2e.connector.doris;
+package org.apache.seatunnel.api.tracing;
 
-import org.apache.seatunnel.e2e.common.container.TestContainer;
+import java.util.function.Supplier;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.TestTemplate;
-import org.testcontainers.containers.Container;
+public class MDCSupplier<T> implements Supplier<T> {
+    private final MDCContext context;
+    private final Supplier<T> delegate;
 
-import java.io.IOException;
+    public MDCSupplier(Supplier<T> delegate) {
+        this(MDCContext.current(), delegate);
+    }
 
-public class DorisNoSchemaIT extends DorisIT {
+    public MDCSupplier(MDCContext context, Supplier<T> delegate) {
+        this.context = context;
+        this.delegate = delegate;
+    }
 
-    @TestTemplate
-    public void testDoris(TestContainer container) throws IOException, InterruptedException {
-        initializeJdbcTable();
-        batchInsertUniqueTableData();
-        Container.ExecResult execResult1 = container.executeJob("/doris_source_no_schema.conf");
-        Assertions.assertEquals(0, execResult1.getExitCode());
-        checkSinkData();
+    @Override
+    public T get() {
+        try (MDCContext ignored = context.activate()) {
+            return delegate.get();
+        }
     }
 }
