@@ -64,7 +64,6 @@ import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsT
 import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsType.LONG;
 import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsType.LONG_RANGE;
 import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsType.MATCH_ONLY_TEXT;
-import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsType.NESTED;
 import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsType.OBJECT;
 import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsType.PERCOLATOR;
 import static org.apache.seatunnel.connectors.seatunnel.elasticsearch.client.EsType.POINT;
@@ -146,9 +145,15 @@ public class ElasticSearchTypeConverter implements BasicTypeConverter<BasicTypeD
                         new SeaTunnelRowType(
                                 new String[] {"values", "counts"},
                                 new SeaTunnelDataType<?>[] {
-                                    ArrayType.DOUBLE_ARRAY_TYPE, ArrayType.LONG_ARRAY_TYPE
+                                        ArrayType.DOUBLE_ARRAY_TYPE, ArrayType.LONG_ARRAY_TYPE
                                 });
                 builder.dataType(rowType);
+                break;
+            case EsType.NESTED:
+                builder.dataType(
+                        new ArrayType<>(
+                                Map[].class,
+                                new MapType<>(BasicType.STRING_TYPE, BasicType.STRING_TYPE)));
                 break;
             case INTEGER:
             case TOKEN_COUNT:
@@ -207,7 +212,6 @@ public class ElasticSearchTypeConverter implements BasicTypeConverter<BasicTypeD
             case COMPLETION:
             case STRING:
             case GEO_SHAPE:
-            case NESTED:
             case PERCOLATOR:
             case POINT:
             case RANK_FEATURES:
