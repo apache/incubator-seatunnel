@@ -27,6 +27,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SinkConfig implements Config {
-    //    private String multipleRowTableId;
     private TablePath tablePath;
 }
