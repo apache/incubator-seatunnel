@@ -42,6 +42,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -180,7 +181,12 @@ public class DefaultSeaTunnelRowDeserializer implements SeaTunnelRowDeserializer
                 SeaTunnelDataType<?> elementType = arrayType.getElementType();
                 if (elementType instanceof MapType) {
                     MapType<?, ?> mapType = (MapType<?, ?>) elementType;
-                    List<Map> mapList = JsonUtils.toList(fieldValue, Map.class);
+                    List<Map> mapList = new ArrayList<>();
+                    if (JsonUtils.isJsonArray(fieldValue)) {
+                        mapList = JsonUtils.toList(fieldValue, Map.class);
+                    } else {
+                        mapList.add(JsonUtils.toMap(fieldValue));
+                    }
                     Object arr = Array.newInstance(elementType.getTypeClass(), mapList.size());
                     SeaTunnelDataType<?> keyType = mapType.getKeyType();
                     SeaTunnelDataType<?> valueType = mapType.getValueType();
