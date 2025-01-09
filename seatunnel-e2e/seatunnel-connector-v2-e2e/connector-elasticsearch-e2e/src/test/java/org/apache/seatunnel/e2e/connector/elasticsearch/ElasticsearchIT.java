@@ -102,9 +102,9 @@ public class ElasticsearchIT extends TestSuiteBase implements TestResource {
     public void startUp() throws Exception {
         container =
                 new ElasticsearchContainer(
-                        DockerImageName.parse("elasticsearch:8.9.0")
-                                .asCompatibleSubstituteFor(
-                                        "docker.elastic.co/elasticsearch/elasticsearch"))
+                                DockerImageName.parse("elasticsearch:8.9.0")
+                                        .asCompatibleSubstituteFor(
+                                                "docker.elastic.co/elasticsearch/elasticsearch"))
                         .withNetwork(NETWORK)
                         .withEnv("cluster.routing.allocation.disk.threshold_enabled", "false")
                         .withNetworkAliases("elasticsearch")
@@ -169,11 +169,11 @@ public class ElasticsearchIT extends TestSuiteBase implements TestResource {
                 esRestClient.bulk(
                         "{ \"index\" : { \"_index\" : \"st_index_nest\", \"_id\" : \"1\" } }\n"
                                 + IOUtils.toString(
-                                        ContainerUtil.getResourcesFile(
-                                                        "/elasticsearch/st_index_nest_data.json")
-                                                .toURI(),
-                                        StandardCharsets.UTF_8)
-                                .replace("\n", "")
+                                                ContainerUtil.getResourcesFile(
+                                                                "/elasticsearch/st_index_nest_data.json")
+                                                        .toURI(),
+                                                StandardCharsets.UTF_8)
+                                        .replace("\n", "")
                                 + "\n");
         Assertions.assertFalse(response.isErrors(), response.getResponse());
         // waiting index refresh
@@ -194,11 +194,11 @@ public class ElasticsearchIT extends TestSuiteBase implements TestResource {
                 esRestClient.bulk(
                         "{ \"index\" : { \"_index\" : \"st_index_full_type\", \"_id\" : \"1\" } }\n"
                                 + IOUtils.toString(
-                                        ContainerUtil.getResourcesFile(
-                                                        "/elasticsearch/st_index_full_type_data.json")
-                                                .toURI(),
-                                        StandardCharsets.UTF_8)
-                                .replace("\n", "")
+                                                ContainerUtil.getResourcesFile(
+                                                                "/elasticsearch/st_index_full_type_data.json")
+                                                        .toURI(),
+                                                StandardCharsets.UTF_8)
+                                        .replace("\n", "")
                                 + "\n");
         Assertions.assertFalse(response.isErrors(), response.getResponse());
         // waiting index refresh
@@ -442,21 +442,21 @@ public class ElasticsearchIT extends TestSuiteBase implements TestResource {
     private List<String> generateTestDataSet1() throws JsonProcessingException {
         String[] fields =
                 new String[] {
-                        "c_map",
-                        "c_array",
-                        "c_string",
-                        "c_boolean",
-                        "c_tinyint",
-                        "c_smallint",
-                        "c_bigint",
-                        "c_float",
-                        "c_double",
-                        "c_decimal",
-                        "c_bytes",
-                        "c_int",
-                        "c_date",
-                        "c_timestamp",
-                        "c_null"
+                    "c_map",
+                    "c_array",
+                    "c_string",
+                    "c_boolean",
+                    "c_tinyint",
+                    "c_smallint",
+                    "c_bigint",
+                    "c_float",
+                    "c_double",
+                    "c_decimal",
+                    "c_bytes",
+                    "c_int",
+                    "c_date",
+                    "c_timestamp",
+                    "c_null"
                 };
 
         List<String> documents = new ArrayList<>();
@@ -465,22 +465,22 @@ public class ElasticsearchIT extends TestSuiteBase implements TestResource {
             Map<String, Object> doc = new HashMap<>();
             Object[] values =
                     new Object[] {
-                            Collections.singletonMap("key", Short.parseShort(String.valueOf(i))),
-                            new Byte[] {Byte.parseByte("1"), Byte.parseByte("2"), Byte.parseByte("3")},
-                            "string",
-                            Boolean.FALSE,
-                            Byte.parseByte("1"),
-                            Short.parseShort("1"),
-                            Long.parseLong("1"),
-                            Float.parseFloat("1.1"),
-                            Double.parseDouble("1.1"),
-                            BigDecimal.valueOf(11, 1),
-                            "test".getBytes(),
-                            i,
-                            LocalDate.now().toString(),
-                            System.currentTimeMillis(),
-                            // Null values are also a basic use case for testing
-                            null
+                        Collections.singletonMap("key", Short.parseShort(String.valueOf(i))),
+                        new Byte[] {Byte.parseByte("1"), Byte.parseByte("2"), Byte.parseByte("3")},
+                        "string",
+                        Boolean.FALSE,
+                        Byte.parseByte("1"),
+                        Short.parseShort("1"),
+                        Long.parseLong("1"),
+                        Float.parseFloat("1.1"),
+                        Double.parseDouble("1.1"),
+                        BigDecimal.valueOf(11, 1),
+                        "test".getBytes(),
+                        i,
+                        LocalDate.now().toString(),
+                        System.currentTimeMillis(),
+                        // Null values are also a basic use case for testing
+                        null
                     };
             for (int j = 0; j < fields.length; j++) {
                 doc.put(fields[j], values[j]);
@@ -493,21 +493,21 @@ public class ElasticsearchIT extends TestSuiteBase implements TestResource {
     private List<String> generateTestDataSet2() throws JsonProcessingException {
         String[] fields =
                 new String[] {
-                        "c_map2",
-                        "c_array2",
-                        "c_string2",
-                        "c_boolean2",
-                        "c_tinyint2",
-                        "c_smallint2",
-                        "c_bigint2",
-                        "c_float2",
-                        "c_double2",
-                        "c_decimal2",
-                        "c_bytes2",
-                        "c_int2",
-                        "c_date2",
-                        "c_timestamp2",
-                        "c_null2"
+                    "c_map2",
+                    "c_array2",
+                    "c_string2",
+                    "c_boolean2",
+                    "c_tinyint2",
+                    "c_smallint2",
+                    "c_bigint2",
+                    "c_float2",
+                    "c_double2",
+                    "c_decimal2",
+                    "c_bytes2",
+                    "c_int2",
+                    "c_date2",
+                    "c_timestamp2",
+                    "c_null2"
                 };
 
         List<String> documents = new ArrayList<>();
@@ -516,24 +516,24 @@ public class ElasticsearchIT extends TestSuiteBase implements TestResource {
             Map<String, Object> doc = new HashMap<>();
             Object[] values =
                     new Object[] {
-                            Collections.singletonMap("key2", Short.parseShort(String.valueOf(i))),
-                            new Byte[] {
-                                    Byte.parseByte("11"), Byte.parseByte("22"), Byte.parseByte("33")
-                            },
-                            "string2",
-                            Boolean.FALSE,
-                            Byte.parseByte("2"),
-                            Short.parseShort("2"),
-                            Long.parseLong("2"),
-                            Float.parseFloat("2.2"),
-                            Double.parseDouble("2.2"),
-                            BigDecimal.valueOf(22, 1),
-                            "test2".getBytes(),
-                            i,
-                            LocalDate.now().toString(),
-                            System.currentTimeMillis(),
-                            // Null values are also a basic use case for testing
-                            null
+                        Collections.singletonMap("key2", Short.parseShort(String.valueOf(i))),
+                        new Byte[] {
+                            Byte.parseByte("11"), Byte.parseByte("22"), Byte.parseByte("33")
+                        },
+                        "string2",
+                        Boolean.FALSE,
+                        Byte.parseByte("2"),
+                        Short.parseShort("2"),
+                        Long.parseLong("2"),
+                        Float.parseFloat("2.2"),
+                        Double.parseDouble("2.2"),
+                        BigDecimal.valueOf(22, 1),
+                        "test2".getBytes(),
+                        i,
+                        LocalDate.now().toString(),
+                        System.currentTimeMillis(),
+                        // Null values are also a basic use case for testing
+                        null
                     };
             for (int j = 0; j < fields.length; j++) {
                 doc.put(fields[j], values[j]);

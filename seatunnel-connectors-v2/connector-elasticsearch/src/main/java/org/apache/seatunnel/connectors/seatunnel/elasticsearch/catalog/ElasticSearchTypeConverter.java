@@ -145,7 +145,7 @@ public class ElasticSearchTypeConverter implements BasicTypeConverter<BasicTypeD
                         new SeaTunnelRowType(
                                 new String[] {"values", "counts"},
                                 new SeaTunnelDataType<?>[] {
-                                        ArrayType.DOUBLE_ARRAY_TYPE, ArrayType.LONG_ARRAY_TYPE
+                                    ArrayType.DOUBLE_ARRAY_TYPE, ArrayType.LONG_ARRAY_TYPE
                                 });
                 builder.dataType(rowType);
                 break;
