@@ -29,9 +29,12 @@ import java.util.stream.Collectors;
 @SuppressWarnings("MagicNumber")
 public class HttpParameter implements Serializable {
     protected String url;
+    protected boolean enabledOldSubmit = false;
     protected HttpRequestMethod method;
     protected Map<String, String> headers;
     protected Map<String, String> params;
+    protected Map<String, Object> pageParams;
+    protected boolean keepParamsForm = false;
     protected String body;
     protected int pollIntervalMillis;
     protected int retry;
@@ -44,6 +47,7 @@ public class HttpParameter implements Serializable {
     public void buildWithConfig(Config pluginConfig) {
         // set url
         this.setUrl(pluginConfig.getString(HttpConfig.URL.key()));
+        this.setKeepParamsForm(pluginConfig.getBoolean(HttpConfig.KEEP_PARAM_FORM.key()));
         // set method
         if (pluginConfig.hasPath(HttpConfig.METHOD.key())) {
             HttpRequestMethod httpRequestMethod =

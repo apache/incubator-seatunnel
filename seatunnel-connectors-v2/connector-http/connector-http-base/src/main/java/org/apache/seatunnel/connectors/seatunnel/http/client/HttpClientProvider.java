@@ -17,8 +17,11 @@
 
 package org.apache.seatunnel.connectors.seatunnel.http.client;
 
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.http.config.HttpParameter;
 
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -42,7 +45,6 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
-import org.apache.logging.log4j.util.Strings;
 
 import com.github.rholder.retry.Attempt;
 import com.github.rholder.retry.RetryListener;
@@ -68,6 +70,7 @@ import java.util.concurrent.TimeUnit;
 public class HttpClientProvider implements AutoCloseable {
     private static final String ENCODING = "UTF-8";
     private static final String APPLICATION_JSON = "application/json";
+    private static final String APPLICATION_FORM = "application/x-www-form-urlencoded";
     private static final int INITIAL_CAPACITY = 16;
     private RequestConfig requestConfig;
     private final CloseableHttpClient httpClient;
@@ -116,14 +119,32 @@ public class HttpClientProvider implements AutoCloseable {
             String method,
             Map<String, String> headers,
             Map<String, String> params,
-            String body)
+            String body,
+            Map<String, Object> pageParams,
+            boolean keepParamsForm)
             throws Exception {
         // convert method option to uppercase
         method = method.toUpperCase(Locale.ROOT);
-        if (HttpPost.METHOD_NAME.equals(method)) {
+        // Keep the original post  logic
+        if (HttpPost.METHOD_NAME.equals(method) && keepParamsForm) {
+            if (MapUtils.isEmpty(params)) {
+                params = new HashMap<>();
+            }
+            for (Map.Entry<String, Object> entry : pageParams.entrySet()) {
+                params.put(entry.getKey(), entry.getValue().toString());
+            }
             return doPost(url, headers, params, body);
         }
+        if (HttpPost.METHOD_NAME.equals(method)) {
+            return doPost(url, headers, params, body, pageParams);
+        }
         if (HttpGet.METHOD_NAME.equals(method)) {
+            if (MapUtils.isEmpty(params)) {
+                params = new HashMap<>();
+            }
+            for (Map.Entry<String, Object> entry : pageParams.entrySet()) {
+                params.put(entry.getKey(), entry.getValue().toString());
+            }
             return doGet(url, headers, params);
         }
         if (HttpPut.METHOD_NAME.equals(method)) {
@@ -185,6 +206,17 @@ public class HttpClientProvider implements AutoCloseable {
     }
 
     /**
+     * Send a post request without request headers and request parameters
+     *
+     * @param url request address
+     * @return http response result
+     * @throws Exception information
+     */
+    public HttpResponse doPost(String url) throws Exception {
+        return doPost(url, Collections.emptyMap(), Collections.emptyMap());
+    }
+
+    /**
      * Send post request with request parameters
      *
      * @param url request address
@@ -193,7 +225,30 @@ public class HttpClientProvider implements AutoCloseable {
      * @throws Exception information
      */
     public HttpResponse doPost(String url, Map<String, String> params) throws Exception {
-        return doPost(url, Collections.emptyMap(), params, Strings.EMPTY);
+        return doPost(url, Collections.emptyMap(), params);
+    }
+
+    /**
+     * Send a post request with request headers and request parameters
+     *
+     * @param url request address
+     * @param headers request header map
+     * @param params request parameter map
+     * @return http response result
+     * @throws Exception information
+     */
+    public HttpResponse doPost(String url, Map<String, String> headers, Map<String, String> params)
+            throws Exception {
+        // create a new http get
+        HttpPost httpPost = new HttpPost(url);
+        // set default request config
+        httpPost.setConfig(requestConfig);
+        // set request header
+        addHeaders(httpPost, headers);
+        // set request params
+        addParameters(httpPost, params);
+        // return http response
+        return getResponse(httpPost);
     }
 
     /**
@@ -205,7 +260,30 @@ public class HttpClientProvider implements AutoCloseable {
      * @throws Exception information
      */
     public HttpResponse doPost(String url, String body) throws Exception {
-        return doPost(url, Collections.emptyMap(), Collections.emptyMap(), body);
+        return doPost(url, Collections.emptyMap(), body);
+    }
+
+    /**
+     * Send a post request with request headers and request body
+     *
+     * @param url request address
+     * @param headers request header map
+     * @param body request body content
+     * @return http response result
+     * @throws Exception information
+     */
+    public HttpResponse doPost(String url, Map<String, String> headers, String body)
+            throws Exception {
+        // create a new http post
+        HttpPost httpPost = new HttpPost(url);
+        // set default request config
+        httpPost.setConfig(requestConfig);
+        // set request header
+        addHeaders(httpPost, headers);
+        // add body in request
+        addBody(httpPost, body);
+        // return http response
+        return getResponse(httpPost);
     }
 
     /**
@@ -244,6 +322,29 @@ public class HttpClientProvider implements AutoCloseable {
      * @throws Exception information
      */
     public HttpResponse doPost(
+            String url,
+            Map<String, String> headers,
+            Map<String, String> params,
+            String body,
+            Map<String, Object> pageParams)
+            throws Exception {
+        // Create access address
+        URIBuilder uriBuilder = new URIBuilder(url);
+        // add parameter to uri
+        addParameters(uriBuilder, params);
+        // create a new http get
+        HttpPost httpPost = new HttpPost(uriBuilder.build());
+        // set default request config
+        httpPost.setConfig(requestConfig);
+        // set request header
+        addHeaders(httpPost, headers);
+        // add body in request
+        addBody(httpPost, body, pageParams);
+        // return http response
+        return getResponse(httpPost);
+    }
+
+    public HttpResponse doPost(
             String url, Map<String, String> headers, Map<String, String> params, String body)
             throws Exception {
         // create a new http get
@@ -253,7 +354,9 @@ public class HttpClientProvider implements AutoCloseable {
         // set request header
         addHeaders(httpPost, headers);
         // set request params
-        addParameters(httpPost, params, body);
+        addParameters(httpPost, params);
+        // add body in request
+        addBody(httpPost, body);
         // return http response
         return getResponse(httpPost);
     }
@@ -364,45 +467,59 @@ public class HttpClientProvider implements AutoCloseable {
         request.setEntity(new UrlEncodedFormEntity(parameters, ENCODING));
     }
 
-    private void addParameters(
-            HttpEntityEnclosingRequestBase request, Map<String, String> params, String body)
-            throws UnsupportedEncodingException {
-        if (Objects.isNull(params) || params.isEmpty()) {
-            addBody(request, body);
-            return;
-        }
-        // When body is empty, it is considered a form submission
-        if (StringUtils.isBlank(body)) {
-            List<NameValuePair> parameters = new ArrayList<>();
-            Set<Map.Entry<String, String>> entrySet = params.entrySet();
-            for (Map.Entry<String, String> e : entrySet) {
-                String name = e.getKey();
-                String value = e.getValue();
-                NameValuePair pair = new BasicNameValuePair(name, value);
-                parameters.add(pair);
-            }
-            request.setEntity(new UrlEncodedFormEntity(parameters, ENCODING));
-        } else {
-            String newBody = replaceParams(body, params);
-            addBody(request, newBody);
-        }
-    }
-
-    private String replaceParams(String template, Map<String, String> params) {
-        String result = template;
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            result = result.replace("${" + key + "}", value);
-        }
-        return result;
-    }
-
     private void addHeaders(HttpRequestBase request, Map<String, String> headers) {
         if (Objects.isNull(headers) || headers.isEmpty()) {
             return;
         }
         headers.forEach(request::addHeader);
+    }
+
+    private void addBody(
+            HttpEntityEnclosingRequestBase request, String body, Map<String, Object> pageParams)
+            throws UnsupportedEncodingException {
+        Map<String, Object> bodyMap = new HashedMap<>();
+        if (StringUtils.isNotEmpty(body)) {
+            bodyMap = JsonUtils.parseObject(body, Map.class);
+        }
+
+        if (request.getHeaders(HTTP.CONTENT_TYPE) != null
+                && request.getHeaders(HTTP.CONTENT_TYPE).length > 0
+                && APPLICATION_FORM.equalsIgnoreCase(
+                        request.getHeaders(HTTP.CONTENT_TYPE)[0].getValue())) {
+            Map<String, String> formParam = new HashedMap<>();
+            if (MapUtils.isNotEmpty(pageParams)) {
+                for (Map.Entry<String, Object> entry : pageParams.entrySet()) {
+                    formParam.put(entry.getKey(), entry.getValue().toString());
+                }
+            }
+            if (MapUtils.isNotEmpty(bodyMap)) {
+                for (Map.Entry<String, Object> entry : bodyMap.entrySet()) {
+                    formParam.put(entry.getKey(), entry.getValue().toString());
+                }
+            }
+            if (MapUtils.isNotEmpty(formParam)) {
+                List<NameValuePair> parameters = new ArrayList<>();
+                Set<Map.Entry<String, String>> entrySet = formParam.entrySet();
+                for (Map.Entry<String, String> e : entrySet) {
+                    String name = e.getKey();
+                    String value = e.getValue();
+                    NameValuePair pair = new BasicNameValuePair(name, value);
+                    parameters.add(pair);
+                }
+                // Set to the request's http object
+                request.setEntity(new UrlEncodedFormEntity(parameters, ENCODING));
+            }
+        } else {
+            request.addHeader(HTTP.CONTENT_TYPE, APPLICATION_JSON);
+
+            if (MapUtils.isNotEmpty(pageParams)) {
+                bodyMap.putAll(pageParams);
+            }
+            StringEntity entity =
+                    new StringEntity(JsonUtils.toJsonString(bodyMap), ContentType.APPLICATION_JSON);
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, APPLICATION_JSON));
+            request.setEntity(entity);
+        }
     }
 
     private boolean checkAlreadyHaveContentType(HttpEntityEnclosingRequestBase request) {
