@@ -305,16 +305,6 @@ public final class SeaTunnelRow implements Serializable {
                 return getBytesForArray(v, BasicType.FLOAT_TYPE);
             case "Double[]":
                 return getBytesForArray(v, BasicType.DOUBLE_TYPE);
-            case "Map[]":
-                int sizeMaps = 0;
-                for (Map o : (Map[]) v) {
-                    for (Map.Entry<?, ?> entry : ((Map<?, ?>) o).entrySet()) {
-                        sizeMaps +=
-                                getBytesForValue(entry.getKey())
-                                        + getBytesForValue(entry.getValue());
-                    }
-                }
-                return sizeMaps;
             case "HashMap":
             case "LinkedHashMap":
                 int size = 0;
