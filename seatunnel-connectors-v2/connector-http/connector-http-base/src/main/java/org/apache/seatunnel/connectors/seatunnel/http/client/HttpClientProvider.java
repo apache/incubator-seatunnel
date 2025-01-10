@@ -119,7 +119,7 @@ public class HttpClientProvider implements AutoCloseable {
             String method,
             Map<String, String> headers,
             Map<String, String> params,
-            String body,
+            Map<String, Object> body,
             Map<String, Object> pageParams,
             boolean keepParamsForm)
             throws Exception {
@@ -329,7 +329,7 @@ public class HttpClientProvider implements AutoCloseable {
             String url,
             Map<String, String> headers,
             Map<String, String> params,
-            String body,
+            Map<String, Object> body,
             Map<String, Object> pageParams)
             throws Exception {
         // Create access address
@@ -349,7 +349,10 @@ public class HttpClientProvider implements AutoCloseable {
     }
 
     public HttpResponse doPost(
-            String url, Map<String, String> headers, Map<String, String> params, String body)
+            String url,
+            Map<String, String> headers,
+            Map<String, String> params,
+            Map<String, Object> body)
             throws Exception {
         // create a new http get
         HttpPost httpPost = new HttpPost(url);
@@ -479,11 +482,13 @@ public class HttpClientProvider implements AutoCloseable {
     }
 
     private void addBody(
-            HttpEntityEnclosingRequestBase request, String body, Map<String, Object> pageParams)
+            HttpEntityEnclosingRequestBase request,
+            Map<String, Object> body,
+            Map<String, Object> pageParams)
             throws UnsupportedEncodingException {
         Map<String, Object> bodyMap = new HashedMap<>();
-        if (StringUtils.isNotEmpty(body)) {
-            bodyMap = JsonUtils.parseObject(body, Map.class);
+        if (MapUtils.isNotEmpty(body)) {
+            bodyMap = body;
         }
 
         if (request.getHeaders(HTTP.CONTENT_TYPE) != null
@@ -544,6 +549,21 @@ public class HttpClientProvider implements AutoCloseable {
         }
 
         StringEntity entity = new StringEntity(body, ContentType.APPLICATION_JSON);
+        entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, APPLICATION_JSON));
+        request.setEntity(entity);
+    }
+
+    private void addBody(HttpEntityEnclosingRequestBase request, Map<String, Object> body) {
+        if (checkAlreadyHaveContentType(request)) {
+            return;
+        }
+        request.addHeader(HTTP.CONTENT_TYPE, APPLICATION_JSON);
+
+        if (MapUtils.isEmpty(body)) {
+            body = new HashMap<>();
+        }
+        StringEntity entity =
+                new StringEntity(JsonUtils.toJsonString(body), ContentType.APPLICATION_JSON);
         entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, APPLICATION_JSON));
         request.setEntity(entity);
     }

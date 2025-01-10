@@ -35,7 +35,7 @@ public class HttpParameter implements Serializable {
     protected Map<String, String> params;
     protected Map<String, Object> pageParams;
     protected boolean keepParamsForm = false;
-    protected String body;
+    protected Map<String, Object> body;
     protected int pollIntervalMillis;
     protected int retry;
     protected int retryBackoffMultiplierMillis = HttpConfig.DEFAULT_RETRY_BACKOFF_MULTIPLIER_MS;
@@ -82,7 +82,13 @@ public class HttpParameter implements Serializable {
         }
         // set body
         if (pluginConfig.hasPath(HttpConfig.BODY.key())) {
-            this.setBody(pluginConfig.getString(HttpConfig.BODY.key()));
+            this.setBody(
+                    pluginConfig.getConfig(HttpConfig.BODY.key()).entrySet().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            Map.Entry::getKey,
+                                            entry -> entry.getValue().unwrapped(),
+                                            (v1, v2) -> v2)));
         }
         if (pluginConfig.hasPath(HttpConfig.POLL_INTERVAL_MILLS.key())) {
             this.setPollIntervalMillis(pluginConfig.getInt(HttpConfig.POLL_INTERVAL_MILLS.key()));

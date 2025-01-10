@@ -62,7 +62,6 @@ public class HttpSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
             // only support post web hook
             HttpResponse response =
                     httpClient.doPost(httpParameter.getUrl(), httpParameter.getHeaders(), body);
-            ;
             if (HttpResponse.STATUS_OK == response.getCode()) {
                 return;
             }
