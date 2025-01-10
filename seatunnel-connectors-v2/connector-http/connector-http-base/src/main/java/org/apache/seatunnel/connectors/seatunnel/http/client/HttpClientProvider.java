@@ -130,8 +130,10 @@ public class HttpClientProvider implements AutoCloseable {
             if (MapUtils.isEmpty(params)) {
                 params = new HashMap<>();
             }
-            for (Map.Entry<String, Object> entry : pageParams.entrySet()) {
-                params.put(entry.getKey(), entry.getValue().toString());
+            if (MapUtils.isNotEmpty(pageParams)) {
+                for (Map.Entry<String, Object> entry : pageParams.entrySet()) {
+                    params.put(entry.getKey(), entry.getValue().toString());
+                }
             }
             return doPost(url, headers, params, body);
         }
