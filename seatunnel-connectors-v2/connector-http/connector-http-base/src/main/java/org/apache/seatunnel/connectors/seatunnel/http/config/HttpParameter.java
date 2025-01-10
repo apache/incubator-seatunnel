@@ -47,7 +47,10 @@ public class HttpParameter implements Serializable {
     public void buildWithConfig(Config pluginConfig) {
         // set url
         this.setUrl(pluginConfig.getString(HttpConfig.URL.key()));
-        this.setKeepParamsForm(pluginConfig.getBoolean(HttpConfig.KEEP_PARAM_FORM.key()));
+        if (pluginConfig.hasPath(HttpConfig.KEEP_PARAM_FORM.key())) {
+            this.setKeepParamsForm(pluginConfig.getBoolean(HttpConfig.KEEP_PARAM_FORM.key()));
+        }
+
         // set method
         if (pluginConfig.hasPath(HttpConfig.METHOD.key())) {
             HttpRequestMethod httpRequestMethod =
