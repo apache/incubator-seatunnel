@@ -71,7 +71,7 @@ SeaTunnel Engine implements cluster management based on [Hazelcast IMDG](https:/
 
 The `backup count` is a parameter that defines the number of synchronous backups. For example, if it is set to 1, the backup of the partition will be placed on one other member. If it is set to 2, it will be placed on two other members.
 
-We recommend that the value of `backup-count` be `min(1, max(5, N/2))`. `N` is the number of cluster nodes.
+We recommend that the value of `backup-count` be `max(1, min(5, N/2))`. `N` is the number of cluster nodes.
 
 ```yaml
 seatunnel:
@@ -296,6 +296,29 @@ seatunnel:
     job-schedule-strategy: WAIT
 ```
 When `dynamic-slot: true` is used, the `job-schedule-strategy: WAIT` configuration will become invalid and will be forcibly changed to `job-schedule-strategy: REJECT`, because this parameter is meaningless in dynamic slots.
+
+
+### 4.8 Coordinator Service
+
+CoordinatorService responsible for the process of generating each job from a LogicalDag to an ExecutionDag,
+and then to a PhysicalDag. It ultimately creates the JobMaster for the job to handle scheduling, execution, and state monitoring.
+
+**core-thread-num**
+
+The corePoolSize of seatunnel coordinator job's executor cached thread pool
+
+**max-thread-num**
+
+The max job count can be executed at same time
+
+Example
+
+```yaml
+coordinator-service:
+  core-thread-num: 30
+  max-thread-num: 1000
+```
+
 
 ## 5. Configuring SeaTunnel Engine Network Services
 

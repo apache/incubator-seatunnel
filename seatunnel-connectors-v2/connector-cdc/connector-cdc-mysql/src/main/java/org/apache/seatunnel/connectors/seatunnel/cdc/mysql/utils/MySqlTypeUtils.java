@@ -21,7 +21,7 @@ import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.connectors.seatunnel.common.source.TypeDefineUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.mysql.MySqlTypeConverter;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.utils.MysqlDefaultValueUtils;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.utils.DefaultValueUtils;
 
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import io.debezium.connector.mysql.MySqlDefaultValueConverter;
@@ -30,7 +30,6 @@ import io.debezium.relational.Column;
 import io.debezium.relational.RelationalDatabaseConnectorConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /** Utilities for converting from MySQL types to SeaTunnel types. */
@@ -70,8 +69,7 @@ public class MySqlTypeUtils {
         Optional<String> defaultValueExpression = column.defaultValueExpression();
         Object defaultValue = defaultValueExpression.orElse(null);
         if (defaultValueExpression.isPresent()
-                && Objects.nonNull(defaultValue)
-                && !MysqlDefaultValueUtils.isSpecialDefaultValue(defaultValue)) {
+                && !DefaultValueUtils.isMysqlSpecialDefaultValue(defaultValue)) {
             defaultValue =
                     mySqlDefaultValueConverter
                             .parseDefaultValue(column, defaultValueExpression.get())
@@ -82,11 +80,14 @@ public class MySqlTypeUtils {
                         .name(column.name())
                         .columnType(column.typeName())
                         .dataType(column.typeName())
-                        .length((long) column.length())
-                        .precision((long) column.length())
                         .scale(column.scale().orElse(0))
                         .nullable(column.isOptional())
                         .defaultValue(defaultValue);
+
+        if (column.length() >= 0) {
+            builder.length((long) column.length()).precision((long) column.length());
+        }
+
         switch (column.typeName().toUpperCase()) {
             case MySqlTypeConverter.MYSQL_CHAR:
             case MySqlTypeConverter.MYSQL_VARCHAR:

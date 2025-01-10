@@ -82,8 +82,8 @@ public class FixedChunkSplitter extends ChunkSplitter {
             partitionEnd = range.getRight();
         }
         if (partitionStart == null || partitionEnd == null) {
-            JdbcSourceSplit spilt = createSingleSplit(table);
-            return Collections.singletonList(spilt);
+            JdbcSourceSplit split = createSingleSplit(table);
+            return Collections.singletonList(split);
         }
 
         return createNumberColumnSplits(

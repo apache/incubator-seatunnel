@@ -26,6 +26,7 @@ import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.api.table.converter.TypeConverter;
 import org.apache.seatunnel.connectors.doris.config.DorisSinkOptions;
 import org.apache.seatunnel.connectors.seatunnel.common.sql.template.SqlTemplate;
+import org.apache.seatunnel.connectors.seatunnel.common.util.CreateTableParser;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -39,7 +40,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class DorisCatalogUtil {

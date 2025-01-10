@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.clickhouse.sink.file;
 
+import org.apache.seatunnel.shade.com.google.common.collect.ImmutableMap;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
@@ -46,7 +47,6 @@ import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.ClickhouseUtil;
 
 import com.clickhouse.client.ClickHouseNode;
 import com.google.auto.service.AutoService;
-import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -62,6 +62,7 @@ import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.Clickh
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.FILE_FIELDS_DELIMITER;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.FILE_TEMP_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.HOST;
+import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.KEY_PATH;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_ADDRESS;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_FREE_PASSWORD;
 import static org.apache.seatunnel.connectors.seatunnel.clickhouse.config.ClickhouseConfig.NODE_PASS;
@@ -108,6 +109,7 @@ public class ClickhouseFileSink
                         .put(COMPATIBLE_MODE.key(), COMPATIBLE_MODE.defaultValue())
                         .put(FILE_TEMP_PATH.key(), FILE_TEMP_PATH.defaultValue())
                         .put(FILE_FIELDS_DELIMITER.key(), FILE_FIELDS_DELIMITER.defaultValue())
+                        .put(KEY_PATH.key(), KEY_PATH.defaultValue())
                         .build();
 
         config = config.withFallback(ConfigFactory.parseMap(defaultConfigs));
@@ -125,7 +127,9 @@ public class ClickhouseFileSink
                 proxy.getClickhouseTableSchema(config.getString(TABLE.key()));
         ClickhouseTable table =
                 proxy.getClickhouseTable(
-                        config.getString(DATABASE.key()), config.getString(TABLE.key()));
+                        proxy.getClickhouseConnection(),
+                        config.getString(DATABASE.key()),
+                        config.getString(TABLE.key()));
         String shardKey = null;
         String shardKeyType = null;
         if (config.hasPath(SHARDING_KEY.key())) {
@@ -184,7 +188,8 @@ public class ClickhouseFileSink
                         nodePassword,
                         config.getBoolean(COMPATIBLE_MODE.key()),
                         config.getString(FILE_TEMP_PATH.key()),
-                        config.getString(FILE_FIELDS_DELIMITER.key()));
+                        config.getString(FILE_FIELDS_DELIMITER.key()),
+                        config.getString(KEY_PATH.key()));
     }
 
     @Override

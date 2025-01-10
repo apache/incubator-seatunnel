@@ -31,6 +31,7 @@ import org.apache.seatunnel.connectors.seatunnel.cdc.oracle.config.OracleSourceC
 import org.apache.seatunnel.connectors.seatunnel.cdc.oracle.source.offset.RedoLogOffset;
 import org.apache.seatunnel.connectors.seatunnel.cdc.oracle.utils.OracleUtils;
 
+import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
 
@@ -67,6 +68,8 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -264,7 +267,29 @@ public class OracleSourceFetchTaskContext extends JdbcSourceFetchTaskContext {
                     dataSourceDialect.queryTableSchema(connection, snapshotSplit.getTableId()));
         } else {
             IncrementalSplit incrementalSplit = (IncrementalSplit) sourceSplitBase;
+            Map<TableId, byte[]> historyTableChanges = incrementalSplit.getHistoryTableChanges();
             for (TableId tableId : incrementalSplit.getTableIds()) {
+                if (historyTableChanges != null && historyTableChanges.containsKey(tableId)) {
+                    SchemaAndValue schemaAndValue =
+                            jsonConverter.toConnectData("topic", historyTableChanges.get(tableId));
+                    Struct deserializedStruct = (Struct) schemaAndValue.value();
+
+                    TableChanges tableChanges =
+                            tableChangeSerializer.deserialize(
+                                    Collections.singletonList(deserializedStruct), false);
+
+                    Iterator<TableChanges.TableChange> iterator = tableChanges.iterator();
+                    TableChanges.TableChange tableChange = null;
+                    while (iterator.hasNext()) {
+                        if (tableChange != null) {
+                            throw new IllegalStateException(
+                                    "The table changes should only have one element");
+                        }
+                        tableChange = iterator.next();
+                    }
+                    engineHistory.add(tableChange);
+                    continue;
+                }
                 engineHistory.add(dataSourceDialect.queryTableSchema(connection, tableId));
             }
         }

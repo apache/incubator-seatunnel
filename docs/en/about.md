@@ -64,7 +64,7 @@ SeaTunnel has lots of users. You can find more information about them in [Users]
 <br/><br/>
 <img src="https://landscape.cncf.io/images/left-logo.svg" width="150" alt=""/>&nbsp;&nbsp;<img src="https://landscape.cncf.io/images/right-logo.svg" width="200" alt=""/>
 <br/><br/>
-SeaTunnel enriches the <a href="https://landscape.cncf.io/card-mode?category=streaming-messaging&license=apache-license-2-0&grouping=category&selected=sea-tunnal">CNCF CLOUD NATIVE Landscape</a >.
+SeaTunnel enriches the <a href="https://landscape.cncf.io/?item=app-definition-and-development--streaming-messaging--seatunnel">CNCF CLOUD NATIVE Landscape</a >.
 </p >
 
 ## Learn more

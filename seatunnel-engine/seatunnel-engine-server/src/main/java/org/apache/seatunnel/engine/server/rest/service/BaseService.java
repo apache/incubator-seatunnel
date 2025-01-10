@@ -31,6 +31,7 @@ import org.apache.seatunnel.engine.common.config.JobConfig;
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
 import org.apache.seatunnel.engine.core.classloader.ClassLoaderService;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalDag;
+import org.apache.seatunnel.engine.core.job.ExecutionAddress;
 import org.apache.seatunnel.engine.core.job.JobDAGInfo;
 import org.apache.seatunnel.engine.core.job.JobImmutableInformation;
 import org.apache.seatunnel.engine.core.job.JobInfo;
@@ -69,6 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -164,7 +166,11 @@ public abstract class BaseService {
                         logicalDag,
                         jobImmutableInformation,
                         getSeaTunnelServer(false).getSeaTunnelConfig().getEngineConfig(),
-                        true);
+                        true,
+                        new ExecutionAddress(
+                                this.nodeEngine.getMasterAddress().getHost(),
+                                this.nodeEngine.getMasterAddress().getPort()),
+                        new HashSet<>());
 
         jobInfoJson
                 .add(RestConstant.JOB_ID, String.valueOf(jobId))

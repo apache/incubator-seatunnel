@@ -44,6 +44,7 @@ public class PaimonCatalogLoader implements Serializable {
     private static final String HDFS_DEF_FS_NAME = "fs.defaultFS";
 
     private static final String HDFS_PREFIX = "hdfs://";
+    private static final String S3A_PREFIX = "s3a://";
     /** ********* Hdfs constants ************* */
     private static final String HDFS_IMPL = "org.apache.hadoop.hdfs.DistributedFileSystem";
 
@@ -63,7 +64,7 @@ public class PaimonCatalogLoader implements Serializable {
     }
 
     public Catalog loadCatalog() {
-        // When using the seatunel engine, set the current class loader to prevent loading failures
+        // When using the seatunnel engine, set the current class loader to prevent loading failures
         Thread.currentThread().setContextClassLoader(PaimonCatalogLoader.class.getClassLoader());
         final Map<String, String> optionsMap = new HashMap<>(1);
         optionsMap.put(CatalogOptions.WAREHOUSE.key(), warehouse);
@@ -71,12 +72,12 @@ public class PaimonCatalogLoader implements Serializable {
         if (warehouse.startsWith(HDFS_PREFIX)) {
             checkConfiguration(paimonHadoopConfiguration, HDFS_DEF_FS_NAME);
             paimonHadoopConfiguration.set(HDFS_IMPL_KEY, HDFS_IMPL);
+        } else if (warehouse.startsWith(S3A_PREFIX)) {
+            optionsMap.putAll(paimonHadoopConfiguration.getPropsWithPrefix(StringUtils.EMPTY));
         }
         if (PaimonCatalogEnum.HIVE.getType().equals(catalogType.getType())) {
             optionsMap.put(CatalogOptions.URI.key(), catalogUri);
-            paimonHadoopConfiguration
-                    .getPropsWithPrefix(StringUtils.EMPTY)
-                    .forEach((k, v) -> optionsMap.put(k, v));
+            optionsMap.putAll(paimonHadoopConfiguration.getPropsWithPrefix(StringUtils.EMPTY));
         }
         final Options options = Options.fromMap(optionsMap);
         PaimonSecurityContext.shouldEnableKerberos(paimonHadoopConfiguration);

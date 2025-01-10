@@ -20,7 +20,7 @@ package org.apache.seatunnel.connectors.seatunnel.kafka.source;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.catalog.TablePath;
-import org.apache.seatunnel.api.table.event.SchemaChangeEvent;
+import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.RecordEmitter;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormatErrorHandleWay;
@@ -67,9 +67,6 @@ public class KafkaRecordEmitter
             } else {
                 deserializationSchema.deserialize(consumerRecord.value(), outputCollector);
             }
-            // consumerRecord.offset + 1 is the offset commit to Kafka and also the start offset
-            // for the next run
-            splitState.setCurrentOffset(consumerRecord.offset() + 1);
         } catch (Exception e) {
             if (this.messageFormatErrorHandleWay == MessageFormatErrorHandleWay.SKIP) {
                 logger.warn(
@@ -79,6 +76,9 @@ public class KafkaRecordEmitter
                 throw e;
             }
         }
+        // consumerRecord.offset + 1 is the offset commit to Kafka and also the start offset
+        // for the next run
+        splitState.setCurrentOffset(consumerRecord.offset() + 1);
     }
 
     private static class OutputCollector<T> implements Collector<T> {

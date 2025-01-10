@@ -342,6 +342,7 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
         try {
             return getFileStatus(client, file) != null;
         } catch (FileNotFoundException fnfe) {
+            LOG.debug("File does not exist: " + file, fnfe);
             return false;
         }
     }
@@ -557,12 +558,18 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
             if (created) {
                 String parentDir = parent.toUri().getPath();
                 client.changeWorkingDirectory(parentDir);
-                created = created && client.makeDirectory(pathName);
+                LOG.debug("Creating directory " + pathName);
+                created = client.makeDirectory(pathName);
             }
         } else if (isFile(client, absolute)) {
             throw new ParentNotDirectoryException(
                     String.format(
                             "Can't make directory for path %s since it is a file.", absolute));
+        } else {
+            LOG.debug("Skipping creation of existing directory " + file);
+        }
+        if (!created) {
+            LOG.debug("Failed to create " + file);
         }
         return created;
     }

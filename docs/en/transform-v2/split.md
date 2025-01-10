@@ -46,8 +46,8 @@ We want split `name` field to `first_name` and `second name`, we can add `Split`
 ```
 transform {
   Split {
-    source_table_name = "fake"
-    result_table_name = "fake1"
+    plugin_input = "fake"
+    plugin_output = "fake1"
     separator = " "
     split_field = "name"
     output_fields = [first_name, second_name]

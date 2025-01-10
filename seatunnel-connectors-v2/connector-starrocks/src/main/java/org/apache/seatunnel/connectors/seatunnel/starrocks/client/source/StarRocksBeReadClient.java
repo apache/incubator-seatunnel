@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.starrocks.client.source;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.connectors.seatunnel.common.source.arrow.reader.ArrowToSeatunnelRowReader;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.client.source.model.QueryPartition;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.config.SourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.starrocks.exception.StarRocksConnectorErrorCode;
@@ -56,7 +57,7 @@ public class StarRocksBeReadClient implements Serializable {
     private int readerOffset = 0;
     private final SourceConfig sourceConfig;
     private SeaTunnelRowType seaTunnelRowType;
-    private StarRocksRowBatchReader rowBatch;
+    private ArrowToSeatunnelRowReader rowBatch;
     protected AtomicBoolean eos = new AtomicBoolean(false);
 
     public StarRocksBeReadClient(String beNodeInfo, SourceConfig sourceConfig) {
@@ -162,7 +163,10 @@ public class StarRocksBeReadClient implements Serializable {
                 }
                 eos.set(result.isEos());
                 if (!eos.get()) {
-                    rowBatch = new StarRocksRowBatchReader(result, seaTunnelRowType).readArrow();
+
+                    rowBatch =
+                            new ArrowToSeatunnelRowReader(result.getRows(), seaTunnelRowType)
+                                    .readArrow();
                 }
             } catch (TException e) {
                 throw new StarRocksConnectorException(

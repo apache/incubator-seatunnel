@@ -53,16 +53,11 @@ Redis 端口
 | 200  | 获取成功 | true    |
 | 500  | 内部错误 | false   |
 
-可以使用`{`和`}`符号自定义Redis键名，`{}`中的字段名会被解析替换为上游数据中的某个字段值，例如：将字段名称指定为 `{code}` 并将 data_type 设置为 `key`，将有两个数据写入 Redis：
+如果将字段名称指定为 code 并将 data_type 设置为 key，将有两个数据写入 Redis：
 1. `200 -> {code: 200, data: 获取成功, success: true}`
 2. `500 -> {code: 500, data: 内部错误, success: false}`
-
-Redis键名可以由固定部分和变化部分组成，通过Redis分组符号:连接，例如：将字段名称指定为 `code:{code}` 并将 data_type 设置为 `key`，将有两个数据写入 Redis：
-1. `code:200 -> {code: 200, data: 获取成功, success: true}`
-2. `code:500 -> {code: 500, data: 内部错误, success: false}`
-
-如果将Redis键名指定为 `value` 并将 data_type 设置为 `key`，则只有一个数据写入 Redis：
-
+   
+如果将字段名称指定为 value 并将 data_type 设置为 key，则由于上游数据的字段中没有 value 字段，将只有一个数据写入 Redis：
 1. `value -> {code: 500, data: 内部错误, success: false}`
 
 请参见 data_type 部分以了解具体的写入规则。

@@ -229,10 +229,26 @@ public class DorisCatalogIT extends AbstractDorisIT {
                                 put(DorisSinkOptions.NEEDS_UNSUPPORTED_TYPE_CASTING.key(), true);
                             }
                         });
-        upstreamTable
-                .getTableSchema()
-                .getColumns()
-                .add(PhysicalColumn.of("v3", new DecimalType(66, 22), 66, false, null, "v3"));
+
+        upstreamTable =
+                CatalogTable.of(
+                        upstreamTable.getTableId(),
+                        TableSchema.builder()
+                                .columns(upstreamTable.getTableSchema().getColumns())
+                                .column(
+                                        PhysicalColumn.of(
+                                                "v3",
+                                                new DecimalType(66, 22),
+                                                66,
+                                                false,
+                                                null,
+                                                "v3"))
+                                .primaryKey(upstreamTable.getTableSchema().getPrimaryKey())
+                                .constraintKey(upstreamTable.getTableSchema().getConstraintKeys())
+                                .build(),
+                        upstreamTable.getOptions(),
+                        upstreamTable.getPartitionKeys(),
+                        upstreamTable.getComment());
         CatalogTable newTable = assertCreateTable(upstreamTable, config5, "test4.test4");
         Assertions.assertEquals(
                 BasicType.DOUBLE_TYPE, newTable.getTableSchema().getColumns().get(4).getDataType());

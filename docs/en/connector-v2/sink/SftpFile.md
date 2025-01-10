@@ -61,6 +61,7 @@ By default, we use 2PC commit to ensure `exactly-once`
 | xml_row_tag                           | string  | no       | RECORD                                     | Only used when file_format is xml.                                                                                |
 | xml_use_attr_format                   | boolean | no       | -                                          | Only used when file_format is xml.                                                                                |
 | parquet_avro_write_timestamp_as_int96 | boolean | no       | false                                      | Only used when file_format is parquet.                                                                            |
+| enable_header_write                   | boolean | no       | false                                      | Only used when file_format_type is text,csv.<br/> false:don't write header,true:write header.     |
 | parquet_avro_write_fixed_as_int96     | array   | no       | -                                          | Only used when file_format is parquet.                                                                            |
 | encoding                              | string  | no       | "UTF-8"                                    | Only used when file_format_type is json,text,csv,xml.                                                             |
 | schema_save_mode                      | string  | no       | CREATE_SCHEMA_WHEN_NOT_EXIST               | Existing dir processing method                                                                    |
@@ -216,6 +217,10 @@ Support writing Parquet INT96 from a timestamp, only valid for parquet files.
 ### parquet_avro_write_fixed_as_int96 [array]
 
 Support writing Parquet INT96 from a 12-byte field, only valid for parquet files.
+
+### enable_header_write [boolean]
+
+Only used when file_format_type is text,csv.false:don't write header,true:write header.
 
 ### encoding [string]
 

@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.kafka.source;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DeserializationSchema;
+import org.apache.seatunnel.api.table.catalog.CatalogOptions;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
@@ -31,7 +32,6 @@ import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
-import org.apache.seatunnel.connectors.seatunnel.kafka.config.Config;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormat;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormatErrorHandleWay;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.StartMode;
@@ -41,6 +41,7 @@ import org.apache.seatunnel.format.compatible.kafka.connect.json.KafkaConnectJso
 import org.apache.seatunnel.format.json.JsonDeserializationSchema;
 import org.apache.seatunnel.format.json.canal.CanalJsonDeserializationSchema;
 import org.apache.seatunnel.format.json.debezium.DebeziumJsonDeserializationSchema;
+import org.apache.seatunnel.format.json.debezium.DebeziumJsonDeserializationSchemaDispatcher;
 import org.apache.seatunnel.format.json.exception.SeaTunnelJsonFormatException;
 import org.apache.seatunnel.format.json.maxwell.MaxWellJsonDeserializationSchema;
 import org.apache.seatunnel.format.json.ogg.OggJsonDeserializationSchema;
@@ -49,6 +50,7 @@ import org.apache.seatunnel.format.text.TextDeserializationSchema;
 import org.apache.seatunnel.format.text.constant.TextFormatConstant;
 
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.TopicPartition;
 
 import lombok.Getter;
@@ -66,6 +68,7 @@ import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.BOOT
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.COMMIT_ON_CHECKPOINT;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.CONSUMER_GROUP;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.DEBEZIUM_RECORD_INCLUDE_SCHEMA;
+import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.DEBEZIUM_RECORD_TABLE_FILTER;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.FIELD_DELIMITER;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.FORMAT;
 import static org.apache.seatunnel.connectors.seatunnel.kafka.config.Config.KAFKA_CONFIG;
@@ -114,11 +117,17 @@ public class KafkaSourceConfig implements Serializable {
     private Map<TablePath, ConsumerMetadata> createMapConsumerMetadata(
             ReadonlyConfig readonlyConfig) {
         List<ConsumerMetadata> consumerMetadataList;
-        if (readonlyConfig.getOptional(Config.TABLE_LIST).isPresent()) {
+        if (readonlyConfig.getOptional(TableSchemaOptions.TABLE_CONFIGS).isPresent()) {
             consumerMetadataList =
-                    readonlyConfig.get(Config.TABLE_LIST).stream()
+                    readonlyConfig.get(TableSchemaOptions.TABLE_CONFIGS).stream()
                             .map(ReadonlyConfig::fromMap)
-                            .map(config -> createConsumerMetadata(config))
+                            .map(this::createConsumerMetadata)
+                            .collect(Collectors.toList());
+        } else if (readonlyConfig.getOptional(CatalogOptions.TABLE_LIST).isPresent()) {
+            consumerMetadataList =
+                    readonlyConfig.get(CatalogOptions.TABLE_LIST).stream()
+                            .map(ReadonlyConfig::fromMap)
+                            .map(this::createConsumerMetadata)
                             .collect(Collectors.toList());
         } else {
             consumerMetadataList =
@@ -239,7 +248,6 @@ public class KafkaSourceConfig implements Serializable {
     private DeserializationSchema<SeaTunnelRow> createDeserializationSchema(
             CatalogTable catalogTable, ReadonlyConfig readonlyConfig) {
         SeaTunnelRowType seaTunnelRowType = catalogTable.getSeaTunnelRowType();
-
         MessageFormat format = readonlyConfig.get(FORMAT);
 
         if (!readonlyConfig.getOptional(TableSchemaOptions.SCHEMA).isPresent()) {
@@ -283,7 +291,30 @@ public class KafkaSourceConfig implements Serializable {
                         catalogTable, keySchemaEnable, valueSchemaEnable, false, false);
             case DEBEZIUM_JSON:
                 boolean includeSchema = readonlyConfig.get(DEBEZIUM_RECORD_INCLUDE_SCHEMA);
-                return new DebeziumJsonDeserializationSchema(catalogTable, true, includeSchema);
+                TableSchemaOptions.TableIdentifier tableFilter =
+                        readonlyConfig.get(DEBEZIUM_RECORD_TABLE_FILTER);
+                if (tableFilter != null) {
+                    TablePath tablePath =
+                            TablePath.of(
+                                    StringUtils.isNotEmpty(tableFilter.getDatabaseName())
+                                            ? tableFilter.getDatabaseName()
+                                            : null,
+                                    StringUtils.isNotEmpty(tableFilter.getSchemaName())
+                                            ? tableFilter.getSchemaName()
+                                            : null,
+                                    StringUtils.isNotEmpty(tableFilter.getTableName())
+                                            ? tableFilter.getTableName()
+                                            : null);
+                    Map<TablePath, DebeziumJsonDeserializationSchema> tableDeserializationMap =
+                            Collections.singletonMap(
+                                    tablePath,
+                                    new DebeziumJsonDeserializationSchema(
+                                            catalogTable, true, includeSchema));
+                    return new DebeziumJsonDeserializationSchemaDispatcher(
+                            tableDeserializationMap, true, includeSchema);
+                } else {
+                    return new DebeziumJsonDeserializationSchema(catalogTable, true, includeSchema);
+                }
             case AVRO:
                 return new AvroDeserializationSchema(catalogTable);
             case PROTOBUF:

@@ -78,7 +78,9 @@ RUN cd /opt && \
     tar -zxvf apache-seatunnel-${VERSION}-bin.tar.gz && \
     mv apache-seatunnel-${VERSION} seatunnel && \
     rm apache-seatunnel-${VERSION}-bin.tar.gz && \
-    cp seatunnel/config/log4j2_client.properties seatunnel/config/log4j2.properties && \
+    sed -i 's/#rootLogger.appenderRef.consoleStdout.ref/rootLogger.appenderRef.consoleStdout.ref/' seatunnel/config/log4j2.properties && \
+    sed -i 's/#rootLogger.appenderRef.consoleStderr.ref/rootLogger.appenderRef.consoleStderr.ref/' seatunnel/config/log4j2.properties && \
+    sed -i 's/rootLogger.appenderRef.file.ref/#rootLogger.appenderRef.file.ref/' seatunnel/config/log4j2.properties && \    
     cp seatunnel/config/hazelcast-master.yaml seatunnel/config/hazelcast-worker.yaml
 
 WORKDIR /opt/seatunnel
@@ -283,7 +285,7 @@ networks:
 run `docker-compose up -d` command to start the cluster.
 
 
-You can use `docker logs -f seatunne_master`, `docker logs -f seatunnel_worker_1` to check the node log.
+You can run `docker logs -f seatunne_master`, `docker logs -f seatunnel_worker_1` to check the node log.
 And when you call `http://localhost:5801/hazelcast/rest/maps/system-monitoring-information`, you will see there are 2 nodes as we excepted.
 
 After that, you can use client or restapi to submit job to this cluster.

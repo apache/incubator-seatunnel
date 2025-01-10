@@ -17,6 +17,9 @@
 
 package org.apache.seatunnel.connectors.seatunnel.assertion.excecutor;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Iterables;
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.DecimalType;
 import org.apache.seatunnel.api.table.type.MapType;
@@ -30,9 +33,6 @@ import org.apache.seatunnel.connectors.seatunnel.assertion.rule.AssertFieldRule;
 import org.apache.seatunnel.format.json.JsonToRowConverters;
 
 import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -218,6 +218,7 @@ public class AssertExecutor {
             case DECIMAL:
             case TIME:
             case TIMESTAMP:
+            case TIMESTAMP_TZ:
             case DATE:
             default:
                 return value.equals(confValue);
@@ -285,11 +286,11 @@ public class AssertExecutor {
 
     private Boolean checkType(Object value, SeaTunnelDataType<?> fieldType) {
         if (value == null) {
-            if (fieldType.getSqlType() == SqlType.NULL) {
-                return true;
-            } else {
-                return false;
-            }
+            return true;
+        }
+
+        if (fieldType.getSqlType() == SqlType.NULL) {
+            return false;
         }
 
         if (fieldType.getSqlType() == SqlType.ROW) {

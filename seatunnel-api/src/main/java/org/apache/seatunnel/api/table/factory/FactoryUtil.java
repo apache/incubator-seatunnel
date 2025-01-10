@@ -44,7 +44,6 @@ import scala.Tuple2;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -66,12 +65,31 @@ public final class FactoryUtil {
     public static <T, SplitT extends SourceSplit, StateT extends Serializable>
             Tuple2<SeaTunnelSource<T, SplitT, StateT>, List<CatalogTable>> createAndPrepareSource(
                     ReadonlyConfig options, ClassLoader classLoader, String factoryIdentifier) {
+        return restoreAndPrepareSource(options, classLoader, factoryIdentifier, null);
+    }
+
+    public static <T, SplitT extends SourceSplit, StateT extends Serializable>
+            Tuple2<SeaTunnelSource<T, SplitT, StateT>, List<CatalogTable>> restoreAndPrepareSource(
+                    ReadonlyConfig options,
+                    ClassLoader classLoader,
+                    String factoryIdentifier,
+                    ChangeStreamTableSourceCheckpoint checkpoint) {
 
         try {
             final TableSourceFactory factory =
                     discoverFactory(classLoader, TableSourceFactory.class, factoryIdentifier);
-            SeaTunnelSource<T, SplitT, StateT> source =
-                    createAndPrepareSource(factory, options, classLoader);
+            SeaTunnelSource<T, SplitT, StateT> source;
+            if (factory instanceof ChangeStreamTableSourceFactory && checkpoint != null) {
+                ChangeStreamTableSourceFactory changeStreamTableSourceFactory =
+                        (ChangeStreamTableSourceFactory) factory;
+                ChangeStreamTableSourceState<Serializable, SourceSplit> state =
+                        changeStreamTableSourceFactory.deserializeTableSourceState(checkpoint);
+                source =
+                        restoreAndPrepareSource(
+                                changeStreamTableSourceFactory, options, classLoader, state);
+            } else {
+                source = createAndPrepareSource(factory, options, classLoader);
+            }
             List<CatalogTable> catalogTables;
             try {
                 catalogTables = source.getProducedCatalogTables();
@@ -79,7 +97,7 @@ public final class FactoryUtil {
                 // TODO remove it when all connector use `getProducedCatalogTables`
                 SeaTunnelDataType<T> seaTunnelDataType = source.getProducedType();
                 final String tableId =
-                        options.getOptional(CommonOptions.RESULT_TABLE_NAME).orElse(DEFAULT_ID);
+                        options.getOptional(CommonOptions.PLUGIN_OUTPUT).orElse(DEFAULT_ID);
                 catalogTables =
                         CatalogTableUtil.convertDataTypeToCatalogTables(seaTunnelDataType, tableId);
             }
@@ -110,6 +128,19 @@ public final class FactoryUtil {
         TableSourceFactoryContext context = new TableSourceFactoryContext(options, classLoader);
         ConfigValidator.of(context.getOptions()).validate(factory.optionRule());
         TableSource<T, SplitT, StateT> tableSource = factory.createSource(context);
+        return tableSource.createSource();
+    }
+
+    private static <T, SplitT extends SourceSplit, StateT extends Serializable>
+            SeaTunnelSource<T, SplitT, StateT> restoreAndPrepareSource(
+                    ChangeStreamTableSourceFactory factory,
+                    ReadonlyConfig options,
+                    ClassLoader classLoader,
+                    ChangeStreamTableSourceState state) {
+        TableSourceFactoryContext context = new TableSourceFactoryContext(options, classLoader);
+        ConfigValidator.of(context.getOptions()).validate(factory.optionRule());
+        LOG.info("Restore create source from checkpoint state: {}", state);
+        TableSource<T, SplitT, StateT> tableSource = factory.restoreSource(context, state);
         return tableSource.createSource();
     }
 
@@ -307,16 +338,15 @@ public final class FactoryUtil {
         return sinkOptionRule;
     }
 
-    public static SeaTunnelTransform<?> createAndPrepareTransform(
-            CatalogTable catalogTable,
+    public static SeaTunnelTransform<?> createAndPrepareMultiTableTransform(
+            List<CatalogTable> catalogTables,
             ReadonlyConfig options,
             ClassLoader classLoader,
             String factoryIdentifier) {
         final TableTransformFactory factory =
                 discoverFactory(classLoader, TableTransformFactory.class, factoryIdentifier);
         TableTransformFactoryContext context =
-                new TableTransformFactoryContext(
-                        Collections.singletonList(catalogTable), options, classLoader);
+                new TableTransformFactoryContext(catalogTables, options, classLoader);
         ConfigValidator.of(context.getOptions()).validate(factory.optionRule());
         return factory.createTransform(context).createTransform();
     }

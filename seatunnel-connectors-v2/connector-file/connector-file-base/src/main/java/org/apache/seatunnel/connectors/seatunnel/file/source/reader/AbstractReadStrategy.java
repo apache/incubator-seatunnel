@@ -34,6 +34,7 @@ import org.apache.seatunnel.connectors.seatunnel.file.hadoop.HadoopFileSystemPro
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipParameters;
 import org.apache.hadoop.fs.FileStatus;
 
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +110,10 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
         FileStatus[] stats = hadoopFileSystemProxy.listStatus(path);
         for (FileStatus fileStatus : stats) {
             if (fileStatus.isDirectory()) {
-                fileNames.addAll(getFileNamesByPath(fileStatus.getPath().toString()));
+                // skip hidden tmp directory, such as .hive-staging_hive
+                if (!fileStatus.getPath().getName().startsWith(".")) {
+                    fileNames.addAll(getFileNamesByPath(fileStatus.getPath().toString()));
+                }
                 continue;
             }
             if (fileStatus.isFile() && filterFileByPattern(fileStatus) && fileStatus.getLen() > 0) {
@@ -237,6 +241,28 @@ public abstract class AbstractReadStrategy implements ReadStrategy {
                         }
                     }
                 }
+                break;
+            case GZ:
+                GzipCompressorInputStream gzipIn =
+                        new GzipCompressorInputStream(hadoopFileSystemProxy.getInputStream(path));
+                GzipParameters parameters = gzipIn.getMetaData();
+                String fileName = parameters.getFilename();
+                if (fileName == null) {
+                    // remove file suffix
+                    // eg: excel need full compressed name
+                    if (fileFormat == FileFormat.EXCEL) {
+                        if (path.endsWith(".gz")) {
+                            fileName = path.substring(0, path.length() - 3);
+                        } else {
+                            throw new IllegalArgumentException(
+                                    "Excel file must have a .gz extension. File: " + path);
+                        }
+                    } else {
+                        fileName = path;
+                    }
+                }
+                readProcess(
+                        path, tableId, output, copyInputStream(gzipIn), partitionsMap, fileName);
                 break;
             case NONE:
                 readProcess(

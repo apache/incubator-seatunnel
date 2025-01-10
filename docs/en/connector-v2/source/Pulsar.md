@@ -147,7 +147,7 @@ source {
   	subscription.name = "seatunnel"
     client.service-url = "pulsar://localhost:6650"
     admin.service-url = "http://my-broker.example.com:8080"
-    result_table_name = "test"
+    plugin_output = "test"
   }
 }
 ```

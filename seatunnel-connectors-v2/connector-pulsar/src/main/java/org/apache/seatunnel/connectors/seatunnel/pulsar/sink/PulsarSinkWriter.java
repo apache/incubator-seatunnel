@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.pulsar.sink;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.SerializationSchema;
 import org.apache.seatunnel.api.sink.SinkWriter;
@@ -43,8 +45,6 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.TypedMessageBuilder;
 import org.apache.pulsar.client.impl.transaction.TransactionImpl;
-
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.util.Arrays;

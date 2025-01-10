@@ -42,9 +42,9 @@ Read external data source data through JDBC.
 
 ## Database Dependency
 
-> Please download the support list corresponding to 'Maven' and copy it to the '$SEATNUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
-> For example PostgreSQL datasource: cp postgresql-xxx.jar $SEATNUNNEL_HOME/plugins/jdbc/lib/<br/>
-> If you want to manipulate the GEOMETRY type in PostgreSQL, add postgresql-xxx.jar and postgis-jdbc-xxx.jar to $SEATNUNNEL_HOME/plugins/jdbc/lib/
+> Please download the support list corresponding to 'Maven' and copy it to the '$SEATUNNEL_HOME/plugins/jdbc/lib/' working directory<br/>
+> For example PostgreSQL datasource: cp postgresql-xxx.jar $SEATUNNEL_HOME/plugins/jdbc/lib/<br/>
+> If you want to manipulate the GEOMETRY type in PostgreSQL, add postgresql-xxx.jar and postgis-jdbc-xxx.jar to $SEATUNNEL_HOME/plugins/jdbc/lib/
 
 ## Data Type Mapping
 
@@ -261,7 +261,7 @@ source{
         partition_column= "id"
         
         # The name of the table returned
-        result_table_name = "jdbc"
+        plugin_output = "jdbc"
         partition_lower_bound = 1
         partition_upper_bound = 50
         partition_num = 5

@@ -19,6 +19,7 @@ package org.apache.seatunnel.transform.llm;
 
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
@@ -33,8 +34,6 @@ import org.apache.seatunnel.transform.nlpmodel.llm.remote.openai.OpenAIModel;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

@@ -17,7 +17,10 @@
 
 package org.apache.seatunnel.engine.server;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
+import org.apache.seatunnel.engine.common.utils.concurrent.CompletableFuture;
 import org.apache.seatunnel.engine.server.execution.BlockTask;
 import org.apache.seatunnel.engine.server.execution.ExceptionTestTask;
 import org.apache.seatunnel.engine.server.execution.FixedCallTestTimeTask;
@@ -38,20 +41,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Lists;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.internal.serialization.Data;
 import lombok.NonNull;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -167,7 +168,12 @@ public class TaskExecutionServiceTest extends AbstractSeaTunnelServerTest {
     }
 
     @Test
-    public void testClassloaderSplit() throws MalformedURLException {
+    public void testClassloaderSplit() throws IOException {
+        File console = File.createTempFile("console", ".jar");
+        File fake = File.createTempFile("fake", ".jar");
+        String consoleFile = console.toURI().toURL().toString();
+        String fakeFile = fake.toURI().toURL().toString();
+
         TaskExecutionService taskExecutionService = server.getTaskExecutionService();
 
         long sleepTime = 300;
@@ -190,8 +196,8 @@ public class TaskExecutionServiceTest extends AbstractSeaTunnelServerTest {
                                 nodeEngine.getSerializationService().toData(testTask1),
                                 nodeEngine.getSerializationService().toData(testTask2)),
                         Arrays.asList(
-                                Collections.singleton(new URL("file://fake.jar")),
-                                Collections.singleton(new URL("file://console.jar"))),
+                                Collections.singleton(new URL(fakeFile)),
+                                Collections.singleton(new URL(consoleFile))),
                         Arrays.asList(emptySet(), emptySet()));
 
         Data data = nodeEngine.getSerializationService().toData(taskGroupImmutableInformation);
@@ -203,24 +209,27 @@ public class TaskExecutionServiceTest extends AbstractSeaTunnelServerTest {
         TaskGroupContext taskGroupContext =
                 taskExecutionService.getActiveExecutionContext(location);
         Assertions.assertIterableEquals(
-                Collections.singleton(new URL("file://fake.jar")),
+                Collections.singleton(new URL(fakeFile)),
                 taskGroupContext.getJars().get(testTask1.getTaskID()));
         Assertions.assertIterableEquals(
-                Collections.singleton(new URL("file://console.jar")),
+                Collections.singleton(new URL(consoleFile)),
                 taskGroupContext.getJars().get(testTask2.getTaskID()));
 
         Assertions.assertIterableEquals(
-                Collections.singletonList(new URL("file://fake.jar")),
+                Collections.singletonList(new URL(fakeFile)),
                 Arrays.asList(
                         ((URLClassLoader) taskGroupContext.getClassLoader(testTask1.getTaskID()))
                                 .getURLs()));
         Assertions.assertIterableEquals(
-                Collections.singletonList(new URL("file://console.jar")),
+                Collections.singletonList(new URL(consoleFile)),
                 Arrays.asList(
                         ((URLClassLoader) taskGroupContext.getClassLoader(testTask2.getTaskID()))
                                 .getURLs()));
 
         taskExecutionService.cancelTaskGroup(location);
+
+        fake.delete();
+        console.delete();
     }
 
     /** Test task execution time is the same as the timer timeout */

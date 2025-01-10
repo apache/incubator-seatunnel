@@ -53,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.awaitility.Awaitility.await;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.given;
 
 @Slf4j
 @DisabledOnContainer(
@@ -72,6 +73,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
     private final UniqueDatabase inventoryDatabase =
             new UniqueDatabase(
                     MYSQL_CONTAINER, MYSQL_DATABASE, "mysqluser", "mysqlpw", MYSQL_DATABASE);
+    private final String QUERY_SQL = "select * from %s.%s";
 
     // mysql source table query sql
     private static final String SOURCE_SQL_TEMPLATE =
@@ -178,6 +180,45 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
                                     query(getSourceQuerySQL(MYSQL_DATABASE, SOURCE_TABLE_1)),
                                     query(getSinkQuerySQL(MYSQL_DATABASE, SINK_TABLE)));
                         });
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testMysqlCdcMetadataTrans(TestContainer container) throws InterruptedException {
+        // Clear related content to ensure that multiple operations are not affected
+        clearTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+        clearTable(MYSQL_DATABASE, SINK_TABLE);
+        Long jobId = JobIdGenerator.newJobId();
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        container.executeJob(
+                                "/mysqlcdc_to_metadata_trans.conf", String.valueOf(jobId));
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                });
+        TimeUnit.SECONDS.sleep(10);
+        // insert update delete
+        upsertDeleteSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
+        TimeUnit.SECONDS.sleep(10);
+        await().atMost(2, TimeUnit.MINUTES)
+                .untilAsserted(
+                        () -> {
+                            String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                            Assertions.assertEquals("RUNNING", jobStatus);
+                        });
+        try {
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @TestTemplate
@@ -346,6 +387,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
         // wait for data written to sink
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
                                 Assertions.assertTrue(
@@ -372,20 +414,13 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
         changeSourceTable(MYSQL_DATABASE, SOURCE_TABLE_1);
 
         // stream stage
-        await().atMost(60000, TimeUnit.MILLISECONDS)
+        await().atMost(300000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
-                                Assertions.assertAll(
-                                        () ->
-                                                Assertions.assertIterableEquals(
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE,
-                                                                        SOURCE_TABLE_1)),
-                                                        query(
-                                                                getSourceQuerySQL(
-                                                                        MYSQL_DATABASE2,
-                                                                        SOURCE_TABLE_1)))));
+                                Assertions.assertIterableEquals(
+                                        query(getSourceQuerySQL(MYSQL_DATABASE, SOURCE_TABLE_1)),
+                                        query(getSourceQuerySQL(MYSQL_DATABASE2, SOURCE_TABLE_1))));
         await().atMost(60000, TimeUnit.MILLISECONDS)
                 .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .until(() -> getConnectionStatus("st_user_source").size() == 1);
@@ -413,6 +448,7 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
         // stream stage
         await().atMost(60000, TimeUnit.MILLISECONDS)
+                .pollInterval(1000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () ->
                                 Assertions.assertAll(
@@ -503,6 +539,59 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
                                                                 getSourceQuerySQL(
                                                                         MYSQL_DATABASE2,
                                                                         SOURCE_TABLE_2_CUSTOM_PRIMARY_KEY)))));
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK},
+            disabledReason = "Currently SPARK do not support cdc")
+    public void testMysqlCdcByWildcardsConfig(TestContainer container)
+            throws IOException, InterruptedException {
+        inventoryDatabase.setTemplateName("wildcards").createAndInitialize();
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        container.executeJob("/mysqlcdc_wildcards_to_mysql.conf");
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                });
+        TimeUnit.SECONDS.sleep(5);
+        inventoryDatabase.setTemplateName("wildcards_dml").createAndInitialize();
+        given().pollDelay(20, TimeUnit.SECONDS)
+                .pollInterval(2000, TimeUnit.MILLISECONDS)
+                .await()
+                .atMost(60000, TimeUnit.MILLISECONDS)
+                .untilAsserted(
+                        () -> {
+                            Assertions.assertAll(
+                                    () -> {
+                                        log.info(
+                                                query(getQuerySQL("sink", "source_products"))
+                                                        .toString());
+                                        Assertions.assertIterableEquals(
+                                                query(getQuerySQL("source", "products")),
+                                                query(getQuerySQL("sink", "source_products")));
+                                    },
+                                    () -> {
+                                        log.info(
+                                                query(getQuerySQL("sink", "source_customers"))
+                                                        .toString());
+                                        Assertions.assertIterableEquals(
+                                                query(getQuerySQL("source", "customers")),
+                                                query(getQuerySQL("sink", "source_customers")));
+                                    },
+                                    () -> {
+                                        log.info(
+                                                query(getQuerySQL("sink", "source1_orders"))
+                                                        .toString());
+                                        Assertions.assertIterableEquals(
+                                                query(getQuerySQL("source1", "orders")),
+                                                query(getQuerySQL("sink", "source1_orders")));
+                                    });
+                        });
     }
 
     private Connection getJdbcConnection() throws SQLException {
@@ -668,5 +757,9 @@ public class MysqlCDCIT extends TestSuiteBase implements TestResource {
 
     private String getSinkQuerySQL(String database, String tableName) {
         return String.format(SINK_SQL_TEMPLATE, database, tableName);
+    }
+
+    private String getQuerySQL(String database, String tableName) {
+        return String.format(QUERY_SQL, database, tableName);
     }
 }

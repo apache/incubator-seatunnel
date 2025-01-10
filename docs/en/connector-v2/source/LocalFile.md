@@ -56,12 +56,14 @@ If you use SeaTunnel Engine, It automatically integrated the hadoop jar when you
 | skip_header_row_number    | long    | no       | 0                                    |
 | schema                    | config  | no       | -                                    |
 | sheet_name                | string  | no       | -                                    |
+| excel_engine              | string  | no       | POI                                  |                                             |
 | xml_row_tag               | string  | no       | -                                    |
 | xml_use_attr_format       | boolean | no       | -                                    |
 | file_filter_pattern       | string  | no       |                                      |
 | compress_codec            | string  | no       | none                                 |
 | archive_compress_codec    | string  | no       | none                                 |
 | encoding                  | string  | no       | UTF-8                                |
+| null_format               | string  | no       | -                                    | 
 | common-options            |         | no       | -                                    |
 | tables_configs            | list    | no       | used to define a multiple table task |
 
@@ -238,6 +240,16 @@ Only need to be configured when file_format is excel.
 
 Reader the sheet of the workbook.
 
+### excel_engine [string]
+
+Only need to be configured when file_format is excel.
+
+supported as the following file types:
+`POI` `EasyExcel`
+
+The default excel reading engine is POI, but POI can easily cause memory overflow when reading Excel with more than 65,000 rows, so you can switch to EasyExcel as the reading engine.
+
+
 ### xml_row_tag [string]
 
 Only need to be configured when file_format is xml.
@@ -322,12 +334,22 @@ The compress codec of archive files and the details that supported as the follow
 | ZIP                    | txt,json,excel,xml | .zip                    |
 | TAR                    | txt,json,excel,xml | .tar                    |
 | TAR_GZ                 | txt,json,excel,xml | .tar.gz                 |
+| GZ                     | txt,json,excel,xml | .gz                     |
 | NONE                   | all                | .*                      |
+
+Note: gz compressed excel file needs to compress the original file or specify the file suffix, such as e2e.xls ->e2e_test.xls.gz
 
 ### encoding [string]
 
 Only used when file_format_type is json,text,csv,xml.
 The encoding of the file to read. This param will be parsed by `Charset.forName(encoding)`.
+
+### null_format [string]
+
+Only used when file_format_type is text.
+null_format to define which strings can be represented as null.
+
+e.g: `\N`
 
 ### common options
 
@@ -490,4 +512,6 @@ sink {
 - [BugFix] Fix the bug of incorrect path in windows environment ([2980](https://github.com/apache/seatunnel/pull/2980))
 - [Improve] Support extract partition from SeaTunnelRow fields ([3085](https://github.com/apache/seatunnel/pull/3085))
 - [Improve] Support parse field from file path ([2985](https://github.com/apache/seatunnel/pull/2985))
+### 2.3.9-beta 2024-11-12
+- [Improve] Support parse field from file path ([8019](https://github.com/apache/seatunnel/issues/8019))
 

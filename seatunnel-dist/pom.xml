@@ -104,7 +104,6 @@
                 <!-- Imap storage dependency package  -->
                 <hadoop-aliyun.version>3.1.4</hadoop-aliyun.version>
                 <json-smart.version>2.4.7</json-smart.version>
-                <hadoop-aws.version>3.1.4</hadoop-aws.version>
                 <aws-java-sdk.version>1.11.271</aws-java-sdk.version>
                 <netty-buffer.version>4.1.89.Final</netty-buffer.version>
                 <hive.exec.version>3.1.3</hive.exec.version>
@@ -735,9 +734,10 @@
 
                 <!-- hadoop jar -->
                 <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-aws</artifactId>
-                    <version>${hadoop-aws.version}</version>
+                    <groupId>org.apache.seatunnel</groupId>
+                    <artifactId>seatunnel-hadoop-aws</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>optional</classifier>
                     <scope>provided</scope>
                 </dependency>
                 <dependency>
@@ -960,6 +960,14 @@
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
+
+                <dependency>
+                    <groupId>org.apache.seatunnel</groupId>
+                    <artifactId>seatunnel-hadoop-aws</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>optional</classifier>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <finalName>apache-seatunnel-${project.version}</finalName>
@@ -1012,6 +1020,95 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
+                        <version>${exec-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>docker-build</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <skip>${docker.build.skip}</skip>
+                                    <environmentVariables>
+                                        <DOCKER_BUILDKIT>1</DOCKER_BUILDKIT>
+                                    </environmentVariables>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                    <arguments>
+                                        <argument>buildx</argument>
+                                        <argument>build</argument>
+                                        <argument>--load</argument>
+                                        <argument>--no-cache</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.hub}/${docker.repo}:${docker.tag}</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.hub}/${docker.repo}:latest</argument>
+                                        <argument>${project.basedir}</argument>
+                                        <argument>--build-arg</argument>
+                                        <argument>VERSION=${project.version}</argument>
+                                        <argument>--file=src/main/docker/Dockerfile</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>docker-verify</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <phase>verify</phase>
+                                <configuration>
+                                    <skip>${docker.verify.skip}</skip>
+                                    <environmentVariables>
+                                        <DOCKER_BUILDKIT>1</DOCKER_BUILDKIT>
+                                    </environmentVariables>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                    <arguments>
+                                        <argument>run</argument>
+                                        <argument>--rm</argument>
+                                        <argument>${docker.hub}/${docker.repo}:${docker.tag}</argument>
+                                        <argument>bash</argument>
+                                        <argument>./bin/seatunnel.sh</argument>
+                                        <argument>-e</argument>
+                                        <argument>local</argument>
+                                        <argument>-c</argument>
+                                        <argument>config/v2.batch.config.template</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>docker-push</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <skip>${docker.push.skip}</skip>
+                                    <environmentVariables>
+                                        <DOCKER_BUILDKIT>1</DOCKER_BUILDKIT>
+                                    </environmentVariables>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                    <arguments>
+                                        <argument>buildx</argument>
+                                        <argument>build</argument>
+                                        <argument>--platform</argument>
+                                        <argument>linux/amd64,linux/arm64</argument>
+                                        <argument>--no-cache</argument>
+                                        <argument>--push</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.hub}/${docker.repo}:${docker.tag}</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.hub}/${docker.repo}:latest</argument>
+                                        <argument>${project.basedir}</argument>
+                                        <argument>--build-arg</argument>
+                                        <argument>VERSION=${project.version}</argument>
+                                        <argument>--file=src/main/docker/Dockerfile</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

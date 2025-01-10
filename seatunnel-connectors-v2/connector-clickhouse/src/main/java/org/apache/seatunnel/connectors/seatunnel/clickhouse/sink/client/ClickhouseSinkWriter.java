@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.clickhouse.sink.client;
 
+import org.apache.seatunnel.shade.com.google.common.base.Strings;
+
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.config.Common;
@@ -34,7 +36,6 @@ import org.apache.seatunnel.connectors.seatunnel.clickhouse.util.IntHolder;
 import org.apache.commons.lang3.StringUtils;
 
 import com.clickhouse.jdbc.internal.ClickHouseConnectionImpl;
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

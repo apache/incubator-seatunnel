@@ -30,7 +30,6 @@ import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ComparisonOperator;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
@@ -39,6 +38,7 @@ import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -139,7 +139,8 @@ public class ZetaSQLFilter {
 
     private boolean inExpr(InExpression inExpression, Object[] inputFields) {
         Expression leftExpr = inExpression.getLeftExpression();
-        ExpressionList itemsList = (ExpressionList) inExpression.getRightItemsList();
+        ParenthesedExpressionList<Expression> itemsList =
+                (ParenthesedExpressionList) inExpression.getRightExpression();
         Object leftValue = zetaSQLFunction.computeForValue(leftExpr, inputFields);
         for (Expression exprItem : itemsList.getExpressions()) {
             Object rightValue = zetaSQLFunction.computeForValue(exprItem, inputFields);

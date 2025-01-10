@@ -20,19 +20,19 @@ package org.apache.seatunnel.engine.server.task.flow;
 import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.event.EventListener;
 import org.apache.seatunnel.api.serialization.Serializer;
-import org.apache.seatunnel.api.sink.MultiTableResourceManager;
 import org.apache.seatunnel.api.sink.SinkCommitter;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SinkWriter.Context;
-import org.apache.seatunnel.api.sink.SupportResourceShare;
+import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSinkWriter;
 import org.apache.seatunnel.api.sink.event.WriterCloseEvent;
 import org.apache.seatunnel.api.sink.multitablesink.MultiTableSink;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TablePath;
-import org.apache.seatunnel.api.table.event.SchemaChangeEvent;
+import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.api.table.type.Record;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.constants.PluginType;
+import org.apache.seatunnel.engine.common.utils.concurrent.CompletableFuture;
 import org.apache.seatunnel.engine.core.checkpoint.InternalCheckpointListener;
 import org.apache.seatunnel.engine.core.dag.actions.SinkAction;
 import org.apache.seatunnel.engine.server.checkpoint.ActionStateKey;
@@ -61,7 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -97,8 +96,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
     private TaskMetricsCalcContext taskMetricsCalcContext;
 
     private final boolean containAggCommitter;
-
-    private MultiTableResourceManager resourceManager;
 
     private EventListener eventListener;
 
@@ -176,13 +173,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
         super.close();
         writer.close();
         writerContext.getEventListener().onEvent(new WriterCloseEvent());
-        try {
-            if (resourceManager != null) {
-                resourceManager.close();
-            }
-        } catch (Throwable e) {
-            log.error("close resourceManager error", e);
-        }
     }
 
     private void registerCommitter() {
@@ -264,7 +254,12 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
                     return;
                 }
                 SchemaChangeEvent event = (SchemaChangeEvent) record.getData();
-                writer.applySchemaChange(event);
+                if (writer instanceof SupportSchemaEvolutionSinkWriter) {
+                    ((SupportSchemaEvolutionSinkWriter) writer).applySchemaChange(event);
+                } else {
+                    // todo remove deprecated method
+                    writer.applySchemaChange(event);
+                }
             } else {
                 if (prepareClose) {
                     return;
@@ -347,11 +342,6 @@ public class SinkFlowLifeCycle<T, CommitInfoT extends Serializable, AggregatedCo
             this.writer = sinkAction.getSink().createWriter(writerContext);
         } else {
             this.writer = sinkAction.getSink().restoreWriter(writerContext, states);
-        }
-        if (this.writer instanceof SupportResourceShare) {
-            resourceManager =
-                    ((SupportResourceShare) this.writer).initMultiTableResourceManager(1, 1);
-            ((SupportResourceShare) this.writer).setMultiTableResourceManager(resourceManager, 0);
         }
     }
 }

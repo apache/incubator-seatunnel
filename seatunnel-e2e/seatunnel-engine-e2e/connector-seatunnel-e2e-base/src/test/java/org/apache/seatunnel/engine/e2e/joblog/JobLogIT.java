@@ -18,8 +18,9 @@
 package org.apache.seatunnel.engine.e2e.joblog;
 
 import org.apache.seatunnel.common.constants.JobMode;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.e2e.common.util.ContainerUtil;
-import org.apache.seatunnel.engine.e2e.SeaTunnelContainer;
+import org.apache.seatunnel.engine.e2e.SeaTunnelEngineContainer;
 import org.apache.seatunnel.engine.server.rest.RestConstant;
 
 import org.awaitility.Awaitility;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.StringUtils;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -35,12 +37,15 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerLoggerFactory;
 import org.testcontainers.utility.MountableFile;
 
+import com.beust.jcommander.internal.Lists;
+import com.hazelcast.jet.datamodel.Tuple2;
 import io.restassured.response.Response;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -49,10 +54,14 @@ import static io.restassured.RestAssured.given;
 import static org.apache.seatunnel.e2e.common.util.ContainerUtil.PROJECT_ROOT_PATH;
 import static org.hamcrest.Matchers.equalTo;
 
-public class JobLogIT extends SeaTunnelContainer {
+public class JobLogIT extends SeaTunnelEngineContainer {
 
     private static final String CUSTOM_JOB_NAME = "test-job-log-file";
+    private static final String CUSTOM_JOB_NAME2 = "test-job-log-file2";
+    private static final String CUSTOM_JOB_NAME3 = "test-job-log-file3";
     private static final long CUSTOM_JOB_ID = 862969647010611201L;
+    private static final long CUSTOM_JOB_ID2 = 862969647010611202L;
+    private static final long CUSTOM_JOB_ID3 = 862969647010611203L;
 
     private static final String confFile = "/fakesource_to_console.conf";
     private static final Path BIN_PATH = Paths.get(SEATUNNEL_HOME, "bin", SERVER_SHELL);
@@ -99,10 +108,31 @@ public class JobLogIT extends SeaTunnelContainer {
     @Test
     public void testJobLogFile() throws Exception {
         submitJobAndAssertResponse(
-                server, JobMode.STREAMING.name(), false, CUSTOM_JOB_NAME, CUSTOM_JOB_ID);
+                server, JobMode.BATCH.name(), false, CUSTOM_JOB_NAME, CUSTOM_JOB_ID);
+
+        submitJobAndAssertResponse(
+                server, JobMode.STREAMING.name(), false, CUSTOM_JOB_NAME2, CUSTOM_JOB_ID2);
+
+        submitJobAndAssertResponse(
+                server, JobMode.STREAMING.name(), false, CUSTOM_JOB_NAME3, CUSTOM_JOB_ID3);
 
         assertConsoleLog();
         assertFileLog();
+        assertLogFormatType();
+
+        List<Tuple2<Boolean, String>> before =
+                Lists.newArrayList(
+                        Tuple2.tuple2(false, "job-" + CUSTOM_JOB_ID + ".log"),
+                        Tuple2.tuple2(false, "job-" + CUSTOM_JOB_ID2 + ".log"),
+                        Tuple2.tuple2(false, "job-" + CUSTOM_JOB_ID3 + ".log"));
+        assertFileLogClean(before);
+        Thread.sleep(90000);
+        List<Tuple2<Boolean, String>> after =
+                Lists.newArrayList(
+                        Tuple2.tuple2(true, "job-" + CUSTOM_JOB_ID + ".log"),
+                        Tuple2.tuple2(false, "job-" + CUSTOM_JOB_ID2 + ".log"),
+                        Tuple2.tuple2(false, "job-" + CUSTOM_JOB_ID3 + ".log"));
+        assertFileLogClean(after);
     }
 
     private void assertConsoleLog() {
@@ -131,6 +161,30 @@ public class JobLogIT extends SeaTunnelContainer {
                                                                         .find());
                                             });
                         });
+    }
+
+    private void assertLogFormatType() throws IOException, InterruptedException {
+        final String baseUrl = "curl http://localhost:8080/logs";
+        final String htmlUrl = baseUrl;
+        final String jsonUrl = baseUrl + "?format=JSON";
+        final String expectedHtmlTitle = "<html><head><title>Seatunnel log</title></head>";
+
+        // Execute commands and get results for both HTML and JSON logs
+        Container.ExecResult htmlExecResult = server.execInContainer("sh", "-c", htmlUrl);
+        Container.ExecResult jsonExecResult = server.execInContainer("sh", "-c", jsonUrl);
+
+        // Get the stdout of each execution result
+        String htmlOutput = htmlExecResult.getStdout();
+        String jsonOutput = jsonExecResult.getStdout();
+
+        // Verify HTML response contains expected title
+        Assertions.assertTrue(htmlOutput.contains(expectedHtmlTitle));
+
+        // Verify JSON response is valid JSON
+        Assertions.assertDoesNotThrow(
+                () -> JsonUtils.parseArray(jsonOutput),
+                "JSON format log list interface exception, returned type is not JSON, content:"
+                        + jsonOutput);
     }
 
     private void assertFileLog() throws IOException, InterruptedException {
@@ -168,6 +222,27 @@ public class JobLogIT extends SeaTunnelContainer {
                         });
     }
 
+    private void assertFileLogClean(List<Tuple2<Boolean, String>> tuple2s)
+            throws IOException, InterruptedException {
+        for (Tuple2<Boolean, String> tuple2 : tuple2s) {
+            Container.ExecResult execResult =
+                    server.execInContainer(
+                            "sh", "-c", "find /tmp/seatunnel/logs -name " + tuple2.f1() + "\n");
+            String file = execResult.getStdout();
+            execResult =
+                    secondServer.execInContainer(
+                            "sh", "-c", "find /tmp/seatunnel/logs -name " + tuple2.f1() + "\n");
+            String file1 = execResult.getStdout();
+            Assertions.assertEquals(
+                    tuple2.f0(),
+                    StringUtils.isBlank(file) && StringUtils.isBlank(file1),
+                    "Server Logs: \n"
+                            + server.getLogs()
+                            + "\n SecondServer Logs: \n"
+                            + secondServer.getLogs());
+        }
+    }
+
     private Response submitJob(
             GenericContainer<?> container,
             String jobMode,
@@ -187,7 +262,7 @@ public class JobLogIT extends SeaTunnelContainer {
                         + "    \"source\": [\n"
                         + "        {\n"
                         + "            \"plugin_name\": \"FakeSource\",\n"
-                        + "            \"result_table_name\": \"fake\",\n"
+                        + "            \"plugin_output\": \"fake\",\n"
                         + "            \"row.num\": 100,\n"
                         + "            \"schema\": {\n"
                         + "                \"fields\": {\n"
@@ -203,7 +278,7 @@ public class JobLogIT extends SeaTunnelContainer {
                         + "    \"sink\": [\n"
                         + "        {\n"
                         + "            \"plugin_name\": \"Console\",\n"
-                        + "            \"source_table_name\": [\"fake\"]\n"
+                        + "            \"plugin_input\": [\"fake\"]\n"
                         + "        }\n"
                         + "    ]\n"
                         + "}";
@@ -221,13 +296,13 @@ public class JobLogIT extends SeaTunnelContainer {
                                                 + ":"
                                                 + container.getFirstMappedPort()
                                                 + RestConstant.CONTEXT_PATH
-                                                + RestConstant.SUBMIT_JOB_URL
+                                                + RestConstant.REST_URL_SUBMIT_JOB
                                         : "http://"
                                                 + container.getHost()
                                                 + ":"
                                                 + container.getFirstMappedPort()
                                                 + RestConstant.CONTEXT_PATH
-                                                + RestConstant.SUBMIT_JOB_URL
+                                                + RestConstant.REST_URL_SUBMIT_JOB
                                                 + "?"
                                                 + parameters);
         return response;
