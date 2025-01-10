@@ -27,15 +27,25 @@ import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.connectors.seatunnel.elasticsearch.config.SinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.elasticsearch.dto.ElasticsearchClusterInfo;
 import org.apache.seatunnel.connectors.seatunnel.elasticsearch.dto.IndexInfo;
+import org.apache.seatunnel.connectors.seatunnel.elasticsearch.serialize.source.DefaultSeaTunnelRowDeserializer;
+import org.apache.seatunnel.connectors.seatunnel.elasticsearch.serialize.source.ElasticsearchRecord;
+import org.apache.seatunnel.connectors.seatunnel.elasticsearch.serialize.source.SeaTunnelRowDeserializer;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.apache.seatunnel.api.table.type.BasicType.STRING_TYPE;
+import static org.apache.seatunnel.api.table.type.LocalTimeType.LOCAL_DATE_TIME_TYPE;
 
 public class ElasticsearchRowSerializerTest {
     @Test
@@ -183,5 +193,47 @@ public class ElasticsearchRowSerializerTest {
 
         String upsertStr = serializer.serializeRow(row);
         Assertions.assertEquals(expected, upsertStr);
+    }
+
+    /** Verification time type: millisecond, second conversion */
+    @Test
+    public void testSerializeDate() {
+        String index = "st_index";
+        SeaTunnelRowDeserializer deserializer =
+                new DefaultSeaTunnelRowDeserializer(
+                        new SeaTunnelRowType(
+                                new String[] {"id", "date"},
+                                new SeaTunnelDataType[] {STRING_TYPE, LOCAL_DATE_TIME_TYPE}));
+
+        testDateConversion(deserializer, index, 1689571957, false);
+        testDateConversion(deserializer, index, 1689571957000L, true);
+    }
+
+    private void testDateConversion(
+            SeaTunnelRowDeserializer deserializer,
+            String index,
+            Number dateValue,
+            boolean isMillis) {
+        Map<String, Object> doc =
+                Stream.of(
+                                new AbstractMap.SimpleEntry<>("id", 1),
+                                new AbstractMap.SimpleEntry<>("date", dateValue))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        LocalDateTime field =
+                (LocalDateTime)
+                        deserializer
+                                .deserialize(
+                                        new ElasticsearchRecord(
+                                                doc, Arrays.asList("id", "date"), index))
+                                .getField(1);
+
+        LocalDateTime expected =
+                isMillis
+                        ? LocalDateTime.ofInstant(
+                                Instant.ofEpochMilli(dateValue.longValue()), ZoneOffset.UTC)
+                        : LocalDateTime.ofEpochSecond(dateValue.longValue(), 0, ZoneOffset.UTC);
+
+        Assertions.assertEquals(expected, field);
     }
 }

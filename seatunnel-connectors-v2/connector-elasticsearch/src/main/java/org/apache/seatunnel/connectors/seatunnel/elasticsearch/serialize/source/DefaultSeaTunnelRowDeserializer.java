@@ -233,7 +233,9 @@ public class DefaultSeaTunnelRowDeserializer implements SeaTunnelRowDeserializer
     private LocalDateTime parseDate(String fieldValue) {
         // handle strings of timestamp type
         try {
-            long ts = Long.parseLong(fieldValue);
+            // ES timestamps are allowed to be in epoch seconds, we should uniformly convert them to
+            // epoch milliseconds
+            long ts = Long.parseLong(fieldValue) * (fieldValue.length() == 10 ? 1000 : 1);
             return LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault());
         } catch (NumberFormatException e) {
             // no op
