@@ -37,3 +37,4 @@ values (119,"scooter","Small 2-wheel scooter",3.14,'xx',1),
 
 alter table products ADD COLUMN add_column3 float not null default 1.1;
 alter table products ADD COLUMN add_column4 datetime not null default now();
+

@@ -24,10 +24,10 @@ use shop;
 drop table if exists products;
 -- Create and populate our products using a single insert with many rows
 CREATE TABLE products (
-                          id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                          name VARCHAR(255) NOT NULL DEFAULT 'SeaTunnel',
-                          description VARCHAR(512),
-                          weight FLOAT
+  id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL DEFAULT 'SeaTunnel',
+  description VARCHAR(512),
+  weight FLOAT
 );
 
 INSERT INTO products

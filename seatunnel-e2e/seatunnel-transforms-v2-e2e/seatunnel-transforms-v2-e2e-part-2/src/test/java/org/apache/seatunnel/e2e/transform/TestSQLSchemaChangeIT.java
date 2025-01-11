@@ -99,8 +99,7 @@ public class TestSQLSchemaChangeIT extends TestSuiteBase implements TestResource
         log.info("Elasticsearch container started");
         esRestClient =
                 EsRestClient.createInstance(
-                        org.apache.seatunnel.shade.com.google.common.collect.Lists.newArrayList(
-                                "https://" + container.getHttpHostAddress()),
+                        Lists.newArrayList("https://" + container.getHttpHostAddress()),
                         Optional.of("elastic"),
                         Optional.of("elasticsearch"),
                         false,
