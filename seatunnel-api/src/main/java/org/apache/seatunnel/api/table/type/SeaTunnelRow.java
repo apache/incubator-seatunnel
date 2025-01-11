@@ -169,7 +169,9 @@ public final class SeaTunnelRow implements Serializable {
                 if (elementType instanceof DecimalType) {
                     return ((Object[]) v).length * 36;
                 }
-
+                if (elementType instanceof MapType) {
+                    return getArrayMapNotNullSize(v);
+                }
                 if (elementType instanceof LocalTimeType) {
                     SqlType eleSqlType = elementType.getSqlType();
                     switch (eleSqlType) {
@@ -248,6 +250,19 @@ public final class SeaTunnelRow implements Serializable {
         return c;
     }
 
+    private int getArrayMapNotNullSize(Object v) {
+        int size = 0;
+        if (Objects.nonNull(v)) {
+            for (Map o : (Map[]) v) {
+                for (Map.Entry<?, ?> entry : ((Map<?, ?>) o).entrySet()) {
+                    size += getBytesForValue(entry.getKey()) + getBytesForValue(entry.getValue());
+                }
+            }
+        }
+
+        return size;
+    }
+
     public int getBytesSize() {
         if (size == 0) {
             int s = 0;
@@ -305,6 +320,8 @@ public final class SeaTunnelRow implements Serializable {
                 return getBytesForArray(v, BasicType.FLOAT_TYPE);
             case "Double[]":
                 return getBytesForArray(v, BasicType.DOUBLE_TYPE);
+            case "Map[]":
+                return getArrayMapNotNullSize(v);
             case "HashMap":
             case "LinkedHashMap":
                 int size = 0;
