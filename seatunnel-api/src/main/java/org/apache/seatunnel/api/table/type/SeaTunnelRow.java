@@ -169,7 +169,17 @@ public final class SeaTunnelRow implements Serializable {
                 if (elementType instanceof DecimalType) {
                     return ((Object[]) v).length * 36;
                 }
-
+                if (elementType instanceof MapType) {
+                    int sizeMaps = 0;
+                    for (Map o : (Map[]) v) {
+                        for (Map.Entry<?, ?> entry : ((Map<?, ?>) o).entrySet()) {
+                            sizeMaps +=
+                                    getBytesForValue(entry.getKey())
+                                            + getBytesForValue(entry.getValue());
+                        }
+                    }
+                    return sizeMaps;
+                }
                 if (elementType instanceof LocalTimeType) {
                     SqlType eleSqlType = elementType.getSqlType();
                     switch (eleSqlType) {
