@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.file.config;
 
 import org.apache.seatunnel.connectors.seatunnel.file.sink.config.FileSinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.BinaryWriteStrategy;
+import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.CsvWriteStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.ExcelWriteStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.JsonWriteStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.OrcWriteStrategy;
@@ -43,7 +44,7 @@ public enum FileFormat implements Serializable {
         @Override
         public WriteStrategy getWriteStrategy(FileSinkConfig fileSinkConfig) {
             fileSinkConfig.setFieldDelimiter(",");
-            return new TextWriteStrategy(fileSinkConfig);
+            return new CsvWriteStrategy(fileSinkConfig);
         }
 
         @Override
