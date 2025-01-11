@@ -330,7 +330,7 @@ public class PhysicalPlanGenerator {
                                             (PhysicalExecutionFlow) nextFlow;
                                     SinkAction sinkAction = (SinkAction) sinkFlow.getAction();
                                     String sinkTableId =
-                                            sinkAction.getConfig().getMultipleRowTableId();
+                                            sinkAction.getConfig().getTablePath().toString();
 
                                     long taskIDPrefix = idGenerator.getNextId();
                                     long taskGroupIDPrefix = idGenerator.getNextId();

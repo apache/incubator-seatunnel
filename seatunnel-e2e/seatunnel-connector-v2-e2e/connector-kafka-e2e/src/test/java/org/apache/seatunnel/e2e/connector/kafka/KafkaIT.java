@@ -270,6 +270,26 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
     }
 
     @TestTemplate
+    public void testSourceKafkaTopicWithMultipleDotConsoleAssertCatalogTable(
+            TestContainer container) throws IOException, InterruptedException {
+        TextSerializationSchema serializer =
+                TextSerializationSchema.builder()
+                        .seaTunnelRowType(SEATUNNEL_ROW_TYPE)
+                        .delimiter(",")
+                        .build();
+        generateTestData(
+                row ->
+                        new ProducerRecord<>(
+                                "test.multiple.point.topic.json", null, serializer.serialize(row)),
+                0,
+                100);
+        Container.ExecResult execResult =
+                container.executeJob(
+                        "/textFormatIT/kafka_source_topic_multiple_point_text_to_console.conf");
+        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+    }
+
+    @TestTemplate
     public void testSourceKafkaJsonToConsole(TestContainer container)
             throws IOException, InterruptedException {
         DefaultSeaTunnelRowSerializer serializer =
