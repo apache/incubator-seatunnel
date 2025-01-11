@@ -72,11 +72,10 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         int index = 0;
         for (SeaTunnelTransform<T> t : transform) {
             try {
-                String transformName = "Transform" + ++index;
+                String transformName = t.getPluginName() + "_" + ++index;
                 TransformContext transformContext =
                         new TransformContext(metricsContext, transformName);
-                t.loadContext(transformContext);
-                t.open();
+                t.open(transformContext);
             } catch (Exception e) {
                 log.error(
                         "Open transform: {} failed, cause: {}",

@@ -31,7 +31,7 @@ public interface SeaTunnelTransform<T>
         extends Serializable, PluginIdentifierInterface, SeaTunnelJobAware {
 
     /** call it when Transformer initialed */
-    default void open() {}
+    default void open(Context context) {}
 
     /**
      * Set the data type info of input data.
@@ -55,8 +55,6 @@ public interface SeaTunnelTransform<T>
 
     /** call it when Transformer completed */
     default void close() {}
-
-    void loadContext(Context context);
 
     interface Context extends Serializable {
 

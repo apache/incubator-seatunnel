@@ -49,7 +49,9 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
     private Context context;
 
     @Override
-    public void open() {}
+    public void open(Context context) {
+        this.context = context;
+    }
 
     public AbstractSeaTunnelTransform(
             @NonNull ReadonlyConfig config, @NonNull CatalogTable inputCatalogTable) {
@@ -94,11 +96,6 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
     @Override
     public List<CatalogTable> getProducedCatalogTables() {
         return Collections.singletonList(getProducedCatalogTable());
-    }
-
-    @Override
-    public void loadContext(Context context) {
-        this.context = context;
     }
 
     private CatalogTable transformCatalogTable() {
@@ -149,7 +146,7 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
         }
     }
 
-    protected void hazelcastMetric() {
+    protected void updateMetric() {
         if (context != null && context.getMetricsContext() != null) {
             hazelcastMetric(1);
         }

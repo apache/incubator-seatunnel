@@ -79,19 +79,24 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
     }
 
     @Override
-    public void open() {
+    public void open(Context context) {
+        super.open(context);
+        initSqlEngine();
+    }
+
+    private void tryOpen() {
+        if (sqlEngine == null) {
+            initSqlEngine();
+        }
+    }
+
+    private void initSqlEngine() {
         sqlEngine = SQLEngineFactory.getSQLEngine(engineType);
         sqlEngine.init(
                 inputTableName,
                 inputCatalogTable.getTableId().getTableName(),
                 inputCatalogTable.getSeaTunnelRowType(),
                 query);
-    }
-
-    private void tryOpen() {
-        if (sqlEngine == null) {
-            open();
-        }
     }
 
     @Override

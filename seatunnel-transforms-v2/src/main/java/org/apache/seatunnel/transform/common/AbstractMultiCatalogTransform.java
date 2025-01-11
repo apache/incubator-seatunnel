@@ -91,12 +91,9 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
     }
 
     @Override
-    public void open() {}
-
-    @Override
-    public void loadContext(Context context) {
+    public void open(Context context) {
         this.context = context;
-        transformMap.values().forEach(transform -> transform.loadContext(context));
+        transformMap.values().forEach(transform -> transform.open(context));
     }
 
     protected abstract SeaTunnelTransform<SeaTunnelRow> buildTransform(

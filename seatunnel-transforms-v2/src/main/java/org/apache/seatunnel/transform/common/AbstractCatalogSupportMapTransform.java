@@ -47,7 +47,7 @@ public abstract class AbstractCatalogSupportMapTransform
     public SeaTunnelRow map(SeaTunnelRow row) {
         SeaTunnelRow result = transform(row);
         if (Objects.nonNull(result)) {
-            hazelcastMetric();
+            updateMetric();
         }
         return result;
     }

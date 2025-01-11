@@ -56,7 +56,7 @@ public class LLMTransform extends SingleFieldOutputTransform {
 
     private void tryOpen() {
         if (model == null) {
-            open();
+            initModel();
         }
     }
 
@@ -66,7 +66,12 @@ public class LLMTransform extends SingleFieldOutputTransform {
     }
 
     @Override
-    public void open() {
+    public void open(Context context) {
+        super.open(context);
+        initModel();
+    }
+
+    private void initModel() {
         ModelProvider provider = config.get(ModelTransformConfig.MODEL_PROVIDER);
         switch (provider) {
             case CUSTOM:

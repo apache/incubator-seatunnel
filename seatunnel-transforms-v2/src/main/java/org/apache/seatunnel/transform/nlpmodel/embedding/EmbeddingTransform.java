@@ -63,13 +63,18 @@ public class EmbeddingTransform extends MultipleFieldOutputTransform {
 
     private void tryOpen() {
         if (model == null) {
-            open();
+            initModel();
         }
     }
 
     @Override
-    public void open() {
+    public void open(Context context) {
+        super.open(context);
         // Initialize model
+        initModel();
+    }
+
+    private void initModel() {
         ModelProvider provider = config.get(ModelTransformConfig.MODEL_PROVIDER);
         try {
             switch (provider) {
