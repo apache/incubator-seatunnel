@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.engine.server.task.flow;
 
+import org.apache.seatunnel.api.common.metrics.MetricsContext;
 import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.api.table.type.Record;
 import org.apache.seatunnel.api.transform.Collector;
@@ -29,6 +30,7 @@ import org.apache.seatunnel.engine.server.checkpoint.ActionStateKey;
 import org.apache.seatunnel.engine.server.checkpoint.ActionSubtaskState;
 import org.apache.seatunnel.engine.server.checkpoint.CheckpointBarrier;
 import org.apache.seatunnel.engine.server.task.SeaTunnelTask;
+import org.apache.seatunnel.engine.server.task.context.TransformContext;
 import org.apache.seatunnel.engine.server.task.record.Barrier;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -50,23 +52,30 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
 
     private final Collector<Record<?>> collector;
 
+    private MetricsContext metricsContext;
+
     public TransformFlowLifeCycle(
             TransformChainAction<T> action,
             SeaTunnelTask runningTask,
             Collector<Record<?>> collector,
-            CompletableFuture<Void> completableFuture) {
+            CompletableFuture<Void> completableFuture,
+            MetricsContext metricsContext) {
         super(action, runningTask, completableFuture);
         this.action = action;
         this.transform = action.getTransforms();
         this.collector = collector;
+        this.metricsContext = metricsContext;
     }
 
     @Override
     public void open() throws Exception {
-        super.open();
+        int index = 0;
         for (SeaTunnelTransform<T> t : transform) {
             try {
-                t.open();
+                String transformName = t.getPluginName() + "_" + ++index;
+                TransformContext transformContext =
+                        new TransformContext(metricsContext, transformName);
+                t.open(transformContext);
             } catch (Exception e) {
                 log.error(
                         "Open transform: {} failed, cause: {}",
@@ -173,14 +182,11 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
 
             dataList = nextInputDataList;
         }
-
         return dataList;
     }
 
     @Override
-    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {
-        // nothing
-    }
+    public void restoreState(List<ActionSubtaskState> actionStateList) throws Exception {}
 
     @Override
     public void close() throws IOException {

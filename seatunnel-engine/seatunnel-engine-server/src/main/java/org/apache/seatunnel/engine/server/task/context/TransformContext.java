@@ -15,29 +15,29 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.transform.common;
+package org.apache.seatunnel.engine.server.task.context;
 
-import org.apache.seatunnel.api.configuration.ReadonlyConfig;
-import org.apache.seatunnel.api.table.catalog.CatalogTable;
-import org.apache.seatunnel.api.table.catalog.TableIdentifier;
-import org.apache.seatunnel.api.table.catalog.TableSchema;
+import org.apache.seatunnel.api.common.metrics.MetricsContext;
+import org.apache.seatunnel.api.transform.SeaTunnelTransform;
 
-import lombok.NonNull;
+public class TransformContext implements SeaTunnelTransform.Context {
 
-public abstract class FilterRowTransform extends AbstractCatalogSupportMapTransform {
+    private static final long serialVersionUID = -3082515319043725121L;
+    private final MetricsContext metricsContext;
+    private final String transformName;
 
-    public FilterRowTransform(
-            @NonNull ReadonlyConfig config, @NonNull CatalogTable inputCatalogTable) {
-        super(config, inputCatalogTable);
+    public TransformContext(MetricsContext metricsContext, String transformName) {
+        this.metricsContext = metricsContext;
+        this.transformName = transformName;
     }
 
     @Override
-    protected TableSchema transformTableSchema() {
-        return inputCatalogTable.getTableSchema().copy();
+    public MetricsContext getMetricsContext() {
+        return metricsContext;
     }
 
     @Override
-    protected TableIdentifier transformTableIdentifier() {
-        return inputCatalogTable.getTableId().copy();
+    public String getTransformName() {
+        return transformName;
     }
 }

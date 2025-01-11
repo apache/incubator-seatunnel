@@ -16,9 +16,12 @@
  */
 package org.apache.seatunnel.transform.common;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.transform.SeaTunnelFlatMapTransform;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -30,17 +33,17 @@ public abstract class AbstractCatalogSupportFlatMapTransform
         extends AbstractSeaTunnelTransform<SeaTunnelRow, List<SeaTunnelRow>>
         implements SeaTunnelFlatMapTransform<SeaTunnelRow> {
 
-    public AbstractCatalogSupportFlatMapTransform(@NonNull CatalogTable inputCatalogTable) {
-        super(inputCatalogTable);
-    }
-
     public AbstractCatalogSupportFlatMapTransform(
-            @NonNull CatalogTable inputCatalogTable, ErrorHandleWay rowErrorHandleWay) {
-        super(inputCatalogTable, rowErrorHandleWay);
+            @NonNull ReadonlyConfig config, @NonNull CatalogTable catalogTable) {
+        super(config, catalogTable);
     }
 
     @Override
     public List<SeaTunnelRow> flatMap(SeaTunnelRow row) {
-        return transform(row);
+        List<SeaTunnelRow> results = transform(row);
+        if (CollectionUtils.isNotEmpty(results)) {
+            hazelcastMetric(results.size());
+        }
+        return results;
     }
 }

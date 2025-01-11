@@ -44,6 +44,8 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
 
     protected Map<String, SeaTunnelTransform<SeaTunnelRow>> transformMap;
 
+    private Context context;
+
     public AbstractMultiCatalogTransform(
             List<CatalogTable> inputCatalogTables, ReadonlyConfig config) {
         this.inputCatalogTables = inputCatalogTables;
@@ -73,7 +75,7 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
                     if (tableConfig != null) {
                         transformMap.put(tableId, buildTransform(inputCatalogTable, tableConfig));
                     } else {
-                        transformMap.put(tableId, new IdentityTransform(inputCatalogTable));
+                        transformMap.put(tableId, new IdentityTransform(config, inputCatalogTable));
                     }
                 });
 
@@ -86,6 +88,12 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
                                     return transformMap.get(tableName).getProducedCatalogTable();
                                 })
                         .collect(Collectors.toList());
+    }
+
+    @Override
+    public void open(Context context) {
+        this.context = context;
+        transformMap.values().forEach(transform -> transform.open(context));
     }
 
     protected abstract SeaTunnelTransform<SeaTunnelRow> buildTransform(
@@ -112,8 +120,8 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
             return "Identity";
         }
 
-        public IdentityTransform(CatalogTable catalogTable) {
-            super(catalogTable);
+        public IdentityTransform(ReadonlyConfig config, CatalogTable catalogTable) {
+            super(config, catalogTable);
             this.catalogTable = catalogTable;
         }
 

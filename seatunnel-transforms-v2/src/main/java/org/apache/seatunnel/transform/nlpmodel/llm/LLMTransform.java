@@ -47,7 +47,7 @@ public class LLMTransform extends SingleFieldOutputTransform {
     private Model model;
 
     public LLMTransform(@NonNull ReadonlyConfig config, @NonNull CatalogTable inputCatalogTable) {
-        super(inputCatalogTable);
+        super(config, inputCatalogTable);
         this.config = config;
         this.outputDataType =
                 SeaTunnelDataTypeConvertorUtil.deserializeSeaTunnelDataType(
@@ -56,7 +56,7 @@ public class LLMTransform extends SingleFieldOutputTransform {
 
     private void tryOpen() {
         if (model == null) {
-            open();
+            initModel();
         }
     }
 
@@ -66,7 +66,12 @@ public class LLMTransform extends SingleFieldOutputTransform {
     }
 
     @Override
-    public void open() {
+    public void open(Context context) {
+        super.open(context);
+        initModel();
+    }
+
+    private void initModel() {
         ModelProvider provider = config.get(ModelTransformConfig.MODEL_PROVIDER);
         switch (provider) {
             case CUSTOM:
