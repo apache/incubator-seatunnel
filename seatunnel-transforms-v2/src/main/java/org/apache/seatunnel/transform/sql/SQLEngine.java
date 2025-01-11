@@ -34,4 +34,6 @@ public interface SQLEngine {
     List<SeaTunnelRow> transformBySQL(SeaTunnelRow inputRow, SeaTunnelRowType outputRowType);
 
     default void close() {}
+
+    void resetAllColumnsCount();
 }

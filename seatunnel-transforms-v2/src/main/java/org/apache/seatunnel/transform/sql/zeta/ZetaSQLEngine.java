@@ -303,4 +303,9 @@ public class ZetaSQLEngine implements SQLEngine {
                         - allColumnsCnt;
         return allColumnsCount;
     }
+
+    @Override
+    public void resetAllColumnsCount() {
+        allColumnsCount = null;
+    }
 }
