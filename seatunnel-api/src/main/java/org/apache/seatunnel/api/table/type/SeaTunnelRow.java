@@ -170,15 +170,7 @@ public final class SeaTunnelRow implements Serializable {
                     return ((Object[]) v).length * 36;
                 }
                 if (elementType instanceof MapType) {
-                    int sizeMaps = 0;
-                    for (Map o : (Map[]) v) {
-                        for (Map.Entry<?, ?> entry : ((Map<?, ?>) o).entrySet()) {
-                            sizeMaps +=
-                                    getBytesForValue(entry.getKey())
-                                            + getBytesForValue(entry.getValue());
-                        }
-                    }
-                    return sizeMaps;
+                    return getArrayMapNotNullSize(v);
                 }
                 if (elementType instanceof LocalTimeType) {
                     SqlType eleSqlType = elementType.getSqlType();
@@ -258,6 +250,19 @@ public final class SeaTunnelRow implements Serializable {
         return c;
     }
 
+    private int getArrayMapNotNullSize(Object v) {
+        int size = 0;
+        if (Objects.nonNull(v)) {
+            for (Map o : (Map[]) v) {
+                for (Map.Entry<?, ?> entry : ((Map<?, ?>) o).entrySet()) {
+                    size += getBytesForValue(entry.getKey()) + getBytesForValue(entry.getValue());
+                }
+            }
+        }
+
+        return size;
+    }
+
     public int getBytesSize() {
         if (size == 0) {
             int s = 0;
@@ -316,15 +321,7 @@ public final class SeaTunnelRow implements Serializable {
             case "Double[]":
                 return getBytesForArray(v, BasicType.DOUBLE_TYPE);
             case "Map[]":
-                int sizeMaps = 0;
-                for (Map o : (Map[]) v) {
-                    for (Map.Entry<?, ?> entry : ((Map<?, ?>) o).entrySet()) {
-                        sizeMaps +=
-                                getBytesForValue(entry.getKey())
-                                        + getBytesForValue(entry.getValue());
-                    }
-                }
-                return sizeMaps;
+                return getArrayMapNotNullSize(v);
             case "HashMap":
             case "LinkedHashMap":
                 int size = 0;
