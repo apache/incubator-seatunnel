@@ -115,8 +115,10 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
                 "/home/seatunnel/tmp/seatunnel/read/xml/name=tyrantlucifer/hobby=coding/e2e.xml",
                 sftpContainer);
 
+        // Windows does not support files with wildcard characters. We can rename `e2e.txt` to
+        // `e*e.txt` when copying to a container
         ContainerUtil.copyFileIntoContainers(
-                "/wildcard/e*e.txt",
+                "/wildcard/e2e.txt",
                 "/home/seatunnel/tmp/seatunnel/read/wildcard/e*e.txt",
                 sftpContainer);
 
@@ -208,7 +210,7 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
         TestHelper helper = new TestHelper(container);
         // test read file wit wildcard character, should match tmp/seatunnel/read/wildcard/e*e.txt
         // and tmp/seatunnel/read/wildcard/e2e.txt
-        helper.execute("/wildcard/sftp_file_text_wildcard_character_to_assert.conf");
+        helper.execute("/text/sftp_file_text_wildcard_character_to_assert.conf");
     }
 
     @SneakyThrows
