@@ -113,6 +113,15 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
                 "/home/seatunnel/tmp/seatunnel/read/xml/name=tyrantlucifer/hobby=coding/e2e.xml",
                 sftpContainer);
 
+        ContainerUtil.copyFileIntoContainers(
+                "/wildcard/e*e.txt",
+                "/home/seatunnel/tmp/seatunnel/read/wildcard/e*e.txt",
+                sftpContainer);
+
+        ContainerUtil.copyFileIntoContainers(
+                "/wildcard/e2e.txt",
+                "/home/seatunnel/tmp/seatunnel/read/wildcard/e2e.txt",
+                sftpContainer);
         sftpContainer.execInContainer("sh", "-c", "chown -R seatunnel /home/seatunnel/tmp/");
     }
 
@@ -147,6 +156,9 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
         // test read sftp xml file
         helper.execute("/xml/sftp_file_xml_to_assert.conf");
         // test sftp source support multipleTable
+        // test read file wit wildcard character, should match tmp/seatunnel/read/wildcard/e*e.txt
+        // and tmp/seatunnel/read/wildcard/e2e.txt
+        helper.execute("/wildcard/sftp_file_text_wildcard_character_to_assert.conf");
         String homePath = "/home/seatunnel";
         String sink01 = "/tmp/multipleSource/seatunnel/json/fake01";
         String sink02 = "/tmp/multipleSource/seatunnel/json/fake02";
