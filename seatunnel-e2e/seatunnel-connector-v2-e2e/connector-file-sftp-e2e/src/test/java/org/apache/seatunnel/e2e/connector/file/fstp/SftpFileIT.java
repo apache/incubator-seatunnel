@@ -31,6 +31,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.github.dockerjava.core.command.ExecStartResultCallback;
@@ -156,9 +158,6 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
         // test read sftp xml file
         helper.execute("/xml/sftp_file_xml_to_assert.conf");
         // test sftp source support multipleTable
-        // test read file wit wildcard character, should match tmp/seatunnel/read/wildcard/e*e.txt
-        // and tmp/seatunnel/read/wildcard/e2e.txt
-        helper.execute("/wildcard/sftp_file_text_wildcard_character_to_assert.conf");
         String homePath = "/home/seatunnel";
         String sink01 = "/tmp/multipleSource/seatunnel/json/fake01";
         String sink02 = "/tmp/multipleSource/seatunnel/json/fake02";
@@ -200,6 +199,16 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
         helper.execute("/text/multiple_fake_to_sftp_file_text_append.conf");
         Assertions.assertEquals(getFileListFromContainer(homePath + path3).size(), 2);
         Assertions.assertEquals(getFileListFromContainer(homePath + path4).size(), 2);
+    }
+
+    @TestTemplate
+    @DisabledOnOs(OS.WINDOWS)
+    public void testSftpFileWithWildcardRead(TestContainer container)
+            throws IOException, InterruptedException {
+        TestHelper helper = new TestHelper(container);
+        // test read file wit wildcard character, should match tmp/seatunnel/read/wildcard/e*e.txt
+        // and tmp/seatunnel/read/wildcard/e2e.txt
+        helper.execute("/wildcard/sftp_file_text_wildcard_character_to_assert.conf");
     }
 
     @SneakyThrows
