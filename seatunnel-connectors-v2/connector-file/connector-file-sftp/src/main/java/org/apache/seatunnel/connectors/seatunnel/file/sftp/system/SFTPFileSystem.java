@@ -175,6 +175,7 @@ public class SFTPFileSystem extends FileSystem {
             }
             _path2[j++] = b;
         }
+
         return new String(_path2, 0, _path2.length, StandardCharsets.UTF_8);
     }
 
