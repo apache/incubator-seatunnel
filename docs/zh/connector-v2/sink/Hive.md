@@ -31,20 +31,21 @@
 
 ## 选项
 
-|             名称              |  类型   | 必需 | 默认值  |
-|-------------------------------|---------|------|---------|
-| table_name                    | string  | 是   | -       |
-| metastore_uri                 | string  | 是   | -       |
-| compress_codec                | string  | 否   | none    |
-| hdfs_site_path                | string  | 否   | -       |
-| hive_site_path                | string  | 否   | -       |
-| hive.hadoop.conf              | Map     | 否   | -       |
-| hive.hadoop.conf-path         | string  | 否   | -       |
-| krb5_path                     | string  | 否   | /etc/krb5.conf |
-| kerberos_principal            | string  | 否   | -       |
-| kerberos_keytab_path          | string  | 否   | -       |
-| abort_drop_partition_metadata | boolean | 否   | true    |
-| common-options                |         | 否   | -       |
+| 名称                                    | 类型      | 必需 | 默认值            |
+|---------------------------------------|---------|----|----------------|
+| table_name                            | string  | 是  | -              |
+| metastore_uri                         | string  | 是  | -              |
+| compress_codec                        | string  | 否  | none           |
+| hdfs_site_path                        | string  | 否  | -              |
+| hive_site_path                        | string  | 否  | -              |
+| hive.hadoop.conf                      | Map     | 否  | -              |
+| hive.hadoop.conf-path                 | string  | 否  | -              |
+| krb5_path                             | string  | 否  | /etc/krb5.conf |
+| kerberos_principal                    | string  | 否  | -              |
+| kerberos_keytab_path                  | string  | 否  | -              |
+| abort_drop_partition_metadata         | boolean | 否  | true           |
+| parquet_avro_write_timestamp_as_int96 | boolean | no | false          |
+| common-options                        |         | 否  | -              |
 
 ### table_name [string]
 
