@@ -78,7 +78,7 @@ public class CsvWriteStrategyTest {
     }
 
     @Test
-    public void addQuotesToCsvFields_BasicNonStringField_NoQuotes() {
+    public void testAddQuotesToCsvFieldsBasicField() {
         TableSchema tableSchema =
                 TableSchema.builder()
                         .column(
