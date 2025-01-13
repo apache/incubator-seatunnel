@@ -44,7 +44,7 @@
 | kerberos_principal                    | string  | 否  | -              |
 | kerberos_keytab_path                  | string  | 否  | -              |
 | abort_drop_partition_metadata         | boolean | 否  | true           |
-| parquet_avro_write_timestamp_as_int96 | boolean | no | false          |
+| parquet_avro_write_timestamp_as_int96 | boolean | 否  | false          |
 | common-options                        |         | 否  | -              |
 
 ### table_name [string]
