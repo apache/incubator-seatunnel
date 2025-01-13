@@ -30,6 +30,8 @@ import org.apache.seatunnel.connectors.seatunnel.sink.SinkFlowTestUtils;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -37,6 +39,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@DisabledOnOs(
+        value = OS.WINDOWS,
+        disabledReason =
+                "Hadoop has windows problem, please refer https://cwiki.apache.org/confluence/display/HADOOP2/WindowsProblems")
 public class LocalFileTest {
 
     CatalogTable catalogTable =
@@ -73,8 +79,11 @@ public class LocalFileTest {
                 Arrays.asList(
                         new SeaTunnelRow(new Object[] {"test"}),
                         new SeaTunnelRow(new Object[] {"test"})));
-        Assertions.assertTrue(
-                FileUtils.getFileLineNumber("/tmp/seatunnel/LocalFileTest/only_one_file.txt") == 2);
+        Assertions.assertEquals(
+                2,
+                (long)
+                        FileUtils.getFileLineNumber(
+                                "/tmp/seatunnel/LocalFileTest/only_one_file.txt"));
 
         IllegalArgumentException exception =
                 Assertions.assertThrows(
@@ -119,7 +128,7 @@ public class LocalFileTest {
                 2);
         Assertions.assertFalse(
                 FileUtils.isFileExist("/tmp/seatunnel/LocalFileTest/only_one_file.txt"));
-        Assertions.assertTrue(FileUtils.listFile("/tmp/seatunnel/LocalFileTest").size() == 2);
+        Assertions.assertEquals(2, FileUtils.listFile("/tmp/seatunnel/LocalFileTest").size());
 
         options.put("single_file_mode", false);
         options.put("file_name_expression", "only_one_file");
@@ -133,11 +142,15 @@ public class LocalFileTest {
                         new SeaTunnelRow(new Object[] {"test"})));
         Assertions.assertFalse(
                 FileUtils.isFileExist("/tmp/seatunnel/LocalFileTest/only_one_file.txt"));
-        Assertions.assertTrue(
-                FileUtils.getFileLineNumber("/tmp/seatunnel/LocalFileTest/only_one_file_0.txt")
-                        == 1);
-        Assertions.assertTrue(
-                FileUtils.getFileLineNumber("/tmp/seatunnel/LocalFileTest/only_one_file_1.txt")
-                        == 1);
+        Assertions.assertEquals(
+                1,
+                (long)
+                        FileUtils.getFileLineNumber(
+                                "/tmp/seatunnel/LocalFileTest/only_one_file_0.txt"));
+        Assertions.assertEquals(
+                1,
+                (long)
+                        FileUtils.getFileLineNumber(
+                                "/tmp/seatunnel/LocalFileTest/only_one_file_1.txt"));
     }
 }
