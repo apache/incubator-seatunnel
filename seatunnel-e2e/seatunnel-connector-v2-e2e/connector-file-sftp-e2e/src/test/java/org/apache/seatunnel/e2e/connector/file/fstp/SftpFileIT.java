@@ -31,8 +31,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.github.dockerjava.core.command.ExecStartResultCallback;
@@ -118,12 +116,12 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
         // Windows does not support files with wildcard characters. We can rename `e2e.txt` to
         // `e*e.txt` when copying to a container
         ContainerUtil.copyFileIntoContainers(
-                "/wildcard/e2e.txt",
+                "/text/e2e.txt",
                 "/home/seatunnel/tmp/seatunnel/read/wildcard/e*e.txt",
                 sftpContainer);
 
         ContainerUtil.copyFileIntoContainers(
-                "/wildcard/e2e.txt",
+                "/text/e2e.txt",
                 "/home/seatunnel/tmp/seatunnel/read/wildcard/e2e.txt",
                 sftpContainer);
         sftpContainer.execInContainer("sh", "-c", "chown -R seatunnel /home/seatunnel/tmp/");
@@ -151,6 +149,9 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
         helper.execute("/text/sftp_file_text_projection_to_assert.conf");
         // test read sftp zip text file
         helper.execute("/text/sftp_file_zip_text_to_assert.conf");
+        // test read file wit wildcard character, should match tmp/seatunnel/read/wildcard/e*e.txt
+        // and tmp/seatunnel/read/wildcard/e2e.txt
+        helper.execute("/text/sftp_file_text_wildcard_character_to_assert.conf");
         // test write sftp json file
         helper.execute("/json/fake_to_sftp_file_json.conf");
         // test read sftp json file
@@ -201,16 +202,6 @@ public class SftpFileIT extends TestSuiteBase implements TestResource {
         helper.execute("/text/multiple_fake_to_sftp_file_text_append.conf");
         Assertions.assertEquals(getFileListFromContainer(homePath + path3).size(), 2);
         Assertions.assertEquals(getFileListFromContainer(homePath + path4).size(), 2);
-    }
-
-    @TestTemplate
-    @DisabledOnOs(OS.WINDOWS)
-    public void testSftpFileWithWildcardRead(TestContainer container)
-            throws IOException, InterruptedException {
-        TestHelper helper = new TestHelper(container);
-        // test read file wit wildcard character, should match tmp/seatunnel/read/wildcard/e*e.txt
-        // and tmp/seatunnel/read/wildcard/e2e.txt
-        helper.execute("/text/sftp_file_text_wildcard_character_to_assert.conf");
     }
 
     @SneakyThrows
