@@ -89,6 +89,10 @@ The keytab path of kerberos
 
 Flag to decide whether to drop partition metadata from Hive Metastore during an abort operation. Note: this only affects the metadata in the metastore, the data in the partition will always be deleted(data generated during the synchronization process).
 
+### parquet_avro_write_timestamp_as_int96 [boolean]
+
+Support writing Parquet INT96 from a timestamp, only valid for parquet files.
+
 ### common options
 
 Sink plugin common parameters, please refer to [Sink Common Options](../sink-common-options.md) for details

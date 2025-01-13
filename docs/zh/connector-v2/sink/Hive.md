@@ -89,6 +89,10 @@ Kerberos 的 keytab 文件路径
 
 在中止操作期间是否从 Hive Metastore 中删除分区元数据的标志。注意：这只影响元存储中的元数据，分区中的数据将始终被删除（同步过程中生成的数据）。
 
+### parquet_avro_write_timestamp_as_int96 [boolean]
+
+支持从时间戳写入 Parquet INT96，仅对 parquet 文件有效。
+
 ### 通用选项
 
 Sink 插件的通用参数，请参阅 [Sink Common Options](../sink-common-options.md) 了解详细信息。
