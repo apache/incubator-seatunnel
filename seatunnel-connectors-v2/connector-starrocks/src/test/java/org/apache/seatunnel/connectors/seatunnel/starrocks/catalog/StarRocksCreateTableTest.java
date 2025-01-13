@@ -423,7 +423,7 @@ public class StarRocksCreateTableTest {
                         + "COMMENT 'test table'\n"
                         + "DISTRIBUTED BY HASH (`id`,`age`,`name`)PROPERTIES (\n"
                         + "    \"replication_num\" = \"1\" \n"
-                        + ")",
+                        + ")\n",
                 result);
     }
 }
