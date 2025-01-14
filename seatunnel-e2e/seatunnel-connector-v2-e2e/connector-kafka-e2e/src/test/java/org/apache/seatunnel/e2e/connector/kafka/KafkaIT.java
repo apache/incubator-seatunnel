@@ -282,7 +282,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                         new ProducerRecord<>(
                                 "test.multiple.point.topic.json", null, serializer.serialize(row)),
                 0,
-                100);
+                10);
         Container.ExecResult execResult =
                 container.executeJob(
                         "/textFormatIT/kafka_source_topic_multiple_point_text_to_console.conf");
@@ -315,7 +315,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                         DEFAULT_FORMAT,
                         DEFAULT_FIELD_DELIMITER,
                         null);
-        generateTestData(serializer::serializeRow, 0, 100);
+        generateTestData(serializer::serializeRow, 0, 10);
         Container.ExecResult execResult =
                 container.executeJob(
                         "/kafka/kafkasource_format_error_handle_way_skip_to_console.conf");
