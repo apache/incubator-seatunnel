@@ -32,6 +32,7 @@ import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.schema.event.AlterTableAddColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableChangeColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableColumnEvent;
+import org.apache.seatunnel.api.table.schema.event.AlterTableColumnsEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableDropColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableModifyColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
@@ -212,6 +213,29 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
                 query);
         sqlEngine.resetAllColumnsCount();
         restProducedCatalogTable();
+
+        if (event instanceof AlterTableColumnsEvent) {
+            AlterTableColumnsEvent alterTableColumnsEvent = (AlterTableColumnsEvent) event;
+            AlterTableColumnsEvent newEvent =
+                    new AlterTableColumnsEvent(
+                            event.tableIdentifier(),
+                            alterTableColumnsEvent.getEvents().stream()
+                                    .map(this::convertName)
+                                    .collect(Collectors.toList()));
+
+            newEvent.setJobId(event.getJobId());
+            newEvent.setStatement(((AlterTableColumnsEvent) event).getStatement());
+            newEvent.setSourceDialectName(((AlterTableColumnsEvent) event).getSourceDialectName());
+            if (event.getChangeAfter() != null) {
+                newEvent.setChangeAfter(
+                        CatalogTable.of(
+                                event.getChangeAfter().getTableId(), event.getChangeAfter()));
+            }
+            return newEvent;
+        }
+        if (event instanceof AlterTableColumnEvent) {
+            return convertName((AlterTableColumnEvent) event);
+        }
         return event;
     }
 

@@ -15,15 +15,22 @@
 -- limitations under the License.
 --
 
--- In production you would almost certainly limit the replication user must be on the follower (slave) machine,
--- to prevent other clients accessing the log from other machines. For example, 'replicator'@'follower.acme.com'.
--- However, in this database we'll grant 2 users different privileges:
---
--- 1) 'mysqluser' - all privileges
--- 2) 'st_user_source' - all privileges required by the snapshot reader AND binlog reader (used for testing)
---
-GRANT ALL PRIVILEGES ON *.* TO 'mysqluser'@'%';
-
-CREATE USER 'st_user_source' IDENTIFIED BY 'mysqlpw';
-GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT, DROP, LOCK TABLES  ON *.* TO 'st_user_source'@'%';
 -- ----------------------------------------------------------------------------------------------------------------
+-- DATABASE:  shop
+-- ----------------------------------------------------------------------------------------------------------------
+CREATE DATABASE IF NOT EXISTS `shop`;
+use shop;
+
+alter table products modify name longtext null;
+delete from products where id < 155;
+insert into products
+values (164,"scooter","Small 2-wheel scooter",3.14,1),
+       (165,"car battery","12V car battery",8.1,2),
+       (166,"12-pack drill bits","12-pack of drill bits with sizes ranging from #40 to #3",0.8,3),
+       (167,"hammer","12oz carpenter's hammer",0.75,4),
+       (168,"hammer","14oz carpenter's hammer",0.875,5),
+       (169,"hammer","16oz carpenter's hammer",1.0,6),
+       (170,"rocks","box of assorted rocks",5.3,7),
+       (171,"jacket","water resistent black wind breaker",0.1,8),
+       (172,"spare tire","24 inch spare tire",22.2,9);
+
