@@ -320,9 +320,9 @@ public class ClickhouseCreateTableTest {
                                 + ") ENGINE = MergeTree()\n"
                                 + "ORDER BY (${rowtype_primary_key})\n"
                                 + "PRIMARY KEY (${rowtype_primary_key})\n"
-                                + "COMMENT '${comment}'\n"
                                 + "SETTINGS\n"
-                                + "    index_granularity = 8192;",
+                                + "    index_granularity = 8192\n"
+                                + "COMMENT '${comment}';",
                         "tpch",
                         "lineitem",
                         TableSchema.builder()
@@ -353,9 +353,9 @@ public class ClickhouseCreateTableTest {
                         + ") ENGINE = MergeTree()\n"
                         + "ORDER BY (`L_ORDERKEY`,`L_LINENUMBER`)\n"
                         + "PRIMARY KEY (`L_ORDERKEY`,`L_LINENUMBER`)\n"
-                        + "COMMENT 'clickhouse test table'\n"
                         + "SETTINGS\n"
-                        + "    index_granularity = 8192;";
+                        + "    index_granularity = 8192\n"
+                        + "COMMENT 'clickhouse test table';";
         Assertions.assertEquals(result, expected);
     }
 }
