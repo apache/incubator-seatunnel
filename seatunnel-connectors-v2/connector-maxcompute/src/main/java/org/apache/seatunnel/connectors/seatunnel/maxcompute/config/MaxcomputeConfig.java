@@ -98,7 +98,9 @@ public class MaxcomputeConfig implements Serializable {
                                     + "` (\n"
                                     + SaveModePlaceHolder.ROWTYPE_FIELDS.getPlaceHolder()
                                     + "\n"
-                                    + ");")
+                                    + ") comment '"
+                                    + SaveModePlaceHolder.COMMENT.getPlaceHolder()
+                                    + "' ;")
                     .withDescription(
                             "Create table statement template, used to create MaxCompute table");
 }
