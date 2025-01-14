@@ -226,6 +226,26 @@ public class ZetaSQLEngine implements SQLEngine {
         return outRowType;
     }
 
+    @Override
+    public String getChangeColumnName(String columnName) {
+        List<SelectItem<?>> selectItems = selectBody.getSelectItems();
+        for (SelectItem selectItem : selectItems) {
+            if (selectItem.getExpression() instanceof AllColumns) {
+                return columnName;
+            }
+            Expression expression = selectItem.getExpression();
+            if (columnName.equals(cleanEscape(((Column) expression).getColumnName()))
+                    || columnName.equals(cleanEscape(expression.toString()))) {
+                if (selectItem.getAlias() != null) {
+                    String aliasName = selectItem.getAlias().getName();
+                    return cleanEscape(aliasName);
+                }
+            }
+        }
+
+        return columnName;
+    }
+
     private static String cleanEscape(String columnName) {
         if (columnName.startsWith(ESCAPE_IDENTIFIER) && columnName.endsWith(ESCAPE_IDENTIFIER)) {
             columnName = columnName.substring(1, columnName.length() - 1);

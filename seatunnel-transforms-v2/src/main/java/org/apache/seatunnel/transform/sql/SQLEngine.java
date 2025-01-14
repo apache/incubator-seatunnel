@@ -33,6 +33,8 @@ public interface SQLEngine {
 
     List<SeaTunnelRow> transformBySQL(SeaTunnelRow inputRow, SeaTunnelRowType outputRowType);
 
+    String getChangeColumnName(String columnName);
+
     default void close() {}
 
     void resetAllColumnsCount();

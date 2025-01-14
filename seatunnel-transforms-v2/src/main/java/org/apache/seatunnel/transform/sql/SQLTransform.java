@@ -248,9 +248,9 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
                 newEvent =
                         new AlterTableAddColumnEvent(
                                 event.tableIdentifier(),
-                                convertName(addColumnEvent.getColumn()),
+                                addColumnEvent.getColumn(),
                                 addColumnEvent.isFirst(),
-                                convertName(addColumnEvent.getAfterColumn()));
+                                addColumnEvent.getAfterColumn());
                 break;
             case SCHEMA_CHANGE_DROP_COLUMN:
                 AlterTableDropColumnEvent dropColumnEvent = (AlterTableDropColumnEvent) event;
@@ -313,7 +313,7 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
 
     @VisibleForTesting
     public String convertName(String name) {
-        return name;
+        return sqlEngine.getChangeColumnName(name);
     }
 
     private Column convertName(Column column) {
