@@ -27,6 +27,9 @@ import org.apache.seatunnel.engine.core.job.JobStatus;
 import org.apache.seatunnel.engine.server.SeaTunnelServerStarter;
 import org.apache.seatunnel.engine.server.rest.RestConstant;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -39,13 +42,18 @@ import com.hazelcast.config.MemberAttributeConfig;
 import com.hazelcast.instance.impl.HazelcastInstanceImpl;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static io.restassured.RestAssured.given;
+import static org.apache.seatunnel.e2e.common.util.ContainerUtil.PROJECT_ROOT_PATH;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.CONTEXT_PATH;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
@@ -75,6 +83,12 @@ public class RestApiIT {
 
     @BeforeEach
     void beforeClass() throws Exception {
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        context.setConfigLocation(
+                Paths.get(
+                                PROJECT_ROOT_PATH
+                                        + "/seatunnel-e2e/seatunnel-engine-e2e/connector-seatunnel-e2e-base/src/test/resources/job-log-file/log4j2.properties")
+                        .toUri());
         String testClusterName = TestUtils.getClusterName("RestApiIT");
         node1Config = ConfigProvider.locateAndGetSeaTunnelConfig();
         node1Config.getEngineConfig().getHttpConfig().setPort(8080);
@@ -91,7 +105,8 @@ public class RestApiIT {
         node2Tags.setAttribute("node", "node2");
         Config node2hzconfig = node1Config.getHazelcastConfig().setMemberAttributeConfig(node2Tags);
         node2Config = ConfigProvider.locateAndGetSeaTunnelConfig();
-        node2Config.getEngineConfig().getHttpConfig().setPort(8081);
+        // Dynamically generated port
+        node2Config.getEngineConfig().getHttpConfig().setEnableDynamicPort(true);
         node2Config.getEngineConfig().getHttpConfig().setEnabled(true);
         node2Config.getEngineConfig().getSlotServiceConfig().setDynamicSlot(false);
         node2Config.getEngineConfig().getSlotServiceConfig().setSlotNum(20);
@@ -139,6 +154,96 @@ public class RestApiIT {
     }
 
     @Test
+    public void testGetLog() {
+        Arrays.asList(node2, node1)
+                .forEach(
+                        instance ->
+                                ports.forEach(
+                                        (key, value) -> {
+                                            // Verify log list interface logs/
+                                            given().get(
+                                                            HOST
+                                                                    + key
+                                                                    + CONTEXT_PATH
+                                                                    + RestConstant.REST_URL_LOGS)
+                                                    .then()
+                                                    .statusCode(200)
+                                                    .body(
+                                                            containsString(
+                                                                    clientJobProxy.getJobId()
+                                                                            + ".log"));
+
+                                            given().get(
+                                                            HOST
+                                                                    + value
+                                                                    + node1Config
+                                                                            .getEngineConfig()
+                                                                            .getHttpConfig()
+                                                                            .getContextPath()
+                                                                    + RestConstant.REST_URL_LOGS)
+                                                    .then()
+                                                    .statusCode(200)
+                                                    .body(
+                                                            containsString(
+                                                                    clientJobProxy.getJobId()
+                                                                            + ".log"));
+
+                                            // Verify log list interface logs/:jobId
+                                            String logListV1 =
+                                                    given().get(
+                                                                    HOST
+                                                                            + key
+                                                                            + CONTEXT_PATH
+                                                                            + RestConstant
+                                                                                    .REST_URL_LOGS
+                                                                            + "/"
+                                                                            + clientJobProxy
+                                                                                    .getJobId())
+                                                            .body()
+                                                            .prettyPrint();
+                                            Assertions.assertTrue(
+                                                    logListV1.contains(
+                                                            clientJobProxy.getJobId() + ".log"));
+
+                                            String logListV2 =
+                                                    given().get(
+                                                                    HOST
+                                                                            + value
+                                                                            + node1Config
+                                                                                    .getEngineConfig()
+                                                                                    .getHttpConfig()
+                                                                                    .getContextPath()
+                                                                            + RestConstant
+                                                                                    .REST_URL_LOGS
+                                                                            + "/"
+                                                                            + clientJobProxy
+                                                                                    .getJobId())
+                                                            .body()
+                                                            .prettyPrint();
+                                            Assertions.assertTrue(
+                                                    logListV2.contains(
+                                                            clientJobProxy.getJobId() + ".log"));
+
+                                            // verify access log link
+                                            verifyLogLink(logListV1);
+                                            verifyLogLink(logListV2);
+                                        }));
+    }
+
+    private static void verifyLogLink(String logListV1) {
+        Pattern pattern = Pattern.compile("href\\s*=\\s*\"([^\"]+)\"");
+        Matcher matcher = pattern.matcher(logListV1);
+        while (matcher.find()) {
+            String link = matcher.group(1);
+            Assertions.assertTrue(
+                    given().get(link)
+                            .body()
+                            .prettyPrint()
+                            .contains("Init JobMaster for Job fake_to_file"));
+        }
+    }
+
+    @Test
     public void testGetRunningJobById() {
 
         Arrays.asList(node2, node1)
@@ -150,7 +255,8 @@ public class RestApiIT {
                                                             HOST
                                                                     + key
                                                                     + CONTEXT_PATH
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/"
                                                                     + clientJobProxy.getJobId())
                                                     .then()
@@ -165,7 +271,8 @@ public class RestApiIT {
                                                                             .getEngineConfig()
                                                                             .getHttpConfig()
                                                                             .getContextPath()
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/"
                                                                     + clientJobProxy.getJobId())
                                                     .then()
@@ -186,7 +293,8 @@ public class RestApiIT {
                                                             HOST
                                                                     + key
                                                                     + CONTEXT_PATH
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/"
                                                                     + batchJobProxy.getJobId())
                                                     .then()
@@ -201,7 +309,8 @@ public class RestApiIT {
                                                                             .getEngineConfig()
                                                                             .getHttpConfig()
                                                                             .getContextPath()
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/"
                                                                     + batchJobProxy.getJobId())
                                                     .then()
@@ -222,7 +331,8 @@ public class RestApiIT {
                                                             HOST
                                                                     + key
                                                                     + CONTEXT_PATH
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/"
                                                                     + 123)
                                                     .then()
@@ -233,7 +343,8 @@ public class RestApiIT {
                                                             HOST
                                                                     + key
                                                                     + CONTEXT_PATH
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/")
                                                     .then()
                                                     .statusCode(400);
@@ -245,7 +356,8 @@ public class RestApiIT {
                                                                             .getEngineConfig()
                                                                             .getHttpConfig()
                                                                             .getContextPath()
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/"
                                                                     + 123)
                                                     .then()
@@ -259,7 +371,8 @@ public class RestApiIT {
                                                                             .getEngineConfig()
                                                                             .getHttpConfig()
                                                                             .getContextPath()
-                                                                    + RestConstant.RUNNING_JOB_URL
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOB
                                                                     + "/")
                                                     .then()
                                                     .statusCode(400);
@@ -277,9 +390,59 @@ public class RestApiIT {
                                                             HOST
                                                                     + key
                                                                     + CONTEXT_PATH
-                                                                    + RestConstant.RUNNING_JOBS_URL)
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOBS)
                                                     .then()
                                                     .statusCode(200)
+                                                    .body(
+                                                            "[0].jobDag.jobId",
+                                                            equalTo(
+                                                                    Long.toString(
+                                                                            clientJobProxy
+                                                                                    .getJobId())))
+                                                    .body("[0].jobDag.pipelineEdges", hasKey("1"))
+                                                    .body(
+                                                            "[0].jobDag.pipelineEdges['1']",
+                                                            hasSize(1))
+                                                    .body(
+                                                            "[0].jobDag.pipelineEdges['1'][0].inputVertexId",
+                                                            equalTo("1"))
+                                                    .body(
+                                                            "[0].jobDag.pipelineEdges['1'][0].targetVertexId",
+                                                            equalTo("2"))
+                                                    .body("[0].jobDag.vertexInfoMap", hasSize(2))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].vertexId",
+                                                            equalTo(1))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].type",
+                                                            equalTo("source"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].vertexName",
+                                                            equalTo(
+                                                                    "pipeline-1 [Source[0]-FakeSource]"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].tablePaths[0]",
+                                                            equalTo("fake"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].vertexId",
+                                                            equalTo(2))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].type",
+                                                            equalTo("sink"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].vertexName",
+                                                            equalTo(
+                                                                    "pipeline-1 [Sink[0]-LocalFile-MultiTableSink]"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].tablePaths[0]",
+                                                            equalTo("fake"))
+                                                    .body(
+                                                            "[0].jobDag.envOptions.'job.mode'",
+                                                            equalTo("STREAMING"))
+                                                    .body(
+                                                            "[0].jobDag.envOptions.'checkpoint.interval'",
+                                                            equalTo("5000"))
                                                     .body("[0].jobName", equalTo("fake_to_file"))
                                                     .body("[0].jobStatus", equalTo("RUNNING"));
 
@@ -290,9 +453,59 @@ public class RestApiIT {
                                                                             .getEngineConfig()
                                                                             .getHttpConfig()
                                                                             .getContextPath()
-                                                                    + RestConstant.RUNNING_JOBS_URL)
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_JOBS)
                                                     .then()
                                                     .statusCode(200)
+                                                    .body(
+                                                            "[0].jobDag.jobId",
+                                                            equalTo(
+                                                                    Long.toString(
+                                                                            clientJobProxy
+                                                                                    .getJobId())))
+                                                    .body("[0].jobDag.pipelineEdges", hasKey("1"))
+                                                    .body(
+                                                            "[0].jobDag.pipelineEdges['1']",
+                                                            hasSize(1))
+                                                    .body(
+                                                            "[0].jobDag.pipelineEdges['1'][0].inputVertexId",
+                                                            equalTo("1"))
+                                                    .body(
+                                                            "[0].jobDag.pipelineEdges['1'][0].targetVertexId",
+                                                            equalTo("2"))
+                                                    .body("[0].jobDag.vertexInfoMap", hasSize(2))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].vertexId",
+                                                            equalTo(1))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].type",
+                                                            equalTo("source"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].vertexName",
+                                                            equalTo(
+                                                                    "pipeline-1 [Source[0]-FakeSource]"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[0].tablePaths[0]",
+                                                            equalTo("fake"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].vertexId",
+                                                            equalTo(2))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].type",
+                                                            equalTo("sink"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].vertexName",
+                                                            equalTo(
+                                                                    "pipeline-1 [Sink[0]-LocalFile-MultiTableSink]"))
+                                                    .body(
+                                                            "[0].jobDag.vertexInfoMap[1].tablePaths[0]",
+                                                            equalTo("fake"))
+                                                    .body(
+                                                            "[0].jobDag.envOptions.'job.mode'",
+                                                            equalTo("STREAMING"))
+                                                    .body(
+                                                            "[0].jobDag.envOptions.'checkpoint.interval'",
+                                                            equalTo("5000"))
                                                     .body("[0].jobName", equalTo("fake_to_file"))
                                                     .body("[0].jobStatus", equalTo("RUNNING"));
                                         }));
@@ -309,22 +522,7 @@ public class RestApiIT {
                                                         HOST
                                                                 + key
                                                                 + CONTEXT_PATH
-                                                                + RestConstant.JOB_INFO_URL
-                                                                + "/"
-                                                                + batchJobProxy.getJobId())
-                                                .then()
-                                                .statusCode(200)
-                                                .body("jobName", equalTo("fake_to_console"))
-                                                .body("jobStatus", equalTo("FINISHED"));
-
-                                        given().get(
-                                                        HOST
-                                                                + value
-                                                                + node1Config
-                                                                        .getEngineConfig()
-                                                                        .getHttpConfig()
-                                                                        .getContextPath()
-                                                                + RestConstant.JOB_INFO_URL
+                                                                + RestConstant.REST_URL_JOB_INFO
                                                                 + "/"
                                                                 + batchJobProxy.getJobId())
                                                 .then()
@@ -369,6 +567,83 @@ public class RestApiIT {
                                                 .body(
                                                         "jobDag.vertexInfoMap[1].tablePaths[0]",
                                                         equalTo("fake"))
+                                                .body(
+                                                        "metrics.TableSourceReceivedCount.fake",
+                                                        equalTo("5"))
+                                                .body(
+                                                        "metrics.TableSinkWriteCount.fake",
+                                                        equalTo("5"))
+                                                .body("metrics.SinkWriteCount", equalTo("5"))
+                                                .body("metrics.SourceReceivedCount", equalTo("5"))
+                                                .body(
+                                                        "jobDag.envOptions.'job.mode'",
+                                                        equalTo("BATCH"))
+                                                .body("jobName", equalTo("fake_to_console"))
+                                                .body("jobStatus", equalTo("FINISHED"));
+
+                                        given().get(
+                                                        HOST
+                                                                + value
+                                                                + node1Config
+                                                                        .getEngineConfig()
+                                                                        .getHttpConfig()
+                                                                        .getContextPath()
+                                                                + RestConstant.REST_URL_JOB_INFO
+                                                                + "/"
+                                                                + batchJobProxy.getJobId())
+                                                .then()
+                                                .statusCode(200)
+                                                .body(
+                                                        "jobDag.jobId",
+                                                        equalTo(
+                                                                Long.toString(
+                                                                        batchJobProxy.getJobId())))
+                                                .body("jobDag.pipelineEdges", hasKey("1"))
+                                                .body("jobDag.pipelineEdges['1']", hasSize(1))
+                                                .body(
+                                                        "jobDag.pipelineEdges['1'][0].inputVertexId",
+                                                        equalTo("1"))
+                                                .body(
+                                                        "jobDag.pipelineEdges['1'][0].targetVertexId",
+                                                        equalTo("2"))
+                                                .body("jobDag.vertexInfoMap", hasSize(2))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[0].vertexId",
+                                                        equalTo(1))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[0].type",
+                                                        equalTo("source"))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[0].vertexName",
+                                                        equalTo(
+                                                                "pipeline-1 [Source[0]-FakeSource]"))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[0].tablePaths[0]",
+                                                        equalTo("fake"))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[1].vertexId",
+                                                        equalTo(2))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[1].type",
+                                                        equalTo("sink"))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[1].vertexName",
+                                                        equalTo(
+                                                                "pipeline-1 [Sink[0]-console-MultiTableSink]"))
+                                                .body(
+                                                        "jobDag.vertexInfoMap[1].tablePaths[0]",
+                                                        equalTo("fake"))
+                                                .body(
+                                                        "metrics.TableSourceReceivedCount.fake",
+                                                        equalTo("5"))
+                                                .body(
+                                                        "metrics.TableSinkWriteCount.fake",
+                                                        equalTo("5"))
+                                                .body("metrics.SinkWriteCount", equalTo("5"))
+                                                .body("metrics.SourceReceivedCount", equalTo("5"))
+                                                .body(
+                                                        "jobDag.envOptions.'job.mode'",
+                                                        equalTo("BATCH"))
                                                 .body("jobName", equalTo("fake_to_console"))
                                                 .body("jobStatus", equalTo("FINISHED"));
                                     });
@@ -386,7 +661,7 @@ public class RestApiIT {
                                                         HOST
                                                                 + key
                                                                 + CONTEXT_PATH
-                                                                + RestConstant.OVERVIEW)
+                                                                + RestConstant.REST_URL_OVERVIEW)
                                                 .then()
                                                 .statusCode(200)
                                                 .body("projectVersion", notNullValue())
@@ -399,7 +674,7 @@ public class RestApiIT {
                                                                         .getEngineConfig()
                                                                         .getHttpConfig()
                                                                         .getContextPath()
-                                                                + RestConstant.OVERVIEW)
+                                                                + RestConstant.REST_URL_OVERVIEW)
                                                 .then()
                                                 .statusCode(200)
                                                 .body("projectVersion", notNullValue())
@@ -420,7 +695,7 @@ public class RestApiIT {
                                                         HOST
                                                                 + key
                                                                 + CONTEXT_PATH
-                                                                + RestConstant.OVERVIEW
+                                                                + RestConstant.REST_URL_OVERVIEW
                                                                 + "?node=node1")
                                                 .then()
                                                 .statusCode(200)
@@ -434,7 +709,7 @@ public class RestApiIT {
                                                                         .getEngineConfig()
                                                                         .getHttpConfig()
                                                                         .getContextPath()
-                                                                + RestConstant.OVERVIEW
+                                                                + RestConstant.REST_URL_OVERVIEW
                                                                 + "?node=node1")
                                                 .then()
                                                 .statusCode(200)
@@ -453,7 +728,7 @@ public class RestApiIT {
                         HOST
                                 + node1.getCluster().getLocalMember().getAddress().getPort()
                                 + CONTEXT_PATH
-                                + RestConstant.OVERVIEW
+                                + RestConstant.REST_URL_OVERVIEW
                                 + "?tag1=dev_1")
                 .then()
                 .statusCode(200)
@@ -465,7 +740,7 @@ public class RestApiIT {
                         HOST
                                 + node1.getCluster().getLocalMember().getAddress().getPort()
                                 + CONTEXT_PATH
-                                + RestConstant.UPDATE_TAGS_URL)
+                                + RestConstant.REST_URL_UPDATE_TAGS)
                 .then()
                 .statusCode(200)
                 .body("message", equalTo("update node tags done."));
@@ -474,7 +749,7 @@ public class RestApiIT {
                         HOST
                                 + node1.getCluster().getLocalMember().getAddress().getPort()
                                 + CONTEXT_PATH
-                                + RestConstant.OVERVIEW
+                                + RestConstant.REST_URL_OVERVIEW
                                 + "?tag1=dev_1")
                 .then()
                 .statusCode(200)
@@ -490,7 +765,7 @@ public class RestApiIT {
                         HOST
                                 + node1.getCluster().getLocalMember().getAddress().getPort()
                                 + CONTEXT_PATH
-                                + RestConstant.UPDATE_TAGS_URL)
+                                + RestConstant.REST_URL_UPDATE_TAGS)
                 .then()
                 .statusCode(400)
                 .body("message", equalTo("Request body is empty."));
@@ -504,7 +779,7 @@ public class RestApiIT {
                         HOST
                                 + node1.getCluster().getLocalMember().getAddress().getPort()
                                 + CONTEXT_PATH
-                                + RestConstant.OVERVIEW
+                                + RestConstant.REST_URL_OVERVIEW
                                 + "?node=node1")
                 .then()
                 .statusCode(200)
@@ -516,7 +791,7 @@ public class RestApiIT {
                         HOST
                                 + node1.getCluster().getLocalMember().getAddress().getPort()
                                 + CONTEXT_PATH
-                                + RestConstant.UPDATE_TAGS_URL)
+                                + RestConstant.REST_URL_UPDATE_TAGS)
                 .then()
                 .statusCode(200)
                 .body("message", equalTo("update node tags done."));
@@ -525,7 +800,7 @@ public class RestApiIT {
                         HOST
                                 + node1.getCluster().getLocalMember().getAddress().getPort()
                                 + CONTEXT_PATH
-                                + RestConstant.OVERVIEW
+                                + RestConstant.REST_URL_OVERVIEW
                                 + "?node=node1")
                 .then()
                 .statusCode(200)
@@ -545,7 +820,8 @@ public class RestApiIT {
                                                             HOST
                                                                     + key
                                                                     + CONTEXT_PATH
-                                                                    + RestConstant.RUNNING_THREADS)
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_THREADS)
                                                     .then()
                                                     .statusCode(200)
                                                     .body("[0].threadName", notNullValue())
@@ -557,7 +833,8 @@ public class RestApiIT {
                                                                             .getEngineConfig()
                                                                             .getHttpConfig()
                                                                             .getContextPath()
-                                                                    + RestConstant.RUNNING_THREADS)
+                                                                    + RestConstant
+                                                                            .REST_URL_RUNNING_THREADS)
                                                     .then()
                                                     .statusCode(200)
                                                     .body("[0].threadName", notNullValue())
@@ -577,7 +854,7 @@ public class RestApiIT {
                                                                     + key
                                                                     + CONTEXT_PATH
                                                                     + RestConstant
-                                                                            .SYSTEM_MONITORING_INFORMATION)
+                                                                            .REST_URL_SYSTEM_MONITORING_INFORMATION)
                                                     .then()
                                                     .assertThat()
                                                     .time(lessThan(5000L))
@@ -593,7 +870,7 @@ public class RestApiIT {
                                                                             .getHttpConfig()
                                                                             .getContextPath()
                                                                     + RestConstant
-                                                                            .SYSTEM_MONITORING_INFORMATION)
+                                                                            .REST_URL_SYSTEM_MONITORING_INFORMATION)
                                                     .then()
                                                     .assertThat()
                                                     .time(lessThan(5000L))
@@ -626,7 +903,7 @@ public class RestApiIT {
                                                         + "                    \"age\": \"int\"\n"
                                                         + "                }\n"
                                                         + "            },\n"
-                                                        + "            \"result_table_name\": \"fake\",\n"
+                                                        + "            \"plugin_output\": \"fake\",\n"
                                                         + "            \"parallelism\": 1,\n"
                                                         + "            \"hostname\": \"127.0.0.1\",\n"
                                                         + "            \"username\": \"seatunnel\",\n"
@@ -652,12 +929,11 @@ public class RestApiIT {
                                                         HOST
                                                                 + key
                                                                 + CONTEXT_PATH
-                                                                + RestConstant.ENCRYPT_CONFIG)
+                                                                + RestConstant
+                                                                        .REST_URL_ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body(
-                                                        "source[0].result_table_name",
-                                                        equalTo("fake"))
+                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",
@@ -671,12 +947,11 @@ public class RestApiIT {
                                                                         .getEngineConfig()
                                                                         .getHttpConfig()
                                                                         .getContextPath()
-                                                                + RestConstant.ENCRYPT_CONFIG)
+                                                                + RestConstant
+                                                                        .REST_URL_ENCRYPT_CONFIG)
                                                 .then()
                                                 .statusCode(200)
-                                                .body(
-                                                        "source[0].result_table_name",
-                                                        equalTo("fake"))
+                                                .body("source[0].plugin_output", equalTo("fake"))
                                                 .body("source[0].username", equalTo("c2VhdHVubmVs"))
                                                 .body(
                                                         "source[0].password",
@@ -696,7 +971,7 @@ public class RestApiIT {
                                                         HOST
                                                                 + key
                                                                 + CONTEXT_PATH
-                                                                + RestConstant.THREAD_DUMP)
+                                                                + RestConstant.REST_URL_THREAD_DUMP)
                                                 .then()
                                                 .statusCode(200)
                                                 .body("[0].threadName", notNullValue())
@@ -710,13 +985,38 @@ public class RestApiIT {
                                                                         .getEngineConfig()
                                                                         .getHttpConfig()
                                                                         .getContextPath()
-                                                                + RestConstant.THREAD_DUMP)
+                                                                + RestConstant.REST_URL_THREAD_DUMP)
                                                 .then()
                                                 .statusCode(200)
                                                 .body("[0].threadName", notNullValue())
                                                 .body("[0].threadState", notNullValue())
                                                 .body("[0].stackTrace", notNullValue())
                                                 .body("[0].threadId", notNullValue());
+                                    });
+                        });
+    }
+
+    @Test
+    public void verifyHtmlResponseBasic() {
+        Arrays.asList(node2, node1)
+                .forEach(
+                        instance -> {
+                            ports.forEach(
+                                    (key, value) -> {
+                                        given().get(
+                                                        HOST
+                                                                + value
+                                                                + node1Config
+                                                                        .getEngineConfig()
+                                                                        .getHttpConfig()
+                                                                        .getContextPath())
+                                                .then()
+                                                .statusCode(200)
+                                                .contentType(containsString("text/html"))
+                                                .body(containsString("<html"))
+                                                .body(
+                                                        containsString(
+                                                                "<title>Seatunnel Engine UI</title>"));
                                     });
                         });
     }

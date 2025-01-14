@@ -17,46 +17,26 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import org.apache.seatunnel.common.utils.JsonUtils;
-import org.apache.seatunnel.engine.server.SeaTunnelServer;
+import org.apache.seatunnel.engine.server.rest.service.UpdateTagsService;
 
-import com.hazelcast.cluster.impl.MemberImpl;
-import com.hazelcast.internal.json.JsonObject;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class UpdateTagsServlet extends BaseServlet {
 
+    private final UpdateTagsService updateTagsService;
+
     public UpdateTagsServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.updateTagsService = new UpdateTagsService(nodeEngine);
     }
 
     @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        Map<String, Object> params = JsonUtils.toMap(requestHandle(requestBody(req)));
-        SeaTunnelServer seaTunnelServer = getSeaTunnelServer(false);
-
-        NodeEngineImpl nodeEngine = seaTunnelServer.getNodeEngine();
-        MemberImpl localMember = nodeEngine.getLocalMember();
-
-        Map<String, String> tags =
-                params.entrySet().stream()
-                        .collect(
-                                Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        value ->
-                                                value.getValue() != null
-                                                        ? value.getValue().toString()
-                                                        : ""));
-        localMember.updateAttribute(tags);
-        writeJson(resp, new JsonObject().add("status", "success"));
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        writeJson(resp, updateTagsService.updateTags(requestBody(req)));
     }
 }

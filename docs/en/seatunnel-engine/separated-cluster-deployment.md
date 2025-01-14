@@ -71,7 +71,7 @@ SeaTunnel Engine implements cluster management based on [Hazelcast IMDG](https:/
 
 The `backup count` is a parameter that defines the number of synchronous backups. For example, if it is set to 1, the backup of the partition will be placed on one other member. If it is set to 2, it will be placed on two other members.
 
-We recommend that the value of `backup-count` be `min(1, max(5, N/2))`. `N` is the number of cluster nodes.
+We recommend that the value of `backup-count` be `max(1, min(5, N/2))`. `N` is the number of cluster nodes.
 
 ```yaml
 seatunnel:
@@ -173,7 +173,7 @@ seatunnel:
 This configuration mainly solves the problem of resource leakage caused by continuously creating and attempting to destroy class loaders.
 If you encounter an exception related to metaspace space overflow, you can try to enable this configuration.
 In order to reduce the frequency of creating class loaders, after enabling this configuration, SeaTunnel will not try to release the corresponding class loader when the job is completed, so that it can be used by subsequent jobs, that is to say, when not too many types of Source/Sink connector are used in the running job, it is more effective.
-The default value is false.
+The default value is true.
 Example
 
 ```yaml
@@ -279,6 +279,46 @@ netty-buffer-4.1.89.Final.jar
 netty-common-4.1.89.Final.jar
 seatunnel-hadoop3-3.1.4-uber.jar
 ```
+
+### 4.7 Job Scheduling Strategy
+
+When resources are insufficient, the job scheduling strategy can be configured in the following two modes:
+
+1. `WAIT`: Wait for resources to be available.
+
+2. `REJECT`: Reject the job, default value.
+
+Example
+
+```yaml
+seatunnel:
+  engine:
+    job-schedule-strategy: WAIT
+```
+When `dynamic-slot: true` is used, the `job-schedule-strategy: WAIT` configuration will become invalid and will be forcibly changed to `job-schedule-strategy: REJECT`, because this parameter is meaningless in dynamic slots.
+
+
+### 4.8 Coordinator Service
+
+CoordinatorService responsible for the process of generating each job from a LogicalDag to an ExecutionDag,
+and then to a PhysicalDag. It ultimately creates the JobMaster for the job to handle scheduling, execution, and state monitoring.
+
+**core-thread-num**
+
+The corePoolSize of seatunnel coordinator job's executor cached thread pool
+
+**max-thread-num**
+
+The max job count can be executed at same time
+
+Example
+
+```yaml
+coordinator-service:
+  core-thread-num: 30
+  max-thread-num: 1000
+```
+
 
 ## 5. Configuring SeaTunnel Engine Network Services
 

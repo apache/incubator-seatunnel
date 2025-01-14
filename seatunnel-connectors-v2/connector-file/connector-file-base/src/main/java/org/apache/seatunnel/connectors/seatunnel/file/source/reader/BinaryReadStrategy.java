@@ -55,7 +55,7 @@ public class BinaryReadStrategy extends AbstractReadStrategy {
             throws IOException, FileConnectorException {
         try (InputStream inputStream = hadoopFileSystemProxy.getInputStream(path)) {
             String relativePath;
-            if (basePath.isFile()) {
+            if (hadoopFileSystemProxy.isFile(basePath.getAbsolutePath())) {
                 relativePath = basePath.getName();
             } else {
                 relativePath =

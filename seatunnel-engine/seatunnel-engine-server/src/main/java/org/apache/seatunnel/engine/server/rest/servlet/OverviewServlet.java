@@ -18,12 +18,7 @@
 package org.apache.seatunnel.engine.server.rest.servlet;
 
 import org.apache.seatunnel.common.utils.JsonUtils;
-import org.apache.seatunnel.engine.common.env.EnvironmentUtil;
-import org.apache.seatunnel.engine.common.env.Version;
-import org.apache.seatunnel.engine.server.SeaTunnelServer;
-import org.apache.seatunnel.engine.server.resourcemanager.opeartion.GetOverviewOperation;
-import org.apache.seatunnel.engine.server.resourcemanager.resource.OverviewInfo;
-import org.apache.seatunnel.engine.server.utils.NodeEngineUtil;
+import org.apache.seatunnel.engine.server.rest.service.OverviewService;
 
 import com.hazelcast.internal.util.JsonUtil;
 import com.hazelcast.spi.impl.NodeEngineImpl;
@@ -37,8 +32,11 @@ import java.util.Map;
 
 public class OverviewServlet extends BaseServlet {
 
+    private final OverviewService overviewService;
+
     public OverviewServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.overviewService = new OverviewService(nodeEngine);
     }
 
     @Override
@@ -47,26 +45,10 @@ public class OverviewServlet extends BaseServlet {
 
         Map<String, String> tags = getParameterMap(req);
 
-        Version version = EnvironmentUtil.getVersion();
-
-        SeaTunnelServer seaTunnelServer = getSeaTunnelServer(true);
-
-        OverviewInfo overviewInfo;
-
-        if (seaTunnelServer == null) {
-            overviewInfo =
-                    (OverviewInfo)
-                            NodeEngineUtil.sendOperationToMasterNode(
-                                            nodeEngine, new GetOverviewOperation(tags))
-                                    .join();
-        } else {
-
-            overviewInfo = GetOverviewOperation.getOverviewInfo(seaTunnelServer, nodeEngine, tags);
-        }
-        overviewInfo.setProjectVersion(version.getProjectVersion());
-        overviewInfo.setGitCommitAbbrev(version.getGitCommitAbbrev());
-
         writeJson(
-                resp, JsonUtil.toJsonObject(JsonUtils.toMap(JsonUtils.toJsonString(overviewInfo))));
+                resp,
+                JsonUtil.toJsonObject(
+                        JsonUtils.toMap(
+                                JsonUtils.toJsonString(overviewService.getOverviewInfo(tags)))));
     }
 }

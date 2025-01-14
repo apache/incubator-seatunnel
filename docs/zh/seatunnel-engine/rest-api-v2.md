@@ -2,19 +2,25 @@
 sidebar_position: 12
 ---
 
-# RESTful API
+# RESTful API V2
 
 SeaTunnel有一个用于监控的API，可用于查询运行作业的状态和统计信息，以及最近完成的作业。监控API是RESTful风格的，它接受HTTP请求并使用JSON数据格式进行响应。
 
 ## 概述
 
-v2版本的api使用jetty支持，与v1版本的接口规范相同 ,可以通过修改`seatunnel.yaml`中的配置项来指定端口和context-path
+v2版本的api使用jetty支持，与v1版本的接口规范相同 ,可以通过修改`seatunnel.yaml`中的配置项来指定端口和context-path，
+同时可以配置 `enable-dynamic-port` 开启动态端口(默认从 `port` 开始累加)，默认为关闭，
+如果`enable-dynamic-port`为`true`，我们将使用`port`和`port`+`port-range`范围内未使用的端口，默认范围是100。
+
 ```yaml
 
 seatunnel:
   engine:
-    enable-http: true
-    port: 8080
+    http:
+      enable-http: true
+      port: 8080
+      enable-dynamic-port: true
+      port-range: 100
 ```
 
 同时也可以配置context-path,配置如下：
@@ -23,9 +29,10 @@ seatunnel:
 
 seatunnel:
   engine:
-    enable-http: true
-    port: 8080
-    context-path: /seatunnel
+    http:
+      enable-http: true
+      port: 8080
+      context-path: /seatunnel
 ```
 
 ## API参考
@@ -80,14 +87,21 @@ seatunnel:
     "jobId": "",
     "jobName": "",
     "jobStatus": "",
-    "envOptions": {
-    },
     "createTime": "",
     "jobDag": {
-      "vertices": [
+      "jobId": "",
+      "envOptions": [],
+      "vertexInfoMap": [
+        {
+          "vertexId": 1,
+          "type": "",
+          "vertexName": "",
+          "tablePaths": [
+            ""
+          ]
+        }
       ],
-      "edges": [
-      ]
+      "pipelineEdges": {}
     },
     "pluginJarsUrls": [
     ],
@@ -125,6 +139,7 @@ seatunnel:
   "createTime": "",
   "jobDag": {
     "jobId": "",
+    "envOptions": [],
     "vertexInfoMap": [
       {
         "vertexId": 1,
@@ -204,6 +219,7 @@ seatunnel:
   "createTime": "",
   "jobDag": {
     "jobId": "",
+    "envOptions": [],
     "vertexInfoMap": [
       {
         "vertexId": 1,
@@ -270,6 +286,7 @@ seatunnel:
     "finishTime": "",
     "jobDag": {
       "jobId": "",
+      "envOptions": [],
       "vertexInfoMap": [
         {
           "vertexId": 1,
@@ -363,14 +380,17 @@ seatunnel:
 
 #### 参数
 
-> |         参数名称         |   是否必传   |  参数类型  |               参数描述                |
-> |----------------------|----------|--------|-----------------------------------|
+> |         参数名称         |   是否必传   |  参数类型  | 参数描述                              |
+> |----------------------|----------|-----------------------------------|-----------------------------------|
 > | jobId                | optional | string | job id                            |
 > | jobName              | optional | string | job name                          |
 > | isStartWithSavePoint | optional | string | if job is started with save point |
+> | format               | optional | string    | 配置风格,支持json和hocon,默认 json         |
 
 #### 请求体
 
+你可以选择用json或者hocon的方式来传递请求体。
+Json请求示例：
 ```json
 {
     "env": {
@@ -379,7 +399,7 @@ seatunnel:
     "source": [
         {
             "plugin_name": "FakeSource",
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -395,12 +415,42 @@ seatunnel:
     "sink": [
         {
             "plugin_name": "Console",
-            "source_table_name": ["fake"]
+            "plugin_input": ["fake"]
         }
     ]
 }
 ```
 
+Hocon请求示例：
+```hocon
+env {
+  job.mode = "batch"
+}
+
+source {
+  FakeSource {
+    plugin_output = "fake"
+    row.num = 100
+    schema = {
+      fields {
+        name = "string"
+        age = "int"
+        card = "int"
+      }
+    }
+  }
+}
+
+transform {
+}
+
+sink {
+  Console {
+    plugin_input = "fake"
+  }
+}
+
+```
 #### 响应
 
 ```json
@@ -413,7 +463,40 @@ seatunnel:
 </details>
 
 ------------------------------------------------------------------------------------------
+### 提交作业来源上传配置文件
 
+<details>
+<summary><code>POST</code> <code><b>/submit-job</b></code> <code>(如果作业提交成功，返回jobId和jobName。)</code></summary>
+
+#### 参数
+
+> |         参数名称         |   是否必传   |  参数类型  | 参数描述                              |
+> |----------------------|----------|-----------------------------------|-----------------------------------|
+> | jobId                | optional | string | job id                            |
+> | jobName              | optional | string | job name                          |
+> | isStartWithSavePoint | optional | string | if job is started with save point |
+
+#### 请求体
+上传文件key的名称是config_file,文件后缀json的按照json格式来解析,conf或config文件后缀按照hocon格式解析
+
+curl Example
+
+```
+curl --location 'http://127.0.0.1:8080/submit-job/upload' --form 'config_file=@"/temp/fake_to_console.conf"'
+
+```
+#### 响应
+
+```json
+{
+    "jobId": 733584788375666689,
+    "jobName": "SeaTunnel_Job"
+}
+```
+
+</details>
+
+------------------------------------------------------------------------------------------
 
 ### 批量提交作业
 
@@ -445,7 +528,7 @@ seatunnel:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -461,7 +544,7 @@ seatunnel:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   },
@@ -476,7 +559,7 @@ seatunnel:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -492,7 +575,7 @@ seatunnel:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   }
@@ -604,7 +687,7 @@ seatunnel:
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -644,7 +727,7 @@ seatunnel:
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",
@@ -728,4 +811,88 @@ seatunnel:
   "message": "Invalid JSON format in request body."
 }
 ```
+</details>
+
+
+------------------------------------------------------------------------------------------
+
+### 获取所有节点日志内容
+
+<details>
+ <summary><code>GET</code> <code><b>/logs/:jobId</b></code> <code>(返回日志列表。)</code></summary>
+
+#### 请求参数
+
+#### 参数(在请求体中params字段中添加)
+
+> |         参数名称         |   是否必传   |  参数类型  |               参数描述                |
+> |----------------------|----------|--------|-----------------------------------|
+> | jobId                | optional | string | job id                            |
+
+当`jobId`为空时，返回所有节点的日志信息，否则返回指定`jobId`在所有节点的的日志列表。
+
+#### 响应
+
+返回请求节点的日志列表、内容
+
+#### 返回所有日志文件列表
+
+如果你想先查看日志列表，可以通过`GET`请求获取日志列表，`http://localhost:8080/logs?format=json`
+
+```json
+[
+  {
+    "node": "localhost:8080",
+    "logLink": "http://localhost:8080/logs/job-899485770241277953.log",
+    "logName": "job-899485770241277953.log"
+  },
+  {
+    "node": "localhost:8080",
+    "logLink": "http://localhost:8080/logs/job-899470314109468673.log",
+    "logName": "job-899470314109468673.log"
+  }
+]
+```
+
+当前支持的格式有`json`和`html`，默认为`html`。
+
+
+#### 例子
+
+获取所有节点jobId为`733584788375666689`的日志信息：`http://localhost:8080/logs/733584788375666689`
+获取所有节点日志列表：`http://localhost:8080/logs`
+获取所有节点日志列表以JSON格式返回：`http://localhost:8080/logs?format=json`
+获取日志文件内容：`http://localhost:8080/logs/job-898380162133917698.log`
+
+
+</details>
+
+
+### 获取单节点日志内容
+
+<details>
+ <summary><code>GET</code> <code><b>/log</b></code> <code>(返回日志列表。)</code></summary>
+
+#### 响应
+
+返回请求节点的日志列表
+
+#### 例子
+
+获取当前节点的日志列表：`http://localhost:5801/log`
+获取日志文件内容：`http://localhost:5801/log/job-898380162133917698.log``
+
+</details>
+
+### 获取节点指标信息
+
+<details>
+ <summary>
+    <code>GET</code> <code><b>/metrics</b></code>  
+    <code>GET</code> <code><b>/openmetrics</b></code>
+</summary>
+你需要先打开`Telemetry`才能获取集群指标信息。否则将返回空信息。
+
+更多关于`Telemetry`的信息可以在[Telemetry](telemetry.md)文档中找到。
+
 </details>

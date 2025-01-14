@@ -17,8 +17,8 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import com.hazelcast.internal.json.JsonArray;
-import com.hazelcast.internal.json.JsonObject;
+import org.apache.seatunnel.engine.server.rest.service.RunningThreadService;
+
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import javax.servlet.ServletException;
@@ -26,33 +26,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Comparator;
 
 public class RunningThreadsServlet extends BaseServlet {
 
+    private final RunningThreadService runningThreadService;
+
     public RunningThreadsServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.runningThreadService = new RunningThreadService(nodeEngine);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        JsonArray runningThreads =
-                Thread.getAllStackTraces().keySet().stream()
-                        .sorted(Comparator.comparing(Thread::getName))
-                        .map(
-                                stackTraceElements -> {
-                                    JsonObject jobInfoJson = new JsonObject();
-                                    jobInfoJson.add("threadName", stackTraceElements.getName());
-                                    jobInfoJson.add(
-                                            "classLoader",
-                                            String.valueOf(
-                                                    stackTraceElements.getContextClassLoader()));
-                                    return jobInfoJson;
-                                })
-                        .collect(JsonArray::new, JsonArray::add, JsonArray::add);
-
-        writeJson(resp, runningThreads);
+        writeJson(resp, runningThreadService.getRunningThread());
     }
 }

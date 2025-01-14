@@ -32,6 +32,10 @@ public class HttpConfig implements Serializable {
 
     private String contextPath = ServerConfigOptions.CONTEXT_PATH.defaultValue();
 
+    private boolean enableDynamicPort = ServerConfigOptions.ENABLE_DYNAMIC_PORT.defaultValue();
+
+    private int portRange = ServerConfigOptions.PORT_RANGE.defaultValue();
+
     public void setPort(int port) {
         checkPositive(port, ServerConfigOptions.HTTP + " must be > 0");
         this.port = port;

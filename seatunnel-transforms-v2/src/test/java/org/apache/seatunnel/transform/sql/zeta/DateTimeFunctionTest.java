@@ -47,8 +47,8 @@ public class DateTimeFunctionTest {
                 "test",
                 null,
                 rowType,
-                "select from_unixtime(unixtime,'yyyy-MM-dd') as ts from test");
-        SeaTunnelRow outRow = sqlEngine.transformBySQL(inputRow);
+                "select from_unixtime(unixtime,'yyyy-MM-dd') as ts from dual");
+        SeaTunnelRow outRow = sqlEngine.transformBySQL(inputRow, rowType).get(0);
         Object field = outRow.getField(0);
         Assertions.assertNotNull(field.toString());
 
@@ -57,8 +57,8 @@ public class DateTimeFunctionTest {
                 "test",
                 null,
                 rowType,
-                "select from_unixtime(unixtime,'yyyy-MM-dd HH:mm:ss','UTC+6') as ts from test");
-        SeaTunnelRow outRow1 = sqlEngine.transformBySQL(inputRow);
+                "select from_unixtime(unixtime,'yyyy-MM-dd HH:mm:ss','UTC+6') as ts from dual");
+        SeaTunnelRow outRow1 = sqlEngine.transformBySQL(inputRow, rowType).get(0);
         Object field1 = outRow1.getField(0);
         Assertions.assertEquals("2023-01-01 10:00:00", field1.toString());
     }

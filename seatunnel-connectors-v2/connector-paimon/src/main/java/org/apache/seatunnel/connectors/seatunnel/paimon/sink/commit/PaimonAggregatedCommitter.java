@@ -17,17 +17,14 @@
 
 package org.apache.seatunnel.connectors.seatunnel.paimon.sink.commit;
 
-import org.apache.seatunnel.api.common.JobContext;
 import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkAggregatedCommitter;
 import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonHadoopConfiguration;
 import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.paimon.security.PaimonSecurityContext;
-import org.apache.seatunnel.connectors.seatunnel.paimon.utils.JobContextUtil;
 
 import org.apache.paimon.table.Table;
-import org.apache.paimon.table.sink.BatchTableCommit;
 import org.apache.paimon.table.sink.CommitMessage;
 import org.apache.paimon.table.sink.StreamTableCommit;
 import org.apache.paimon.table.sink.TableCommit;
@@ -36,11 +33,11 @@ import org.apache.paimon.table.sink.WriteBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /** Paimon connector aggregated committer class */
 @Slf4j
@@ -52,17 +49,9 @@ public class PaimonAggregatedCommitter
 
     private final WriteBuilder tableWriteBuilder;
 
-    private final JobContext jobContext;
-
     public PaimonAggregatedCommitter(
-            Table table,
-            JobContext jobContext,
-            PaimonHadoopConfiguration paimonHadoopConfiguration) {
-        this.jobContext = jobContext;
-        this.tableWriteBuilder =
-                JobContextUtil.isBatchJob(jobContext)
-                        ? table.newBatchWriteBuilder()
-                        : table.newStreamWriteBuilder();
+            Table table, PaimonHadoopConfiguration paimonHadoopConfiguration) {
+        this.tableWriteBuilder = table.newStreamWriteBuilder();
         PaimonSecurityContext.shouldEnableKerberos(paimonHadoopConfiguration);
     }
 
@@ -70,28 +59,24 @@ public class PaimonAggregatedCommitter
     public List<PaimonAggregatedCommitInfo> commit(
             List<PaimonAggregatedCommitInfo> aggregatedCommitInfo) throws IOException {
         try (TableCommit tableCommit = tableWriteBuilder.newCommit()) {
-            List<CommitMessage> fileCommittables =
-                    aggregatedCommitInfo.stream()
-                            .map(PaimonAggregatedCommitInfo::getCommittables)
-                            .flatMap(List::stream)
-                            .flatMap(List::stream)
-                            .collect(Collectors.toList());
             PaimonSecurityContext.runSecured(
                     () -> {
-                        if (JobContextUtil.isBatchJob(jobContext)) {
-                            log.debug("Trying to commit states batch mode");
-                            ((BatchTableCommit) tableCommit).commit(fileCommittables);
-                        } else {
-                            log.debug("Trying to commit states streaming mode");
-                            ((StreamTableCommit) tableCommit)
-                                    .commit(Objects.hash(fileCommittables), fileCommittables);
-                        }
+                        log.debug("Trying to commit states streaming mode");
+                        aggregatedCommitInfo.stream()
+                                .flatMap(
+                                        paimonAggregatedCommitInfo ->
+                                                paimonAggregatedCommitInfo.getCommittablesMap()
+                                                        .entrySet().stream())
+                                .forEach(
+                                        entry ->
+                                                ((StreamTableCommit) tableCommit)
+                                                        .commit(entry.getKey(), entry.getValue()));
                         return null;
                     });
         } catch (Exception e) {
             throw new PaimonConnectorException(
                     PaimonConnectorErrorCode.TABLE_WRITE_COMMIT_FAILED,
-                    "Flink table store commit operation failed",
+                    "Paimon table storage write-commit Failed.",
                     e);
         }
         return Collections.emptyList();
@@ -99,8 +84,14 @@ public class PaimonAggregatedCommitter
 
     @Override
     public PaimonAggregatedCommitInfo combine(List<PaimonCommitInfo> commitInfos) {
-        List<List<CommitMessage>> committables = new ArrayList<>();
-        commitInfos.forEach(commitInfo -> committables.add(commitInfo.getCommittables()));
+        Map<Long, List<CommitMessage>> committables = new HashMap<>();
+        commitInfos.forEach(
+                commitInfo ->
+                        committables
+                                .computeIfAbsent(
+                                        commitInfo.getCheckpointId(),
+                                        id -> new CopyOnWriteArrayList<>())
+                                .addAll(commitInfo.getCommittables()));
         return new PaimonAggregatedCommitInfo(committables);
     }
 

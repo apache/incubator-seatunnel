@@ -302,6 +302,14 @@ Example:
 
 REPLACE(NAME, ' ')
 
+### SPLIT
+
+Split a string into an array.
+
+Example:
+
+select SPLIT(test,';') as arrays
+
 ### SOUNDEX
 
 ```SOUNDEX(string)```
@@ -965,7 +973,7 @@ select
     else 0
   end as c_number_0
 from
-  fake
+  dual
 ```
 
 It is used to determine whether the condition is valid and return different values according to different judgments
@@ -973,3 +981,41 @@ It is used to determine whether the condition is valid and return different valu
 Example:
 
 case when c_string in ('c_string') then 1 else 0 end
+
+### UUID
+
+```UUID()```
+
+Generate a uuid through java function.
+
+Example:
+
+select UUID() as seatunnel_uuid
+
+### ARRAY
+
+```ARRAY<T> array(T, ...)```
+Create an array consisting of variadic elements and return it. Here, T can be either “column” or “literal”.
+
+Example:
+
+select ARRAY(1,2,3) as arrays
+select ARRAY('c_1',2,3.12) as arrays
+select ARRAY(column1,column2,column3) as arrays
+
+notes: Currently only string, double, long, int types are supported
+
+### LATERAL VIEW 
+#### EXPLODE
+
+explode array column to rows.
+OUTER EXPLODE will return NULL, while array is NULL or empty
+EXPLODE(SPLIT(FIELD_NAME,separator))Used to split string type. The first parameter of SPLIT function  is the field name, the second parameter is the separator
+EXPLODE(ARRAY(value1,value2)) Used to custom array type.
+```
+SELECT * FROM dual 
+	LATERAL VIEW EXPLODE ( SPLIT ( NAME, ',' ) ) AS NAME 
+	LATERAL VIEW EXPLODE ( SPLIT ( pk_id, ';' ) ) AS pk_id 
+	LATERAL VIEW OUTER EXPLODE ( age ) AS age
+	LATERAL VIEW OUTER EXPLODE ( ARRAY(1,1) ) AS num
+```

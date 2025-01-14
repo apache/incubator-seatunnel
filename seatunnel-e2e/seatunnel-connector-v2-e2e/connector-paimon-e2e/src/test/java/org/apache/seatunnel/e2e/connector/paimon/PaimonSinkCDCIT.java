@@ -17,24 +17,16 @@
 
 package org.apache.seatunnel.e2e.connector.paimon;
 
-import org.apache.seatunnel.common.utils.FileUtils;
-import org.apache.seatunnel.core.starter.utils.CompressionUtils;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.e2e.common.TestResource;
-import org.apache.seatunnel.e2e.common.TestSuiteBase;
-import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
-import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.paimon.CoreOptions;
-import org.apache.paimon.catalog.Catalog;
-import org.apache.paimon.catalog.CatalogContext;
-import org.apache.paimon.catalog.CatalogFactory;
-import org.apache.paimon.catalog.Identifier;
 import org.apache.paimon.data.InternalRow;
-import org.apache.paimon.options.Options;
 import org.apache.paimon.reader.RecordReader;
 import org.apache.paimon.table.FileStoreTable;
 import org.apache.paimon.table.Table;
@@ -54,11 +46,11 @@ import org.testcontainers.containers.Container;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -70,20 +62,7 @@ import static org.awaitility.Awaitility.given;
         disabledReason =
                 "Spark and Flink engine can not auto create paimon table on worker node in local file(e.g flink tm) by savemode feature which can lead error")
 @Slf4j
-public class PaimonSinkCDCIT extends TestSuiteBase implements TestResource {
-
-    private static String CATALOG_ROOT_DIR = "/tmp/";
-    private static final String NAMESPACE = "paimon";
-    private static final String NAMESPACE_TAR = "paimon.tar.gz";
-    private static final String CATALOG_DIR = CATALOG_ROOT_DIR + NAMESPACE + "/";
-    private static final String TARGET_TABLE = "st_test";
-    private static final String FAKE_TABLE1 = "FakeTable1";
-    private static final String FAKE_DATABASE1 = "FakeDatabase1";
-    private static final String FAKE_TABLE2 = "FakeTable1";
-    private static final String FAKE_DATABASE2 = "FakeDatabase2";
-    private String CATALOG_ROOT_DIR_WIN = "C:/Users/";
-    private String CATALOG_DIR_WIN = CATALOG_ROOT_DIR_WIN + NAMESPACE + "/";
-    private boolean isWindows;
+public class PaimonSinkCDCIT extends AbstractPaimonIT implements TestResource {
 
     @BeforeAll
     @Override
@@ -545,66 +524,133 @@ public class PaimonSinkCDCIT extends TestSuiteBase implements TestResource {
                         });
     }
 
-    protected final ContainerExtendedFactory containerExtendedFactory =
-            container -> {
-                if (isWindows) {
-                    FileUtils.deleteFile(CATALOG_ROOT_DIR_WIN + NAMESPACE_TAR);
-                    FileUtils.deleteFile(CATALOG_ROOT_DIR_WIN + "paimon.tar");
-                    FileUtils.createNewDir(CATALOG_ROOT_DIR_WIN);
-                } else {
-                    FileUtils.deleteFile(CATALOG_ROOT_DIR + NAMESPACE_TAR);
-                    FileUtils.createNewDir(CATALOG_DIR);
-                }
-
-                container.execInContainer(
-                        "sh",
-                        "-c",
-                        "cd "
-                                + CATALOG_ROOT_DIR
-                                + " && tar -czvf "
-                                + NAMESPACE_TAR
-                                + " "
-                                + NAMESPACE);
-                container.copyFileFromContainer(
-                        CATALOG_ROOT_DIR + NAMESPACE_TAR,
-                        (isWindows ? CATALOG_ROOT_DIR_WIN : CATALOG_ROOT_DIR) + NAMESPACE_TAR);
-                if (isWindows) {
-                    extractFilesWin();
-                } else {
-                    extractFiles();
-                }
-            };
-
-    private void extractFiles() {
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command(
-                "sh", "-c", "cd " + CATALOG_ROOT_DIR + " && tar -zxvf " + NAMESPACE_TAR);
-        try {
-            Process process = processBuilder.start();
-            // wait command completed
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                log.info("Extract files successful.");
-            } else {
-                log.error("Extract files failed with exit code " + exitCode);
-            }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
+    @TestTemplate
+    public void testChangelogLookup(TestContainer container) throws Exception {
+        // create Piamon table (changelog-producer=lookup)
+        Container.ExecResult writeResult =
+                container.executeJob("/changelog_fake_cdc_sink_paimon_case1_ddl.conf");
+        Assertions.assertEquals(0, writeResult.getExitCode());
+        TimeUnit.SECONDS.sleep(20);
+        String[] jobIds =
+                new String[] {
+                    String.valueOf(JobIdGenerator.newJobId()),
+                    String.valueOf(JobIdGenerator.newJobId()),
+                    String.valueOf(JobIdGenerator.newJobId())
+                };
+        log.info("jobIds: {}", Arrays.toString(jobIds));
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        // read changelog and write to append only paimon table
+        futures.add(
+                CompletableFuture.runAsync(
+                        () -> {
+                            try {
+                                container.executeJob("/changelog_paimon_to_paimon.conf", jobIds[0]);
+                            } catch (Exception e) {
+                                throw new SeaTunnelException(e);
+                            }
+                        }));
+        TimeUnit.SECONDS.sleep(10);
+        // dml: insert data
+        futures.add(
+                CompletableFuture.runAsync(
+                        () -> {
+                            try {
+                                container.executeJob(
+                                        "/changelog_fake_cdc_sink_paimon_case1_insert_data.conf",
+                                        jobIds[1]);
+                            } catch (Exception e) {
+                                throw new SeaTunnelException(e);
+                            }
+                        }));
+        // dml: update and delete data
+        TimeUnit.SECONDS.sleep(10);
+        futures.add(
+                CompletableFuture.runAsync(
+                        () -> {
+                            try {
+                                container.executeJob(
+                                        "/changelog_fake_cdc_sink_paimon_case1_update_data.conf",
+                                        jobIds[2]);
+                            } catch (Exception e) {
+                                throw new SeaTunnelException(e);
+                            }
+                        }));
+        // stream job running 30 seconds
+        TimeUnit.SECONDS.sleep(30);
+        // cancel stream job
+        container.cancelJob(jobIds[1]);
+        container.cancelJob(jobIds[2]);
+        container.cancelJob(jobIds[0]);
+        changeLogEnabled = true;
+        TimeUnit.SECONDS.sleep(10);
+        // copy paimon to local
+        container.executeExtraCommands(containerExtendedFactory);
+        List<PaimonRecord> paimonRecords1 = loadPaimonData("seatunnel_namespace", "st_test_sink");
+        List<String> actual1 =
+                paimonRecords1.stream()
+                        .map(PaimonRecord::toChangeLogLookUp)
+                        .collect(Collectors.toList());
+        log.info("paimon records: {}", actual1);
+        Assertions.assertEquals(8, actual1.size());
+        Assertions.assertEquals(
+                Arrays.asList(
+                        "[+I, 1, A, 100, +I]",
+                        "[+I, 2, B, 100, +I]",
+                        "[+I, 3, C, 100, +I]",
+                        "[+I, 1, A, 100, -U]",
+                        "[+I, 1, Aa, 200, +U]",
+                        "[+I, 2, B, 100, -U]",
+                        "[+I, 2, Bb, 90, +U]",
+                        "[+I, 3, C, 100, -D]"),
+                actual1);
+        List<PaimonRecord> paimonRecords2 = loadPaimonData("seatunnel_namespace", "st_test_lookup");
+        List<String> actual2 =
+                paimonRecords2.stream()
+                        .map(PaimonRecord::toChangeLogFull)
+                        .collect(Collectors.toList());
+        log.info("paimon records: {}", actual2);
+        Assertions.assertEquals(2, actual2.size());
+        Assertions.assertEquals(Arrays.asList("[+U, 1, Aa, 200]", "[+I, 2, Bb, 90]"), actual2);
+        changeLogEnabled = false;
+        futures.forEach(future -> future.cancel(true));
     }
 
-    private void extractFilesWin() {
-        try {
-            CompressionUtils.unGzip(
-                    new File(CATALOG_ROOT_DIR_WIN + NAMESPACE_TAR), new File(CATALOG_ROOT_DIR_WIN));
-            CompressionUtils.unTar(
-                    new File(CATALOG_ROOT_DIR_WIN + "paimon.tar"), new File(CATALOG_ROOT_DIR_WIN));
-        } catch (IOException | ArchiveException e) {
-            throw new RuntimeException(e);
-        }
+    @TestTemplate
+    public void testChangelogFullCompaction(TestContainer container) throws Exception {
+        Long jobId = JobIdGenerator.newJobId();
+        log.info("jobId: {}", jobId);
+        CompletableFuture<Void> voidCompletableFuture =
+                CompletableFuture.runAsync(
+                        () -> {
+                            try {
+                                container.executeJob(
+                                        "/changelog_fake_cdc_sink_paimon_case2.conf",
+                                        String.valueOf(jobId));
+                            } catch (Exception e) {
+                                throw new SeaTunnelException(e);
+                            }
+                        });
+        // stream job running 20 seconds
+        TimeUnit.SECONDS.sleep(20);
+        changeLogEnabled = true;
+        // cancel stream job
+        container.cancelJob(String.valueOf(jobId));
+        TimeUnit.SECONDS.sleep(5);
+        // copy paimon to local
+        container.executeExtraCommands(containerExtendedFactory);
+        List<PaimonRecord> paimonRecords = loadPaimonData("seatunnel_namespace", "st_test_full");
+        List<String> actual =
+                paimonRecords.stream()
+                        .map(PaimonRecord::toChangeLogFull)
+                        .collect(Collectors.toList());
+        log.info("paimon records: {}", actual);
+        Assertions.assertEquals(2, actual.size());
+        Assertions.assertEquals(Arrays.asList("[+U, 1, Aa, 200]", "[+I, 2, Bb, 90]"), actual);
+        changeLogEnabled = false;
+        voidCompletableFuture.cancel(true);
     }
 
-    private List<PaimonRecord> loadPaimonData(String dbName, String tbName) throws Exception {
+    protected List<PaimonRecord> loadPaimonData(String dbName, String tbName) throws Exception {
         FileStoreTable table = (FileStoreTable) getTable(dbName, tbName);
         ReadBuilder readBuilder = table.newReadBuilder();
         TableScan.Plan plan = readBuilder.newScan().plan();
@@ -619,13 +665,31 @@ public class PaimonSinkCDCIT extends TestSuiteBase implements TestResource {
         try (RecordReader<InternalRow> reader = tableRead.createReader(plan)) {
             reader.forEachRemaining(
                     row -> {
-                        PaimonRecord paimonRecord =
-                                new PaimonRecord(row.getLong(0), row.getString(1).toString());
+                        PaimonRecord paimonRecord;
+                        if (changeLogEnabled) {
+                            paimonRecord =
+                                    new PaimonRecord(
+                                            row.getRowKind(),
+                                            row.getLong(0),
+                                            row.getString(1).toString());
+                        } else {
+                            paimonRecord =
+                                    new PaimonRecord(row.getLong(0), row.getString(1).toString());
+                        }
                         if (table.schema().fieldNames().contains("score")) {
                             paimonRecord.setScore(row.getInt(2));
                         }
+                        if (table.schema().fieldNames().contains("op")) {
+                            paimonRecord.setOp(row.getString(3).toString());
+                        }
                         result.add(paimonRecord);
-                        log.info("key_id:" + row.getLong(0) + ", name:" + row.getString(1));
+                        log.info(
+                                "rowKind:"
+                                        + row.getRowKind().shortString()
+                                        + ", key_id:"
+                                        + row.getLong(0)
+                                        + ", name:"
+                                        + row.getString(1));
                     });
         }
         log.info(
@@ -635,29 +699,5 @@ public class PaimonSinkCDCIT extends TestSuiteBase implements TestResource {
         log.info(
                 "==========================================================================================");
         return result;
-    }
-
-    protected Table getTable(String dbName, String tbName) {
-        try {
-            return getCatalog().getTable(getIdentifier(dbName, tbName));
-        } catch (Catalog.TableNotExistException e) {
-            // do something
-            throw new RuntimeException("table not exist");
-        }
-    }
-
-    private Identifier getIdentifier(String dbName, String tbName) {
-        return Identifier.create(dbName, tbName);
-    }
-
-    private Catalog getCatalog() {
-        Options options = new Options();
-        if (isWindows) {
-            options.set("warehouse", CATALOG_DIR_WIN);
-        } else {
-            options.set("warehouse", "file://" + CATALOG_DIR);
-        }
-        Catalog catalog = CatalogFactory.createCatalog(CatalogContext.create(options));
-        return catalog;
     }
 }

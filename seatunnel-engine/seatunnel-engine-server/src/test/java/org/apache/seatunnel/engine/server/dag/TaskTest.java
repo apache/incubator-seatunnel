@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.server.dag;
 
+import org.apache.seatunnel.shade.com.google.common.collect.ImmutableMap;
+import org.apache.seatunnel.shade.com.google.common.collect.Sets;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
@@ -53,8 +55,6 @@ import org.apache.seatunnel.engine.server.dag.physical.PlanUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.hazelcast.map.IMap;
 
 import java.net.MalformedURLException;
@@ -69,16 +69,17 @@ public class TaskTest extends AbstractSeaTunnelServerTest {
 
     @Test
     public void testTask() throws MalformedURLException {
-        JobContext jobContext = new JobContext();
+        Long jobId = 1L;
+        JobContext jobContext = new JobContext(jobId);
         jobContext.setJobMode(JobMode.BATCH);
-        LogicalDag testLogicalDag = TestUtils.getTestLogicalDag(jobContext);
-
         JobConfig config = new JobConfig();
         config.setName("test");
+        config.setJobContext(jobContext);
+        LogicalDag testLogicalDag = TestUtils.getTestLogicalDag(jobContext, config);
 
         JobImmutableInformation jobImmutableInformation =
                 new JobImmutableInformation(
-                        1,
+                        jobId,
                         "Test",
                         nodeEngine.getSerializationService().toData(testLogicalDag),
                         config,

@@ -21,12 +21,18 @@ import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.transform.exception.TransformException;
 import org.apache.seatunnel.transform.sql.zeta.ZetaSQLFunction;
 
+import org.apache.groovy.parser.antlr4.util.StringUtils;
+
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class StringFunction {
     private static final byte[] SOUNDEX_INDEX =
@@ -103,7 +109,22 @@ public class StringFunction {
                 }
                 f = true;
             }
-            builder.append(arg);
+            if (arg.getClass().isArray()) {
+                int len = Array.getLength(arg);
+                List<Object> ll = new ArrayList<>();
+                for (int j = 0; j < len; j++) {
+                    Object o = Array.get(arg, j);
+                    ll.add(o);
+                }
+                String s =
+                        ll.stream()
+                                .filter(Objects::nonNull)
+                                .map(Object::toString)
+                                .collect(Collectors.joining(separator != null ? separator : ""));
+                builder.append(s);
+            } else {
+                builder.append(arg);
+            }
         }
         return builder.toString();
     }
@@ -330,6 +351,18 @@ public class StringFunction {
             sp = (String) args.get(1);
         }
         return trim(arg, true, true, sp);
+    }
+
+    public static String[] split(List<Object> args) {
+        String arg = (String) args.get(0);
+        if (StringUtils.isEmpty(arg)) {
+            return null;
+        }
+        String delimiter = "";
+        if (args.size() >= 2) {
+            delimiter = (String) args.get(1);
+        }
+        return arg.split(delimiter);
     }
 
     public static String trim(String s, boolean leading, boolean trailing, String sp) {

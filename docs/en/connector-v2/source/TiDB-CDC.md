@@ -40,7 +40,7 @@ describes how to set up the TiDB CDC connector to snapshot data and capture stre
 
 > 1. You need to ensure that the [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) and the [tikv-client-java jar package](https://mvnrepository.com/artifact/org.tikv/tikv-client-java/3.2.0) has been placed in directory `${SEATUNNEL_HOME}/lib/`.
 
-Please download and put Mysql driver and tikv-java-client in `${SEATUNNEL_HOME}/lib/` dir. For example: cp mysql-connector-java-xxx.jar `$SEATNUNNEL_HOME/lib/`
+Please download and put Mysql driver and tikv-java-client in `${SEATUNNEL_HOME}/lib/` dir. For example: cp mysql-connector-java-xxx.jar `$SEATUNNEL_HOME/lib/`
 
 ## Data Type Mapping
 
@@ -91,7 +91,7 @@ env {
 source {
   # This is a example source plugin **only for test and demonstrate the feature source plugin**
   TiDB-CDC {
-    result_table_name = "products_tidb_cdc"
+    plugin_output = "products_tidb_cdc"
     base-url = "jdbc:mysql://tidb0:4000/inventory"
     driver = "com.mysql.cj.jdbc.Driver"
     tikv.grpc.timeout_in_ms = 20000
@@ -108,7 +108,7 @@ transform {
 
 sink {
   jdbc {
-    source_table_name = "products_tidb_cdc"
+    plugin_input = "products_tidb_cdc"
     url = "jdbc:mysql://tidb0:4000/inventory"
     driver = "com.mysql.cj.jdbc.Driver"
     user = "root"

@@ -23,8 +23,10 @@ import org.apache.seatunnel.connectors.cdc.base.config.SourceConfig;
 import org.apache.seatunnel.connectors.cdc.base.dialect.JdbcDataSourceDialect;
 import org.apache.seatunnel.connectors.cdc.base.relational.JdbcSourceEventDispatcher;
 import org.apache.seatunnel.connectors.cdc.base.utils.SourceRecordUtils;
+import org.apache.seatunnel.connectors.cdc.debezium.ConnectTableChangeSerializer;
 
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.connect.source.SourceRecord;
 
 import io.debezium.config.CommonConnectorConfig;
@@ -39,6 +41,7 @@ import io.debezium.util.SchemaNameAdjuster;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,6 +53,9 @@ public abstract class JdbcSourceFetchTaskContext implements FetchTask.Context {
     protected final JdbcDataSourceDialect dataSourceDialect;
     protected final CommonConnectorConfig dbzConnectorConfig;
     protected final SchemaNameAdjuster schemaNameAdjuster;
+    protected final ConnectTableChangeSerializer tableChangeSerializer =
+            new ConnectTableChangeSerializer();
+    protected final JsonConverter jsonConverter;
 
     public JdbcSourceFetchTaskContext(
             JdbcSourceConfig sourceConfig, JdbcDataSourceDialect dataSourceDialect) {
@@ -57,6 +63,8 @@ public abstract class JdbcSourceFetchTaskContext implements FetchTask.Context {
         this.dataSourceDialect = dataSourceDialect;
         this.dbzConnectorConfig = sourceConfig.getDbzConnectorConfig();
         this.schemaNameAdjuster = SchemaNameAdjuster.create();
+        this.jsonConverter = new JsonConverter();
+        jsonConverter.configure(Collections.singletonMap("schemas.enable", true), false);
     }
 
     @Override

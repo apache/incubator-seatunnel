@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.postgres;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
@@ -24,7 +26,9 @@ import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,7 +39,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -201,6 +204,47 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
     @TestTemplate
     @DisabledOnContainer(
             value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
+    public void testOpengaussCdcMeatadataTrans(TestContainer container)
+            throws InterruptedException, IOException {
+        try {
+            Long jobId = JobIdGenerator.newJobId();
+            CompletableFuture.supplyAsync(
+                    () -> {
+                        try {
+                            container.executeJob(
+                                    "/opengausscdc_to_meatadata_trans.conf", String.valueOf(jobId));
+                        } catch (Exception e) {
+                            log.error("Commit task exception :" + e.getMessage());
+                            throw new RuntimeException(e);
+                        }
+                        return null;
+                    });
+            TimeUnit.SECONDS.sleep(10);
+            // insert update delete
+            upsertDeleteSourceTable(OPENGAUSS_SCHEMA, SOURCE_TABLE_1);
+
+            TimeUnit.SECONDS.sleep(20);
+            Awaitility.await()
+                    .atMost(2, TimeUnit.MINUTES)
+                    .untilAsserted(
+                            () -> {
+                                String jobStatus = container.getJobStatus(String.valueOf(jobId));
+                                Assertions.assertEquals("RUNNING", jobStatus);
+                            });
+            Container.ExecResult cancelJobResult = container.cancelJob(String.valueOf(jobId));
+            Assertions.assertEquals(0, cancelJobResult.getExitCode(), cancelJobResult.getStderr());
+        } finally {
+            clearTable(OPENGAUSS_SCHEMA, SOURCE_TABLE_1);
+            clearTable(OPENGAUSS_SCHEMA, SINK_TABLE_1);
+        }
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
             type = {EngineType.SPARK},
             disabledReason = "Currently SPARK do not support cdc")
     public void testOpengaussCdcMultiTableE2e(TestContainer container) {
@@ -288,12 +332,14 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
             disabledReason = "Currently SPARK and FLINK do not support restore")
     public void testMultiTableWithRestore(TestContainer container)
             throws IOException, InterruptedException {
+        Long jobId = JobIdGenerator.newJobId();
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             return container.executeJob(
-                                    "/opengausscdc_to_opengauss_with_multi_table_mode_one_table.conf");
+                                    "/opengausscdc_to_opengauss_with_multi_table_mode_one_table.conf",
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -319,19 +365,7 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
                                                                             OPENGAUSS_SCHEMA,
                                                                             SINK_TABLE_1)))));
 
-            Pattern jobIdPattern =
-                    Pattern.compile(
-                            ".*Init JobMaster for Job opengausscdc_to_opengauss_with_multi_table_mode_one_table.conf \\(([0-9]*)\\).*",
-                            Pattern.DOTALL);
-            Matcher matcher = jobIdPattern.matcher(container.getServerLogs());
-            String jobId;
-            if (matcher.matches()) {
-                jobId = matcher.group(1);
-            } else {
-                throw new RuntimeException("Can not find jobId");
-            }
-
-            Assertions.assertEquals(0, container.savepointJob(jobId).getExitCode());
+            Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
 
             // Restore job with add a new table
             CompletableFuture.supplyAsync(
@@ -339,7 +373,7 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
                         try {
                             container.restoreJob(
                                     "/opengausscdc_to_opengauss_with_multi_table_mode_two_table.conf",
-                                    jobId);
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -397,12 +431,14 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
             disabledReason = "Currently SPARK and FLINK do not support restore")
     public void testAddFiledWithRestore(TestContainer container)
             throws IOException, InterruptedException {
+        Long jobId = JobIdGenerator.newJobId();
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             return container.executeJob(
-                                    "/opengausscdc_to_opengauss_test_add_Filed.conf");
+                                    "/opengausscdc_to_opengauss_test_add_Filed.conf",
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -425,19 +461,7 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
                                                                             OPENGAUSS_SCHEMA,
                                                                             SINK_TABLE_3)))));
 
-            Pattern jobIdPattern =
-                    Pattern.compile(
-                            ".*Init JobMaster for Job opengausscdc_to_opengauss_test_add_Filed.conf \\(([0-9]*)\\).*",
-                            Pattern.DOTALL);
-            Matcher matcher = jobIdPattern.matcher(container.getServerLogs());
-            String jobId;
-            if (matcher.matches()) {
-                jobId = matcher.group(1);
-            } else {
-                throw new RuntimeException("Can not find jobId");
-            }
-
-            Assertions.assertEquals(0, container.savepointJob(jobId).getExitCode());
+            Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
 
             // add filed add insert source table data
             addFieldsForTable(OPENGAUSS_SCHEMA, SOURCE_TABLE_3);
@@ -449,7 +473,8 @@ public class OpengaussCDCIT extends TestSuiteBase implements TestResource {
                     () -> {
                         try {
                             container.restoreJob(
-                                    "/opengausscdc_to_opengauss_test_add_Filed.conf", jobId);
+                                    "/opengausscdc_to_opengauss_test_add_Filed.conf",
+                                    String.valueOf(jobId));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);

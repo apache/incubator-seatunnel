@@ -82,6 +82,11 @@ Properties in hadoop conf
 
 The specified loading path for the 'core-site.xml', 'hdfs-site.xml', 'hive-site.xml' files
 
+## Filesystems
+The Paimon connector supports writing data to multiple file systems. Currently, the supported file systems are hdfs and s3.
+If you use the s3 filesystem. You can configure the `fs.s3a.access-key`、`fs.s3a.secret-key`、`fs.s3a.endpoint`、`fs.s3a.path.style.access`、`fs.s3a.aws.credentials.provider` properties in the `paimon.hadoop.conf` option.
+Besides, the warehouse should start with `s3a://`.
+
 ## Examples
 
 ### Simple example
@@ -106,6 +111,33 @@ source {
     table = "st_test"
     query = "select c_boolean, c_tinyint from st_test where c_boolean= 'true' and c_tinyint > 116 and c_smallint = 15987 or c_decimal='2924137191386439303744.39292213'"
   }
+}
+```
+
+###  S3 example
+```hocon
+env {
+  execution.parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  Paimon {
+    warehouse = "s3a://test/"
+    database = "seatunnel_namespace11"
+    table = "st_test"
+    paimon.hadoop.conf = {
+        fs.s3a.access-key=G52pnxg67819khOZ9ezX
+        fs.s3a.secret-key=SHJuAQqHsLrgZWikvMa3lJf5T0NfM5LMFliJh9HF
+        fs.s3a.endpoint="http://minio4:9000"
+        fs.s3a.path.style.access=true
+        fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider
+    }
+  }
+}
+
+sink {
+  Console{}
 }
 ```
 
@@ -157,8 +189,11 @@ source {
 ```
 
 ## Changelog
-If you want to read the changelog of this connector, your sink table of paimon which mast has the options named `changelog-producer=input`, then you can refer to [Paimon changelog](https://paimon.apache.org/docs/master/primary-key-table/changelog-producer/).
-Currently, we only support the `input` and `none` mode of changelog producer. If the changelog producer is `input`, the streaming read of the connector will generate -U,+U,+I,+D data. But if the changelog producer is `none`, the streaming read of the connector will generate +I,+U,+D data.
+If you want to read the changelog of the Paimon table, first set the `changelog-producer` for the Paimon source table and then use the SeaTunnel stream task to read it.
+
+### Note
+
+Currently, batch reads are always the latest snapshot read, so to read full changelog data, you need to use stream reads and start stream reads before writing data to the Piamon table, and to ensure order, the parallelism of the stream read task should be set to 1.
 
 ### Streaming read example
 ```hocon

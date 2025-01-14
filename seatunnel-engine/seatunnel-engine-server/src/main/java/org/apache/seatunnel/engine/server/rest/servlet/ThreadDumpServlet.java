@@ -17,8 +17,8 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import com.hazelcast.internal.json.JsonArray;
-import com.hazelcast.internal.json.JsonObject;
+import org.apache.seatunnel.engine.server.rest.service.ThreadDumpService;
+
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import javax.servlet.ServletException;
@@ -26,33 +26,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class ThreadDumpServlet extends BaseServlet {
 
+    private final ThreadDumpService threadDumpService;
+
     public ThreadDumpServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.threadDumpService = new ThreadDumpService(nodeEngine);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        Map<Thread, StackTraceElement[]> threadStacks = Thread.getAllStackTraces();
-        JsonArray threadInfoList = new JsonArray();
-        for (Map.Entry<Thread, StackTraceElement[]> entry : threadStacks.entrySet()) {
-            StringBuilder stackTraceBuilder = new StringBuilder();
-            for (StackTraceElement element : entry.getValue()) {
-                stackTraceBuilder.append(element.toString()).append("\n");
-            }
-            String stackTrace = stackTraceBuilder.toString().trim();
-            JsonObject threadInfo = new JsonObject();
-            threadInfo.add("threadName", entry.getKey().getName());
-            threadInfo.add("threadId", entry.getKey().getId());
-            threadInfo.add("threadState", entry.getKey().getState().name());
-            threadInfo.add("stackTrace", stackTrace);
-            threadInfoList.add(threadInfo);
-        }
 
-        writeJson(resp, threadInfoList);
+        writeJson(resp, threadDumpService.getThreadDump());
     }
 }

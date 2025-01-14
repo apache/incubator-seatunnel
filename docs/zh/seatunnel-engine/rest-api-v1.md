@@ -2,7 +2,7 @@
 sidebar_position: 11
 ---
 
-# RESTful API
+# RESTful API V1
 
 :::caution warn
 
@@ -119,10 +119,19 @@ network:
     },
     "createTime": "",
     "jobDag": {
-      "vertices": [
+      "jobId": "",
+      "envOptions": [],
+      "vertexInfoMap": [
+        {
+          "vertexId": 1,
+          "type": "",
+          "vertexName": "",
+          "tablePaths": [
+            ""
+          ]
+        }
       ],
-      "edges": [
-      ]
+      "pipelineEdges": {}
     },
     "pluginJarsUrls": [
     ],
@@ -160,6 +169,7 @@ network:
   "createTime": "",
   "jobDag": {
     "jobId": "",
+    "envOptions": [],
     "vertexInfoMap": [
       {
         "vertexId": 1,
@@ -239,6 +249,7 @@ network:
   "createTime": "",
   "jobDag": {
     "jobId": "",
+    "envOptions": [],
     "vertexInfoMap": [
       {
         "vertexId": 1,
@@ -305,6 +316,7 @@ network:
     "finishTime": "",
     "jobDag": {
       "jobId": "",
+      "envOptions": [],
       "vertexInfoMap": [
         {
           "vertexId": 1,
@@ -316,7 +328,8 @@ network:
         }
       ],
       "pipelineEdges": {}
-    },    "metrics": ""
+    },
+    "metrics": ""
   }
 ]
 ```
@@ -416,7 +429,7 @@ network:
     "source": [
         {
             "plugin_name": "FakeSource",
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -432,7 +445,7 @@ network:
     "sink": [
         {
             "plugin_name": "Console",
-            "source_table_name": ["fake"]
+            "plugin_input": ["fake"]
         }
     ]
 }
@@ -482,7 +495,7 @@ network:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -498,7 +511,7 @@ network:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   },
@@ -513,7 +526,7 @@ network:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "result_table_name": "fake",
+        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -529,7 +542,7 @@ network:
     "sink": [
       {
         "plugin_name": "Console",
-        "source_table_name": ["fake"]
+        "plugin_input": ["fake"]
       }
     ]
   }
@@ -641,7 +654,7 @@ network:
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -681,7 +694,7 @@ network:
                     "age": "int"
                 }
             },
-            "result_table_name": "fake",
+            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",
@@ -765,4 +778,74 @@ network:
   "message": "Invalid JSON format in request body."
 }
 ```
+</details>
+
+
+------------------------------------------------------------------------------------------
+
+### 获取所有节点日志内容
+
+<details>
+ <summary><code>GET</code> <code><b>/hazelcast/rest/maps/logs/:jobId</b></code> <code>(返回日志列表。)</code></summary>
+
+#### 请求参数
+
+#### 参数(在请求体中params字段中添加)
+
+> |         参数名称         |   是否必传   |  参数类型  |               参数描述                |
+> |----------------------|----------|--------|-----------------------------------|
+> | jobId                | optional | string | job id                            |
+
+当`jobId`为空时，返回所有节点的日志信息，否则返回指定`jobId`在所有节点的的日志列表。
+
+#### 响应
+
+返回请求节点的日志列表、内容
+
+#### 返回所有日志文件列表
+
+如果你想先查看日志列表，可以通过`GET`请求获取日志列表，`http://localhost:5801/hazelcast/rest/maps/logs?format=json`
+
+```json
+[
+  {
+    "node": "localhost:5801",
+    "logLink": "http://localhost:5801/hazelcast/rest/maps/logs/job-899485770241277953.log",
+    "logName": "job-899485770241277953.log"
+  },
+  {
+    "node": "localhost:5801",
+    "logLink": "http://localhost:5801/hazelcast/rest/maps/logs/job-899470314109468673.log",
+    "logName": "job-899470314109468673.log"
+  }
+]
+```
+
+当前支持的格式有`json`和`html`，默认为`html`。
+
+#### 例子
+
+获取所有节点jobId为`733584788375666689`的日志信息：`http://localhost:5801/hazelcast/rest/maps/logs/733584788375666689`
+获取所有节点日志列表：`http://localhost:5801/hazelcast/rest/maps/logs`
+获取所有节点日志列表以JSON格式返回：`http://localhost:5801/hazelcast/rest/maps/logs?format=json`
+获取日志文件内容：`http://localhost:5801/hazelcast/rest/maps/logs/job-898380162133917698.log``
+
+
+</details>
+
+
+### 获取单节点日志内容
+
+<details>
+ <summary><code>GET</code> <code><b>/hazelcast/rest/maps/log</b></code> <code>(返回日志列表。)</code></summary>
+
+#### 响应
+
+返回请求节点的日志列表
+
+#### 例子
+
+获取当前节点的日志列表：`http://localhost:5801/hazelcast/rest/maps/log`
+获取日志文件内容：`http://localhost:5801/hazelcast/rest/maps/log/job-898380162133917698.log`
+
 </details>

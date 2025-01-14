@@ -28,7 +28,7 @@ import java.io.IOException;
 
 import static org.apache.seatunnel.e2e.common.util.ContainerUtil.PROJECT_ROOT_PATH;
 
-public class JobClientJobProxyIT extends SeaTunnelContainer {
+public class JobClientJobProxyIT extends SeaTunnelEngineContainer {
 
     @Override
     @BeforeAll
@@ -77,6 +77,7 @@ public class JobClientJobProxyIT extends SeaTunnelContainer {
         Container.ExecResult execResult =
                 executeJob(server, "/stream_fake_to_inmemory_with_throwable_error.conf");
         Assertions.assertNotEquals(0, execResult.getExitCode());
+        Assertions.assertTrue(execResult.getStderr().contains("table fake sink throw error"));
     }
 
     @Test

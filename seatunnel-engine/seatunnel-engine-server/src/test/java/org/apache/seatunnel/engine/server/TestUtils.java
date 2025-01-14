@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.engine.server;
 
+import org.apache.seatunnel.shade.com.google.common.collect.ImmutableMap;
+import org.apache.seatunnel.shade.com.google.common.collect.Sets;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
@@ -46,9 +48,6 @@ import org.apache.seatunnel.engine.core.parse.MultipleTableJobConfigParser;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -62,7 +61,8 @@ public class TestUtils {
         return System.getProperty("user.dir") + "/src/test/resources/" + confFile;
     }
 
-    public static LogicalDag getTestLogicalDag(JobContext jobContext) throws MalformedURLException {
+    public static LogicalDag getTestLogicalDag(JobContext jobContext, JobConfig config)
+            throws MalformedURLException {
         IdGenerator idGenerator = new IdGenerator();
         Config fakeSourceConfig =
                 ConfigFactory.parseMap(
@@ -109,7 +109,7 @@ public class TestUtils {
 
         LogicalEdge edge = new LogicalEdge(fakeVertex, consoleVertex);
 
-        LogicalDag logicalDag = new LogicalDag();
+        LogicalDag logicalDag = new LogicalDag(config, idGenerator);
         logicalDag.addLogicalVertex(fakeVertex);
         logicalDag.addLogicalVertex(consoleVertex);
         logicalDag.addEdge(edge);

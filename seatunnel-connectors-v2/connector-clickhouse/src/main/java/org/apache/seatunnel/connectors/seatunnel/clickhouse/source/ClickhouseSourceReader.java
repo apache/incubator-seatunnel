@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.clickhouse.source;
 
+import org.apache.seatunnel.api.source.Boundedness;
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.source.SourceReader;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -28,6 +29,7 @@ import com.clickhouse.client.ClickHouseFormat;
 import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+@Slf4j
 public class ClickhouseSourceReader implements SourceReader<SeaTunnelRow, ClickhouseSourceSplit> {
 
     private final List<ClickHouseNode> servers;
@@ -43,6 +46,7 @@ public class ClickhouseSourceReader implements SourceReader<SeaTunnelRow, Clickh
     private final SourceReader.Context readerContext;
     private ClickHouseRequest<?> request;
     private final String sql;
+    private volatile boolean noMoreSplit;
 
     private final List<ClickhouseSourceSplit> splits;
 
@@ -75,29 +79,41 @@ public class ClickhouseSourceReader implements SourceReader<SeaTunnelRow, Clickh
 
     @Override
     public void pollNext(Collector<SeaTunnelRow> output) throws Exception {
-        if (!splits.isEmpty()) {
-            try (ClickHouseResponse response = this.request.query(sql).executeAndWait()) {
-                response.stream()
-                        .forEach(
-                                record -> {
-                                    Object[] values =
-                                            new Object[this.rowTypeInfo.getFieldNames().length];
-                                    for (int i = 0; i < record.size(); i++) {
-                                        if (record.getValue(i).isNullOrEmpty()) {
-                                            values[i] = null;
-                                        } else {
-                                            values[i] =
-                                                    TypeConvertUtil.valueUnwrap(
-                                                            this.rowTypeInfo.getFieldType(i),
-                                                            record.getValue(i));
+        synchronized (output.getCheckpointLock()) {
+            if (!splits.isEmpty()) {
+                try (ClickHouseResponse response = this.request.query(sql).executeAndWait()) {
+                    response.stream()
+                            .forEach(
+                                    record -> {
+                                        Object[] values =
+                                                new Object[this.rowTypeInfo.getFieldNames().length];
+                                        for (int i = 0; i < record.size(); i++) {
+                                            if (record.getValue(i).isNullOrEmpty()) {
+                                                values[i] = null;
+                                            } else {
+                                                values[i] =
+                                                        TypeConvertUtil.valueUnwrap(
+                                                                this.rowTypeInfo.getFieldType(i),
+                                                                record.getValue(i));
+                                            }
                                         }
-                                    }
-                                    output.collect(new SeaTunnelRow(values));
-                                });
+                                        output.collect(new SeaTunnelRow(values));
+                                    });
+                }
+                signalNoMoreElement();
             }
-            this.readerContext.signalNoMoreElement();
-            this.splits.clear();
+            if (noMoreSplit
+                    && splits.isEmpty()
+                    && Boundedness.BOUNDED.equals(readerContext.getBoundedness())) {
+                signalNoMoreElement();
+            }
         }
+    }
+
+    private void signalNoMoreElement() {
+        log.info("Closed the bounded ClickHouse source");
+        this.readerContext.signalNoMoreElement();
+        this.splits.clear();
     }
 
     @Override
@@ -111,7 +127,9 @@ public class ClickhouseSourceReader implements SourceReader<SeaTunnelRow, Clickh
     }
 
     @Override
-    public void handleNoMoreSplits() {}
+    public void handleNoMoreSplits() {
+        noMoreSplit = true;
+    }
 
     @Override
     public void notifyCheckpointComplete(long checkpointId) throws Exception {}

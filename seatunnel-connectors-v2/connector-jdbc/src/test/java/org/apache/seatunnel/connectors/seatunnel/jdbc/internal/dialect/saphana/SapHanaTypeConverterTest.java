@@ -126,7 +126,7 @@ public class SapHanaTypeConverterTest {
                         .build();
         Column column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(new DecimalType(38, 368), column.getDataType());
+        Assertions.assertEquals(new DecimalType(38, 0), column.getDataType());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
 
         typeDefine =
@@ -139,7 +139,7 @@ public class SapHanaTypeConverterTest {
                         .build();
         column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(new DecimalType(10, 368), column.getDataType());
+        Assertions.assertEquals(new DecimalType(10, 5), column.getDataType());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
     }
 
@@ -153,7 +153,7 @@ public class SapHanaTypeConverterTest {
                         .build();
         Column column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(new DecimalType(34, 6176), column.getDataType());
+        Assertions.assertEquals(new DecimalType(34, 0), column.getDataType());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
 
         BasicTypeDefine<Object> typeDefine2 =
@@ -379,6 +379,37 @@ public class SapHanaTypeConverterTest {
         Assertions.assertEquals(typeDefine.getName(), column.getName());
         Assertions.assertEquals(LocalTimeType.LOCAL_DATE_TIME_TYPE, column.getDataType());
         Assertions.assertEquals(7, column.getScale());
+        Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
+    }
+
+    @Test
+    public void testConvertSpecialType() {
+        BasicTypeDefine<Object> typeDefine =
+                BasicTypeDefine.builder()
+                        .name("test")
+                        .columnType("ST_POINT")
+                        .length(8L)
+                        .dataType("ST_POINT")
+                        .build();
+        Column column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
+
+        Assertions.assertEquals(typeDefine.getName(), column.getName());
+        Assertions.assertEquals(PrimitiveByteArrayType.INSTANCE, column.getDataType());
+        Assertions.assertEquals(8, column.getColumnLength());
+        Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
+
+        typeDefine =
+                BasicTypeDefine.builder()
+                        .name("test")
+                        .columnType("ST_GEOMETRY")
+                        .length(8L)
+                        .dataType("ST_GEOMETRY")
+                        .build();
+        column = SapHanaTypeConverter.INSTANCE.convert(typeDefine);
+
+        Assertions.assertEquals(typeDefine.getName(), column.getName());
+        Assertions.assertEquals(PrimitiveByteArrayType.INSTANCE, column.getDataType());
+        Assertions.assertEquals(8, column.getColumnLength());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
     }
 

@@ -37,6 +37,7 @@ import org.apache.seatunnel.api.table.type.PrimitiveByteArrayType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.kafka.config.MessageFormat;
 import org.apache.seatunnel.connectors.seatunnel.kafka.serialize.DefaultSeaTunnelRowSerializer;
 import org.apache.seatunnel.e2e.common.TestResource;
@@ -59,11 +60,13 @@ import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.IsolationLevel;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -72,7 +75,6 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.DockerLoggerFactory;
 
@@ -95,10 +97,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static org.testcontainers.shaded.org.awaitility.Awaitility.given;
 
 @Slf4j
 public class KafkaIT extends TestSuiteBase implements TestResource {
@@ -126,8 +131,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                                         DockerLoggerFactory.getLogger(KAFKA_IMAGE_NAME)));
         Startables.deepStart(Stream.of(kafkaContainer)).join();
         log.info("Kafka container started");
-        Awaitility.given()
-                .ignoreExceptions()
+        given().ignoreExceptions()
                 .atLeast(100, TimeUnit.MILLISECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .atMost(180, TimeUnit.SECONDS)
@@ -291,7 +295,7 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                         DEFAULT_FORMAT,
                         DEFAULT_FIELD_DELIMITER,
                         null);
-        generateTestData(row -> serializer.serializeRow(row), 0, 100);
+        generateTestData(serializer::serializeRow, 0, 100);
         Container.ExecResult execResult =
                 container.executeJob(
                         "/kafka/kafkasource_format_error_handle_way_skip_to_console.conf");
@@ -308,11 +312,11 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                         DEFAULT_FORMAT,
                         DEFAULT_FIELD_DELIMITER,
                         null);
-        generateTestData(row -> serializer.serializeRow(row), 0, 100);
+        generateTestData(serializer::serializeRow, 0, 100);
         Container.ExecResult execResult =
                 container.executeJob(
                         "/kafka/kafkasource_format_error_handle_way_fail_to_console.conf");
-        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+        Assertions.assertEquals(1, execResult.getExitCode(), execResult.getStderr());
     }
 
     @TestTemplate
@@ -693,30 +697,11 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
         ProtobufDeserializationSchema deserializationSchema =
                 new ProtobufDeserializationSchema(catalogTable);
 
-        // Create serializer
         DefaultSeaTunnelRowSerializer serializer =
-                DefaultSeaTunnelRowSerializer.create(
-                        "test_protobuf_topic_fake_source",
-                        seaTunnelRowType,
-                        MessageFormat.PROTOBUF,
-                        DEFAULT_FIELD_DELIMITER,
-                        readonlyConfig);
+                getDefaultSeaTunnelRowSerializer(
+                        "test_protobuf_topic_fake_source", seaTunnelRowType, readonlyConfig);
 
-        // Produce records to Kafka
-        IntStream.range(0, 20)
-                .forEach(
-                        i -> {
-                            try {
-                                SeaTunnelRow originalRow = buildSeaTunnelRow();
-                                ProducerRecord<byte[], byte[]> producerRecord =
-                                        serializer.serializeRow(originalRow);
-                                producer.send(producerRecord).get();
-                            } catch (InterruptedException | ExecutionException e) {
-                                throw new RuntimeException("Error sending Kafka message", e);
-                            }
-                        });
-
-        producer.flush();
+        sendData(serializer);
 
         // Execute the job and validate
         Container.ExecResult execResult = container.executeJob(confFile);
@@ -767,6 +752,176 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
                                     Assertions.assertArrayEquals(
                                             expectedPhoneNumbers, (String[]) row.getField(9)));
                 });
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            type = EngineType.SPARK,
+            value = {})
+    public void testKafkaToKafkaExactlyOnceOnStreaming(TestContainer container)
+            throws InterruptedException {
+        String producerTopic = "kafka_topic_exactly_once_1";
+        String consumerTopic = "kafka_topic_exactly_once_2";
+        String sourceData = "Seatunnel Exactly Once Example";
+        for (int i = 0; i < 10; i++) {
+            ProducerRecord<byte[], byte[]> record =
+                    new ProducerRecord<>(producerTopic, null, sourceData.getBytes());
+            producer.send(record);
+            producer.flush();
+        }
+        Long endOffset = 0l;
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(kafkaConsumerConfig())) {
+            consumer.subscribe(Arrays.asList(producerTopic));
+            Map<TopicPartition, Long> offsets =
+                    consumer.endOffsets(Arrays.asList(new TopicPartition(producerTopic, 0)));
+            endOffset = offsets.entrySet().iterator().next().getValue();
+        }
+        // async execute
+        CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        container.executeJob("/kafka/kafka_to_kafka_exactly_once_streaming.conf");
+                    } catch (Exception e) {
+                        log.error("Commit task exception :" + e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                    return null;
+                });
+        // wait for data written to kafka
+        Long finalEndOffset = endOffset;
+        given().pollDelay(30, TimeUnit.SECONDS)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .await()
+                .atMost(5, TimeUnit.MINUTES)
+                .untilAsserted(
+                        () ->
+                                Assertions.assertTrue(
+                                        checkData(consumerTopic, finalEndOffset, sourceData)));
+    }
+
+    @TestTemplate
+    public void testKafkaToKafkaExactlyOnceOnBatch(TestContainer container)
+            throws InterruptedException, IOException {
+        String producerTopic = "kafka_topic_exactly_once_1";
+        String consumerTopic = "kafka_topic_exactly_once_2";
+        String sourceData = "Seatunnel Exactly Once Example";
+        for (int i = 0; i < 10; i++) {
+            ProducerRecord<byte[], byte[]> record =
+                    new ProducerRecord<>(producerTopic, null, sourceData.getBytes());
+            producer.send(record);
+            producer.flush();
+        }
+        Long endOffset;
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(kafkaConsumerConfig())) {
+            consumer.subscribe(Arrays.asList(producerTopic));
+            Map<TopicPartition, Long> offsets =
+                    consumer.endOffsets(Arrays.asList(new TopicPartition(producerTopic, 0)));
+            endOffset = offsets.entrySet().iterator().next().getValue();
+        }
+        Container.ExecResult execResult =
+                container.executeJob("/kafka/kafka_to_kafka_exactly_once_batch.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+        // wait for data written to kafka
+        Assertions.assertTrue(checkData(consumerTopic, endOffset, sourceData));
+    }
+
+    // Compare the values of data fields obtained from consumers
+    private boolean checkData(String topicName, long endOffset, String data) {
+        List<String> listData = getKafkaConsumerListData(topicName, endOffset);
+        if (listData.isEmpty() || listData.size() != endOffset) {
+            log.error(
+                    "testKafkaToKafkaExactlyOnce get data size is not expect,get consumer data size {}",
+                    listData.size());
+            return false;
+        }
+        for (String value : listData) {
+            if (!data.equals(value)) {
+                log.error("testKafkaToKafkaExactlyOnce get data value is not expect");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private @NotNull DefaultSeaTunnelRowSerializer getDefaultSeaTunnelRowSerializer(
+            String topic, SeaTunnelRowType seaTunnelRowType, ReadonlyConfig readonlyConfig) {
+        // Create serializer
+        DefaultSeaTunnelRowSerializer serializer =
+                DefaultSeaTunnelRowSerializer.create(
+                        topic,
+                        seaTunnelRowType,
+                        MessageFormat.PROTOBUF,
+                        DEFAULT_FIELD_DELIMITER,
+                        readonlyConfig);
+        return serializer;
+    }
+
+    private void sendData(DefaultSeaTunnelRowSerializer serializer) {
+        // Produce records to Kafka
+        IntStream.range(0, 20)
+                .forEach(
+                        i -> {
+                            try {
+                                SeaTunnelRow originalRow = buildSeaTunnelRow();
+                                ProducerRecord<byte[], byte[]> producerRecord =
+                                        serializer.serializeRow(originalRow);
+                                producer.send(producerRecord).get();
+                            } catch (InterruptedException | ExecutionException e) {
+                                throw new RuntimeException("Error sending Kafka message", e);
+                            }
+                        });
+
+        producer.flush();
+    }
+
+    @TestTemplate
+    public void testKafkaProtobufForTransformToAssert(TestContainer container)
+            throws IOException, InterruptedException, URISyntaxException {
+
+        String confFile = "/protobuf/kafka_protobuf_transform_to_assert.conf";
+        String path = getTestConfigFile(confFile);
+        Config config = ConfigFactory.parseFile(new File(path));
+        Config sinkConfig = config.getConfigList("source").get(0);
+        ReadonlyConfig readonlyConfig = ReadonlyConfig.fromConfig(sinkConfig);
+        SeaTunnelRowType seaTunnelRowType = buildSeaTunnelRowType();
+
+        // Create serializer
+        DefaultSeaTunnelRowSerializer serializer =
+                getDefaultSeaTunnelRowSerializer(
+                        "test_protobuf_topic_transform_fake_source",
+                        seaTunnelRowType,
+                        readonlyConfig);
+
+        // Produce records to Kafka
+        sendData(serializer);
+
+        // Execute the job and validate
+        Container.ExecResult execResult = container.executeJob(confFile);
+        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+
+        try (KafkaConsumer<byte[], byte[]> consumer =
+                new KafkaConsumer<>(kafkaByteConsumerConfig())) {
+            consumer.subscribe(Arrays.asList("verify_protobuf_transform"));
+            Map<TopicPartition, Long> offsets =
+                    consumer.endOffsets(
+                            Arrays.asList(new TopicPartition("verify_protobuf_transform", 0)));
+            Long endOffset = offsets.entrySet().iterator().next().getValue();
+            Long lastProcessedOffset = -1L;
+
+            do {
+                ConsumerRecords<byte[], byte[]> records = consumer.poll(Duration.ofMillis(100));
+                for (ConsumerRecord<byte[], byte[]> record : records) {
+                    if (lastProcessedOffset < record.offset()) {
+                        String data = new String(record.value(), "UTF-8");
+                        ObjectNode jsonNodes = JsonUtils.parseObject(data);
+                        Assertions.assertEquals(jsonNodes.size(), 2);
+                        Assertions.assertEquals(jsonNodes.get("city").asText(), "city_value");
+                        Assertions.assertEquals(jsonNodes.get("c_string").asText(), "test data");
+                    }
+                    lastProcessedOffset = record.offset();
+                }
+            } while (lastProcessedOffset < endOffset - 1);
+        }
     }
 
     public static String getTestConfigFile(String configFile)
@@ -870,6 +1025,10 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
         props.put(
                 ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
                 OffsetResetStrategy.EARLIEST.toString().toLowerCase());
+        // exactly once semantics must set config read_commit
+        props.put(
+                ConsumerConfig.ISOLATION_LEVEL_CONFIG,
+                IsolationLevel.READ_COMMITTED.name().toLowerCase());
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         return props;
@@ -990,6 +1149,24 @@ public class KafkaIT extends TestSuiteBase implements TestResource {
             Long endOffset = offsets.entrySet().iterator().next().getValue();
             Long lastProcessedOffset = -1L;
 
+            do {
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                for (ConsumerRecord<String, String> record : records) {
+                    if (lastProcessedOffset < record.offset()) {
+                        data.add(record.value());
+                    }
+                    lastProcessedOffset = record.offset();
+                }
+            } while (lastProcessedOffset < endOffset - 1);
+        }
+        return data;
+    }
+
+    private List<String> getKafkaConsumerListData(String topicName, long endOffset) {
+        List<String> data = new ArrayList<>();
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(kafkaConsumerConfig())) {
+            consumer.subscribe(Arrays.asList(topicName));
+            Long lastProcessedOffset = -1L;
             do {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {

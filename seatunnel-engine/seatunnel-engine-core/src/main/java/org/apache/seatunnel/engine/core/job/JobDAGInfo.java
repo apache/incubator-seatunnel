@@ -21,6 +21,7 @@ import org.apache.seatunnel.api.table.catalog.TablePath;
 
 import com.hazelcast.internal.json.JsonArray;
 import com.hazelcast.internal.json.JsonObject;
+import com.hazelcast.internal.util.JsonUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,14 +29,18 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class JobDAGInfo implements Serializable {
     Long jobId;
+    Map<String, Object> envOptions;
     Map<Integer, List<Edge>> pipelineEdges;
     Map<Long, VertexInfo> vertexInfoMap;
+    ExecutionAddress master;
+    Set<ExecutionAddress> historyExecutionPlan;
 
     public JsonObject toJsonObject() {
         JsonObject pipelineEdgesJsonObject = new JsonObject();
@@ -54,6 +59,8 @@ public class JobDAGInfo implements Serializable {
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("jobId", jobId.toString());
         jsonObject.add("pipelineEdges", pipelineEdgesJsonObject);
+        jsonObject.add("envOptions", JsonUtil.toJsonObject(envOptions));
+
         JsonArray vertexInfoMapString = new JsonArray();
         for (Map.Entry<Long, VertexInfo> entry : vertexInfoMap.entrySet()) {
             JsonObject vertexInfoJsonObj = new JsonObject();

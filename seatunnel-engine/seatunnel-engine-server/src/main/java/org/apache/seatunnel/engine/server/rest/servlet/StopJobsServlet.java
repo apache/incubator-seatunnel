@@ -17,40 +17,27 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import org.apache.seatunnel.common.utils.JsonUtils;
-import org.apache.seatunnel.engine.server.rest.RestConstant;
+import org.apache.seatunnel.engine.server.rest.service.JobInfoService;
 
-import com.hazelcast.internal.json.JsonArray;
-import com.hazelcast.internal.json.JsonObject;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class StopJobsServlet extends BaseServlet {
+
+    private final JobInfoService jobInfoService;
+
     public StopJobsServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.jobInfoService = new JobInfoService(nodeEngine);
     }
 
     @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        List<Map> jobList = JsonUtils.toList(requestHandle(requestBody(req)).toString(), Map.class);
-        JsonArray jsonResponse = new JsonArray();
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-        jobList.forEach(
-                job -> {
-                    handleStopJob(job, getSeaTunnelServer(false), nodeEngine.getNode());
-                    jsonResponse.add(
-                            new JsonObject()
-                                    .add(RestConstant.JOB_ID, (Long) job.get(RestConstant.JOB_ID)));
-                });
-
-        writeJson(resp, jsonResponse);
+        writeJson(resp, jobInfoService.stopJobs(requestBody(req)));
     }
 }

@@ -252,9 +252,9 @@ public class SapHanaTypeConverter implements TypeConverter<BasicTypeDefine> {
                                 ? typeDefine.getLength().intValue()
                                 : MAX_PRECISION - 4;
                 if (scale == null) {
-                    builder.dataType(new DecimalType((int) precision, MAX_SCALE));
+                    builder.dataType(new DecimalType((int) precision, 0));
                     builder.columnLength(precision);
-                    builder.scale(MAX_SCALE);
+                    builder.scale(0);
                 } else if (scale < 0) {
                     int newPrecision = (int) (precision - scale);
                     if (newPrecision == 1) {
@@ -277,16 +277,17 @@ public class SapHanaTypeConverter implements TypeConverter<BasicTypeDefine> {
                 }
                 break;
             case HANA_SMALLDECIMAL:
+                int smallDecimalScale = typeDefine.getScale() != null ? typeDefine.getScale() : 0;
                 if (typeDefine.getPrecision() == null) {
-                    builder.dataType(new DecimalType(DEFAULT_PRECISION, MAX_SMALL_DECIMAL_SCALE));
+                    builder.dataType(new DecimalType(DEFAULT_PRECISION, smallDecimalScale));
                     builder.columnLength((long) DEFAULT_PRECISION);
-                    builder.scale(MAX_SMALL_DECIMAL_SCALE);
+                    builder.scale(smallDecimalScale);
                 } else {
                     builder.dataType(
                             new DecimalType(
-                                    typeDefine.getPrecision().intValue(), MAX_SMALL_DECIMAL_SCALE));
+                                    typeDefine.getPrecision().intValue(), smallDecimalScale));
                     builder.columnLength(typeDefine.getPrecision());
-                    builder.scale(MAX_SMALL_DECIMAL_SCALE);
+                    builder.scale(smallDecimalScale);
                 }
                 break;
             case HANA_REAL:
@@ -297,6 +298,7 @@ public class SapHanaTypeConverter implements TypeConverter<BasicTypeDefine> {
                 break;
             case HANA_ST_POINT:
             case HANA_ST_GEOMETRY:
+                builder.columnLength(typeDefine.getLength());
                 builder.dataType(PrimitiveByteArrayType.INSTANCE);
                 break;
             default:

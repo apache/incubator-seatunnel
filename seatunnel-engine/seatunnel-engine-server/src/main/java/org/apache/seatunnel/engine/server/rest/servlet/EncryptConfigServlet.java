@@ -17,17 +17,10 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import org.apache.seatunnel.shade.com.typesafe.config.Config;
-import org.apache.seatunnel.shade.com.typesafe.config.ConfigRenderOptions;
+import org.apache.seatunnel.engine.server.rest.service.EncryptConfigService;
 
-import org.apache.seatunnel.core.starter.utils.ConfigShadeUtils;
-import org.apache.seatunnel.engine.server.utils.RestUtil;
-
-import com.hazelcast.internal.json.Json;
-import com.hazelcast.internal.json.JsonObject;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -35,18 +28,15 @@ import java.io.IOException;
 
 public class EncryptConfigServlet extends BaseServlet {
 
+    private final EncryptConfigService encryptConfigService;
+
     public EncryptConfigServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.encryptConfigService = new EncryptConfigService(nodeEngine);
     }
 
     @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        Config config = RestUtil.buildConfig(requestHandle(requestBody(req)), true);
-        Config encryptConfig = ConfigShadeUtils.encryptConfig(config);
-        String encryptString =
-                encryptConfig.root().render(ConfigRenderOptions.concise().setJson(true));
-        JsonObject jsonObject = Json.parse(encryptString).asObject();
-        writeJson(resp, jsonObject);
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        writeJson(resp, encryptConfigService.encryptConfig(requestBody(req)));
     }
 }

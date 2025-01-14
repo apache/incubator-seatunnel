@@ -14,7 +14,7 @@ Checkpoint Storage is a storage mechanism for storing checkpoint data.
 
 SeaTunnel Engine supports the following checkpoint storage types:
 
-- HDFS (OSS,S3,HDFS,LocalFile)
+- HDFS (OSS,COS,S3,HDFS,LocalFile)
 - LocalFile (native), (it's deprecated: use Hdfs(LocalFile) instead.
 
 We use the microkernel design pattern to separate the checkpoint storage module from the engine. This allows users to implement their own checkpoint storage modules.
@@ -72,6 +72,42 @@ seatunnel:
 For additional reading on the Hadoop Credential Provider API, you can see: [Credential Provider API](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html).
 
 For Aliyun OSS Credential Provider implements, you can see: [Auth Credential Providers](https://github.com/aliyun/aliyun-oss-java-sdk/tree/master/src/main/java/com/aliyun/oss/common/auth)
+
+#### COS
+
+Tencent COS based hdfs-file you can refer [Hadoop COS Docs](https://hadoop.apache.org/docs/stable/hadoop-cos/cloud-storage/) to config COS.
+
+Except when interacting with cos buckets, the cos client needs the credentials needed to interact with buckets.
+The client supports multiple authentication mechanisms and can be configured as to which mechanisms to use, and their order of use. Custom implementations of com.qcloud.cos.auth.COSCredentialsProvider may also be used.
+If you used SimpleCredentialsProvider (can be obtained from the Tencent Cloud API Key Management), these consist of an access key, a secret key.
+You can config like this:
+
+```yaml
+seatunnel:
+  engine:
+    checkpoint:
+      interval: 6000
+      timeout: 7000
+      storage:
+        type: hdfs
+        max-retained: 3
+        plugin-config:
+          storage.type: cos
+          cos.bucket: cosn://your-bucket
+          fs.cosn.credentials.provider: org.apache.hadoop.fs.cosn.auth.SimpleCredentialsProvider
+          fs.cosn.userinfo.secretId: your-secretId
+          fs.cosn.userinfo.secretKey: your-secretKey
+          fs.cosn.bucket.region: your-region
+```
+
+For additional reading on the Hadoop Credential Provider API, you can see: [Credential Provider API](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html).
+
+For additional COS configuration, you can see: [Tencent Hadoop-COS Docs](https://doc.fincloud.tencent.cn/tcloud/Storage/COS/846365/hadoop)
+
+Please add the following jar to the lib directory:
+- [hadoop-cos-3.4.1.jar](https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-cos/3.4.1)
+- [cos_api-bundle-5.6.69.jar](https://mvnrepository.com/artifact/com.qcloud/cos_api-bundle/5.6.69)
+- [hadoop-shaded-guava-1.1.1.jar](https://mvnrepository.com/artifact/org.apache.hadoop.thirdparty/hadoop-shaded-guava/1.1.1)
 
 #### S3
 

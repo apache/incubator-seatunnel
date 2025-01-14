@@ -19,8 +19,10 @@ package org.apache.seatunnel.engine.common.config;
 
 import org.apache.seatunnel.engine.common.config.server.CheckpointConfig;
 import org.apache.seatunnel.engine.common.config.server.ConnectorJarStorageConfig;
+import org.apache.seatunnel.engine.common.config.server.CoordinatorServiceConfig;
 import org.apache.seatunnel.engine.common.config.server.HttpConfig;
 import org.apache.seatunnel.engine.common.config.server.QueueType;
+import org.apache.seatunnel.engine.common.config.server.ScheduleStrategy;
 import org.apache.seatunnel.engine.common.config.server.ServerConfigOptions;
 import org.apache.seatunnel.engine.common.config.server.SlotServiceConfig;
 import org.apache.seatunnel.engine.common.config.server.TelemetryConfig;
@@ -56,6 +58,9 @@ public class EngineConfig {
 
     private CheckpointConfig checkpointConfig = ServerConfigOptions.CHECKPOINT.defaultValue();
 
+    private CoordinatorServiceConfig coordinatorServiceConfig =
+            ServerConfigOptions.COORDINATOR_SERVICE.defaultValue();
+
     private ConnectorJarStorageConfig connectorJarStorageConfig =
             ServerConfigOptions.CONNECTOR_JAR_STORAGE_CONFIG.defaultValue();
 
@@ -75,11 +80,18 @@ public class EngineConfig {
 
     private TelemetryConfig telemetryConfig = ServerConfigOptions.TELEMETRY.defaultValue();
 
+    private ScheduleStrategy scheduleStrategy =
+            ServerConfigOptions.JOB_SCHEDULE_STRATEGY.defaultValue();
+
     private HttpConfig httpConfig = ServerConfigOptions.HTTP.defaultValue();
 
     public void setBackupCount(int newBackupCount) {
         checkBackupCount(newBackupCount, 0);
         this.backupCount = newBackupCount;
+    }
+
+    public void setScheduleStrategy(ScheduleStrategy scheduleStrategy) {
+        this.scheduleStrategy = scheduleStrategy;
     }
 
     public void setPrintExecutionInfoInterval(int printExecutionInfoInterval) {

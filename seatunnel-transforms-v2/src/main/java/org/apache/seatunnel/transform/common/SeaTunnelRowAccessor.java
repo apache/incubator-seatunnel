@@ -23,6 +23,7 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
+@Deprecated
 public class SeaTunnelRowAccessor {
     private final SeaTunnelRow row;
 

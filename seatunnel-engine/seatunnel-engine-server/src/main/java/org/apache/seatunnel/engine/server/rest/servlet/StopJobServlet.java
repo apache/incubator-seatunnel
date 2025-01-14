@@ -17,11 +17,8 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import org.apache.seatunnel.common.utils.JsonUtils;
-import org.apache.seatunnel.engine.server.SeaTunnelServer;
-import org.apache.seatunnel.engine.server.rest.RestConstant;
+import org.apache.seatunnel.engine.server.rest.service.JobInfoService;
 
-import com.hazelcast.internal.json.JsonObject;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import javax.servlet.ServletException;
@@ -29,21 +26,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class StopJobServlet extends BaseServlet {
+    private final JobInfoService jobInfoService;
+
     public StopJobServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.jobInfoService = new JobInfoService(nodeEngine);
     }
 
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        Map<String, Object> map = JsonUtils.toMap(requestHandle(requestBody(req)));
-        SeaTunnelServer seaTunnelServer = getSeaTunnelServer(false);
-        handleStopJob(map, seaTunnelServer, nodeEngine.getNode());
-        writeJson(
-                resp,
-                new JsonObject().add(RestConstant.JOB_ID, map.get(RestConstant.JOB_ID).toString()));
+        writeJson(resp, jobInfoService.stopJob(requestBody(req)));
     }
 }

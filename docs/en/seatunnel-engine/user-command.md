@@ -122,3 +122,13 @@ This command will cancel the specified job. After canceling the job, the job wil
 Supports batch cancellation of jobs, and can cancel multiple jobs at one time.
 
 All breakpoint information of the canceled job will be deleted and cannot be resumed by seatunnel.sh -r &lt;jobId&gt;.
+
+## Configure The JVM Options
+
+We can configure the JVM options for the SeaTunnel Engine client in the following ways:
+
+1. Add the JVM options to `$SEATUNNEL_HOME/config/jvm_client_options`.
+
+   Modify the JVM parameters in the `$SEATUNNEL_HOME/config/jvm_client_options` file. Please note that the JVM parameters in this file will be applied to all jobs submitted using `seatunnel.sh`, including Local Mode and Cluster Mode.
+
+2. Add JVM options when submitting jobs. For example, `sh bin/seatunnel.sh --config $SEATUNNEL_HOME/config/v2.batch.config.template -DJvmOption="-Xms2G -Xmx2G"`

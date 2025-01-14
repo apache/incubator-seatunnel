@@ -43,7 +43,7 @@ If you use SeaTunnel Engine, It automatically integrated the hadoop jar when you
 
 ## Options
 
-|           name            |  type   | required |            default value             |
+| name                      | type    | required | default value                        |
 |---------------------------|---------|----------|--------------------------------------|
 | path                      | string  | yes      | -                                    |
 | file_format_type          | string  | yes      | -                                    |
@@ -56,12 +56,14 @@ If you use SeaTunnel Engine, It automatically integrated the hadoop jar when you
 | skip_header_row_number    | long    | no       | 0                                    |
 | schema                    | config  | no       | -                                    |
 | sheet_name                | string  | no       | -                                    |
+| excel_engine              | string  | no       | POI                                  |                                             |
 | xml_row_tag               | string  | no       | -                                    |
 | xml_use_attr_format       | boolean | no       | -                                    |
-| file_filter_pattern       | string  | no       | -                                    |
+| file_filter_pattern       | string  | no       |                                      |
 | compress_codec            | string  | no       | none                                 |
 | archive_compress_codec    | string  | no       | none                                 |
 | encoding                  | string  | no       | UTF-8                                |
+| null_format               | string  | no       | -                                    | 
 | common-options            |         | no       | -                                    |
 | tables_configs            | list    | no       | used to define a multiple table task |
 
@@ -238,6 +240,16 @@ Only need to be configured when file_format is excel.
 
 Reader the sheet of the workbook.
 
+### excel_engine [string]
+
+Only need to be configured when file_format is excel.
+
+supported as the following file types:
+`POI` `EasyExcel`
+
+The default excel reading engine is POI, but POI can easily cause memory overflow when reading Excel with more than 65,000 rows, so you can switch to EasyExcel as the reading engine.
+
+
 ### xml_row_tag [string]
 
 Only need to be configured when file_format is xml.
@@ -253,6 +265,55 @@ Specifies Whether to process data using the tag attribute format.
 ### file_filter_pattern [string]
 
 Filter pattern, which used for filtering files.
+
+The pattern follows standard regular expressions. For details, please refer to https://en.wikipedia.org/wiki/Regular_expression.
+There are some examples.
+
+File Structure Example:
+```
+/data/seatunnel/20241001/report.txt
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+/data/seatunnel/20241012/logo.png
+```
+Matching Rules Example:
+
+**Example 1**: *Match all .txt files*，Regular Expression:
+```
+/data/seatunnel/20241001/.*\.txt
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241001/report.txt
+```
+**Example 2**: *Match all file starting with abc*，Regular Expression:
+```
+/data/seatunnel/20241002/abc.*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+```
+**Example 3**: *Match all file starting with abc，And the fourth character is either h or g*, the Regular Expression:
+```
+/data/seatunnel/20241007/abc[h,g].*
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+```
+**Example 4**: *Match third level folders starting with 202410 and files ending with .csv*, the Regular Expression:
+```
+/data/seatunnel/202410\d*/.*\.csv
+```
+The result of this example matching is:
+```
+/data/seatunnel/20241007/abch202410.csv
+/data/seatunnel/20241002/abcg202410.csv
+/data/seatunnel/20241005/old_data.csv
+```
 
 ### compress_codec [string]
 
@@ -273,12 +334,22 @@ The compress codec of archive files and the details that supported as the follow
 | ZIP                    | txt,json,excel,xml | .zip                    |
 | TAR                    | txt,json,excel,xml | .tar                    |
 | TAR_GZ                 | txt,json,excel,xml | .tar.gz                 |
+| GZ                     | txt,json,excel,xml | .gz                     |
 | NONE                   | all                | .*                      |
+
+Note: gz compressed excel file needs to compress the original file or specify the file suffix, such as e2e.xls ->e2e_test.xls.gz
 
 ### encoding [string]
 
 Only used when file_format_type is json,text,csv,xml.
 The encoding of the file to read. This param will be parsed by `Charset.forName(encoding)`.
+
+### null_format [string]
+
+Only used when file_format_type is text.
+null_format to define which strings can be represented as null.
+
+e.g: `\N`
 
 ### common options
 
@@ -406,6 +477,30 @@ sink {
 
 ```
 
+### Filter File
+
+```hocon
+env {
+  parallelism = 1
+  job.mode = "BATCH"
+}
+
+source {
+  LocalFile {
+    path = "/data/seatunnel/"
+    file_format_type = "csv"
+    skip_header_row_number = 1
+    // file example abcD2024.csv
+    file_filter_pattern = "abc[DX]*.*"
+  }
+}
+
+sink {
+  Console {
+  }
+}
+```
+
 ## Changelog
 
 ### 2.2.0-beta 2022-09-26
@@ -417,4 +512,6 @@ sink {
 - [BugFix] Fix the bug of incorrect path in windows environment ([2980](https://github.com/apache/seatunnel/pull/2980))
 - [Improve] Support extract partition from SeaTunnelRow fields ([3085](https://github.com/apache/seatunnel/pull/3085))
 - [Improve] Support parse field from file path ([2985](https://github.com/apache/seatunnel/pull/2985))
+### 2.3.9-beta 2024-11-12
+- [Improve] Support parse field from file path ([8019](https://github.com/apache/seatunnel/issues/8019))
 

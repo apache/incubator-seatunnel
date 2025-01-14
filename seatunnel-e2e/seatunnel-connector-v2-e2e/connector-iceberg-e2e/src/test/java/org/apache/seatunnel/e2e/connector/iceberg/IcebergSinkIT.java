@@ -108,7 +108,7 @@ public class IcebergSinkIT extends TestSuiteBase {
                             "sh", "-c", "cd " + CATALOG_DIR + " && tar -zxvf " + NAMESPACE_TAR);
                     try {
                         Process process = processBuilder.start();
-                        // 等待命令执行完成
+                        // Wait for the command to complete
                         int exitCode = process.waitFor();
                         if (exitCode == 0) {
                             log.info("Extract files successful.");

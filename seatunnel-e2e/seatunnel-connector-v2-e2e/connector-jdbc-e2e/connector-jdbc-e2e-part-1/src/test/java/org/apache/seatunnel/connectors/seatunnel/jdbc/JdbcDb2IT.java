@@ -18,6 +18,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 
@@ -27,8 +29,6 @@ import org.testcontainers.containers.Db2Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerLoggerFactory;
-
-import com.google.common.collect.Lists;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -44,9 +44,9 @@ public class JdbcDb2IT extends AbstractJdbcIT {
 
     private static final String DB2_CONTAINER_HOST = "db2-e2e";
 
-    private static final String DB2_DATABASE = "E2E";
-    private static final String DB2_SOURCE = "SOURCE";
-    private static final String DB2_SINK = "SINK";
+    protected static final String DB2_DATABASE = "E2E";
+    protected static final String DB2_SOURCE = "SOURCE";
+    protected static final String DB2_SINK = "SINK";
 
     private static final String DB2_URL = "jdbc:db2://" + HOST + ":%s/%s";
 

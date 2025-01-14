@@ -17,8 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.kudu.config;
 
-import org.apache.seatunnel.shade.com.fasterxml.jackson.core.type.TypeReference;
-
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.Options;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
@@ -29,7 +27,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @ToString
@@ -54,12 +51,6 @@ public class KuduSourceConfig extends CommonConfig {
                     .stringType()
                     .noDefaultValue()
                     .withDescription("Kudu scan filter expressions");
-
-    public static final Option<List<Map<String, Object>>> TABLE_LIST =
-            Options.key("table_list")
-                    .type(new TypeReference<List<Map<String, Object>>>() {})
-                    .noDefaultValue()
-                    .withDescription("table list config");
 
     private int batchSizeBytes;
 

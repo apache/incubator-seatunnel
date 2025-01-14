@@ -17,16 +17,8 @@
 
 package org.apache.seatunnel.engine.server.rest.servlet;
 
-import org.apache.seatunnel.api.common.metrics.JobMetrics;
-import org.apache.seatunnel.engine.common.Constant;
-import org.apache.seatunnel.engine.core.job.JobDAGInfo;
-import org.apache.seatunnel.engine.server.SeaTunnelServer;
-import org.apache.seatunnel.engine.server.master.JobHistoryService.JobState;
-import org.apache.seatunnel.engine.server.operation.GetJobMetricsOperation;
-import org.apache.seatunnel.engine.server.utils.NodeEngineUtil;
+import org.apache.seatunnel.engine.server.rest.service.JobInfoService;
 
-import com.hazelcast.internal.json.JsonArray;
-import com.hazelcast.map.IMap;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import javax.servlet.ServletException;
@@ -34,14 +26,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Comparator;
 
 public class FinishedJobsServlet extends BaseServlet {
 
     private static final long serialVersionUID = 1L;
 
+    private final JobInfoService jobInfoService;
+
     public FinishedJobsServlet(NodeEngineImpl nodeEngine) {
         super(nodeEngine);
+        this.jobInfoService = new JobInfoService(nodeEngine);
     }
 
     @Override
@@ -56,52 +50,6 @@ public class FinishedJobsServlet extends BaseServlet {
             state = "";
         }
 
-        IMap<Long, JobState> finishedJob =
-                nodeEngine.getHazelcastInstance().getMap(Constant.IMAP_FINISHED_JOB_STATE);
-
-        IMap<Long, JobMetrics> finishedJobMetrics =
-                nodeEngine.getHazelcastInstance().getMap(Constant.IMAP_FINISHED_JOB_METRICS);
-
-        IMap<Long, JobDAGInfo> finishedJobDAGInfo =
-                nodeEngine.getHazelcastInstance().getMap(Constant.IMAP_FINISHED_JOB_VERTEX_INFO);
-        SeaTunnelServer seaTunnelServer = getSeaTunnelServer(true);
-        String finalState = state;
-        JsonArray jobs =
-                finishedJob.values().stream()
-                        .filter(
-                                jobState -> {
-                                    if (finalState.isEmpty()) {
-                                        return true;
-                                    }
-                                    return jobState.getJobStatus()
-                                            .name()
-                                            .equals(finalState.toUpperCase());
-                                })
-                        .sorted(Comparator.comparing(JobState::getFinishTime))
-                        .map(
-                                jobState -> {
-                                    Long jobId = jobState.getJobId();
-                                    String jobMetrics;
-                                    if (seaTunnelServer == null) {
-                                        jobMetrics =
-                                                (String)
-                                                        NodeEngineUtil.sendOperationToMasterNode(
-                                                                        nodeEngine,
-                                                                        new GetJobMetricsOperation(
-                                                                                jobId))
-                                                                .join();
-                                    } else {
-                                        jobMetrics =
-                                                seaTunnelServer
-                                                        .getCoordinatorService()
-                                                        .getJobMetrics(jobId)
-                                                        .toJsonString();
-                                    }
-                                    return getJobInfoJson(
-                                            jobState, jobMetrics, finishedJobDAGInfo.get(jobId));
-                                })
-                        .collect(JsonArray::new, JsonArray::add, JsonArray::add);
-
-        writeJson(resp, jobs);
+        writeJson(resp, jobInfoService.getJobsByStateJson(state));
     }
 }

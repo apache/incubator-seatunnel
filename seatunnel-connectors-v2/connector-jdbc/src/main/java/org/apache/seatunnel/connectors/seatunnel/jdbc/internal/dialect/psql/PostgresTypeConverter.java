@@ -75,12 +75,14 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
     public static final String PG_MONEY = "money";
 
     // char <=> character <=> bpchar
-    public static final String PG_CHAR = "bpchar";
+    public static final String PG_CHAR = "char";
+    public static final String PG_BPCHAR = "bpchar";
     public static final String PG_CHARACTER = "character";
     // char[] <=> _character <=> _bpchar
     public static final String PG_CHAR_ARRAY = "_bpchar";
     // character varying <=> varchar
     public static final String PG_VARCHAR = "varchar";
+    public static final String PG_INET = "inet";
     public static final String PG_CHARACTER_VARYING = "character varying";
     // character varying[] <=> varchar[] <=> _varchar
     public static final String PG_VARCHAR_ARRAY = "_varchar";
@@ -188,6 +190,7 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
                 builder.scale(2);
                 break;
             case PG_CHAR:
+            case PG_BPCHAR:
             case PG_CHARACTER:
                 builder.dataType(BasicType.STRING_TYPE);
                 if (typeDefine.getLength() == null || typeDefine.getLength() <= 0) {
@@ -221,7 +224,9 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
             case PG_XML:
             case PG_GEOMETRY:
             case PG_GEOGRAPHY:
+            case PG_INET:
                 builder.dataType(BasicType.STRING_TYPE);
+                builder.sourceType(pgDataType);
                 break;
             case PG_CHAR_ARRAY:
             case PG_VARCHAR_ARRAY:

@@ -32,6 +32,14 @@ public class TestJsonPathTransformIT extends TestSuiteBase {
     }
 
     @TestTemplate
+    public void testBasicTypeMultiTable(TestContainer container) throws Exception {
+        Container.ExecResult execResult =
+                container.executeJob(
+                        "/json_path_transform/json_path_basic_type_test_multi_table.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
+    @TestTemplate
     public void testArray(TestContainer container) throws Exception {
         Container.ExecResult execResult =
                 container.executeJob("/json_path_transform/array_test.conf");

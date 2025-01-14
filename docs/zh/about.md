@@ -62,9 +62,9 @@ SeaTunnel 拥有大量用户。 您可以在[用户](https://seatunnel.apache.or
 <br/><br/>
 <img src="https://landscape.cncf.io/images/left-logo.svg" width="150" alt=""/>&nbsp;&nbsp;<img src="https://landscape.cncf.io/images/right-logo.svg" width="200" alt=""/>
 <br/><br/>
-SeaTunnel 丰富了<a href="https://landscape.cncf.io/card-mode?category=streaming-messaging&license=apache-license-2-0&grouping=category&selected=sea-tunnal">CNCF 云原生景观</a >。
+SeaTunnel 丰富了<a href="https://landscape.cncf.io/?item=app-definition-and-development--streaming-messaging--seatunnel">CNCF 云原生景观</a >。
 </p >
 
 ## 了解更多
 
-您可以参阅[快速入门](/docs/category/start-v2/locally/deployment) 了解后续相关步骤。
+您可以参阅[快速入门](start-v2/locally/deployment.md) 了解后续相关步骤。

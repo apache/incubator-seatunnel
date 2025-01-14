@@ -44,6 +44,7 @@ import org.apache.seatunnel.engine.server.task.operation.source.RestoredSplitOpe
 import org.apache.seatunnel.engine.server.task.operation.source.SourceNoMoreElementOperation;
 import org.apache.seatunnel.engine.server.task.operation.source.SourceReaderEventOperation;
 import org.apache.seatunnel.engine.server.task.operation.source.SourceRegisterOperation;
+import org.apache.seatunnel.engine.server.telemetry.log.operation.CleanLogOperation;
 
 import com.hazelcast.internal.serialization.DataSerializerHook;
 import com.hazelcast.internal.serialization.impl.FactoryIdHelper;
@@ -103,6 +104,8 @@ public class TaskDataSerializerHook implements DataSerializerHook {
     public static final int REPORT_JOB_EVENT = 25;
 
     public static final int CLOSE_READER_OPERATION = 26;
+
+    public static final int CLEAN_LOG_OPERATION = 27;
 
     public static final int FACTORY_ID =
             FactoryIdHelper.getFactoryId(
@@ -176,6 +179,8 @@ public class TaskDataSerializerHook implements DataSerializerHook {
                     return new JobEventReportOperation();
                 case CLOSE_READER_OPERATION:
                     return new CloseIdleReaderOperation();
+                case CLEAN_LOG_OPERATION:
+                    return new CleanLogOperation();
                 default:
                     throw new IllegalArgumentException("Unknown type id " + typeId);
             }

@@ -75,7 +75,7 @@ SeaTunnel Engine 基于 [Hazelcast IMDG](https://docs.hazelcast.com/imdg/4.1/) �
 
 `backup count` 是定义同步备份数量的参数。例如，如果设置为 1，则分区的备份将放置在一个其他成员上。如果设置为 2，则将放置在两个其他成员上。
 
-我们建议 `backup-count` 的值为 `min(1, max(5, N/2))`。 `N` 是集群节点的数量。
+我们建议 `backup-count` 的值为 `max(1, min(5, N/2))`。 `N` 是集群节点的数量。
 
 ```yaml
 seatunnel:
@@ -282,6 +282,43 @@ jdom2-2.0.6.jar
 netty-buffer-4.1.89.Final.jar 
 netty-common-4.1.89.Final.jar
 seatunnel-hadoop3-3.1.4-uber.jar
+```
+
+### 4.7 作业调度策略
+
+当资源不足时，作业调度策略可以配置为以下两种模式：
+
+1. `WAIT`：等待资源可用。
+2. `REJECT`：拒绝作业，默认值。
+
+示例
+
+```yaml
+seatunnel:
+  engine:
+    job-schedule-strategy: WAIT
+```
+
+当`dynamic-slot: ture`时，`job-schedule-strategy: WAIT` 配置会失效，将被强制修改为`job-schedule-strategy: REJECT`，因为动态Slot时该参数没有意义，可以直接提交。
+
+### 4.8 Coordinator Service
+
+CoordinatorService 提供了每个作业从 LogicalDag 到 ExecutionDag，再到 PhysicalDag 的生成流程， 并最终创建作业的 JobMaster 进行作业的调度执行和状态监控
+
+**core-thread-num**
+
+配置 CoordinatorService 线程池核心线程数量
+
+**max-thread-num**
+
+同时可执行的最大作业数量
+
+Example
+
+```yaml
+coordinator-service:
+  core-thread-num: 30
+  max-thread-num: 1000
 ```
 
 ## 5. 配置 SeaTunnel Engine 网络服务

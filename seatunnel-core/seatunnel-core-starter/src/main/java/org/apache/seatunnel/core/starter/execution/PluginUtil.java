@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.core.starter.execution;
 
+import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import org.apache.seatunnel.api.common.CommonOptions;
@@ -43,8 +44,6 @@ import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelFactoryDiscovery
 import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelSinkPluginDiscovery;
 import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelSourcePluginDiscovery;
 import org.apache.seatunnel.plugin.discovery.seatunnel.SeaTunnelTransformPluginDiscovery;
-
-import com.google.common.collect.Lists;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -98,7 +97,7 @@ public class PluginUtil {
             // TODO remove it when all connector use `getProducedCatalogTables`
             SeaTunnelDataType<?> seaTunnelDataType = source.getProducedType();
             final String tableId =
-                    readonlyConfig.getOptional(CommonOptions.RESULT_TABLE_NAME).orElse(DEFAULT_ID);
+                    readonlyConfig.getOptional(CommonOptions.PLUGIN_OUTPUT).orElse(DEFAULT_ID);
             catalogTables =
                     CatalogTableUtil.convertDataTypeToCatalogTables(seaTunnelDataType, tableId);
         }

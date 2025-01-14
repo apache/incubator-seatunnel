@@ -20,6 +20,8 @@ package org.apache.seatunnel.connectors.seatunnel.hive.source;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
 import org.apache.seatunnel.api.source.SourceSplit;
+import org.apache.seatunnel.api.table.catalog.CatalogOptions;
+import org.apache.seatunnel.api.table.catalog.schema.TableSchemaOptions;
 import org.apache.seatunnel.api.table.connector.TableSource;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactory;
@@ -27,7 +29,6 @@ import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveConfig;
 import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveConstants;
-import org.apache.seatunnel.connectors.seatunnel.hive.source.config.HiveSourceOptions;
 
 import com.google.auto.service.AutoService;
 
@@ -51,7 +52,7 @@ public class HiveSourceFactory implements TableSourceFactory {
         return OptionRule.builder()
                 .optional(HiveConfig.TABLE_NAME)
                 .optional(HiveConfig.METASTORE_URI)
-                .optional(HiveSourceOptions.TABLE_CONFIGS)
+                .optional(TableSchemaOptions.TABLE_CONFIGS, CatalogOptions.TABLE_LIST)
                 .optional(BaseSourceConfigOptions.READ_PARTITIONS)
                 .optional(BaseSourceConfigOptions.READ_COLUMNS)
                 .optional(BaseSourceConfigOptions.KERBEROS_PRINCIPAL)
