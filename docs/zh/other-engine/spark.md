@@ -6,7 +6,7 @@ Spark 是一个强大的高性能分布式计算处理引擎。有关它的更�
 ### 如何在作业中设置 Spark 配置信息
 
 例：
-我为某项工作设置了一些 spark 配置项
+我为这个任务设置了一些 spark 配置项
 
 ```
 env {
@@ -95,8 +95,6 @@ source {
 }
 
 transform {
-  # 如果您想获取有关如何配置 seatunnel 的更多信息并查看转换插件的完整列表，
-  # 请访问 https://seatunnel.apache.org/docs/transform-v2/sql
 }
 
 sink{
@@ -106,4 +104,4 @@ sink{
 
 ### 如何在项目中运行作业
 
-将代码拉取到本地后，进入 seatunnel-examples/seatunnel-spark-connector-v2-example 模块，找到 org.apache.seatunnel.example.spark.v2.SeaTunnelApiExample 来完成作业的操作。
+将代码拉取到本地后，进入 seatunnel-examples/seatunnel-spark-connector-v2-example 模块，找到 org.apache.seatunnel.example.spark.v2.SeaTunnelApiExample 来完成作业的运行。
