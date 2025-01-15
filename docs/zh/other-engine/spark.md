@@ -104,4 +104,4 @@ sink{
 
 ### 如何在项目中运行作业
 
-将代码拉取到本地后，进入 seatunnel-examples/seatunnel-spark-connector-v2-example 模块，找到 org.apache.seatunnel.example.spark.v2.SeaTunnelApiExample 来完成作业的操作。
+将代码拉取到本地后，进入 seatunnel-examples/seatunnel-spark-connector-v2-example 模块，找到 org.apache.seatunnel.example.spark.v2.SeaTunnelApiExample 来完成作业的运行。
