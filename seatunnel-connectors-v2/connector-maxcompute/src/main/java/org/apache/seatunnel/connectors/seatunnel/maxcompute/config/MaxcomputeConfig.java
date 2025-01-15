@@ -98,7 +98,7 @@ public class MaxcomputeConfig implements Serializable {
                                     + "` (\n"
                                     + SaveModePlaceHolder.ROWTYPE_FIELDS.getPlaceHolder()
                                     + "\n"
-                                    + ") comment '"
+                                    + ") COMMENT '"
                                     + SaveModePlaceHolder.COMMENT.getPlaceHolder()
                                     + "' ;")
                     .withDescription(
