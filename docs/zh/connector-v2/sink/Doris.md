@@ -24,6 +24,16 @@
 用于发送数据到doris. 同时支持流模式和批模式处理.
 Doris Sink连接器的内部实现是通过stream load批量缓存和导入的。
 
+## 依赖
+
+### 对于 Spark/Flink
+
+> 1. 你需要下载 [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) 并添加到目录 `${SEATUNNEL_HOME}/plugins/`.
+
+### 对于 SeaTunnel Zeta
+
+> 1. 你需要下载 [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) 并添加到目录 `${SEATUNNEL_HOME}/lib/`.
+
 ## Sink 选项
 
 |              Name              |  Type   | Required |           Default            |                                                                      Description                                                                       |
@@ -82,6 +92,7 @@ ${rowtype_primary_key},
 ${rowtype_fields}
 ) ENGINE=OLAP
  UNIQUE KEY (${rowtype_primary_key})
+COMMENT '${comment}'
 DISTRIBUTED BY HASH (${rowtype_primary_key})
  PROPERTIES (
 "replication_allocation" = "tag.location.default: 1",
@@ -99,6 +110,7 @@ CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}`
     id,
     ${rowtype_fields}
 ) ENGINE = OLAP UNIQUE KEY (${rowtype_primary_key})
+    COMMENT '${comment}'
     DISTRIBUTED BY HASH (${rowtype_primary_key})
     PROPERTIES
 (
@@ -114,8 +126,9 @@ CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}`
 - database：用于获取上游schema中的数据库。
 - table_name：用于获取上游schema中的表名。
 - rowtype_fields：用于获取上游schema中的所有字段，自动映射到Doris的字段描述。
-- rowtype_primary_key：用于获取上游模式中的主键（可能是列表）
+- rowtype_primary_key：用于获取上游模式中的主键（可能是列表）。
 - rowtype_unique_key：用于获取上游模式中的唯一键（可能是列表）。
+- comment：用于获取上游模式中的表注释。
 
 ## 数据类型映射
 

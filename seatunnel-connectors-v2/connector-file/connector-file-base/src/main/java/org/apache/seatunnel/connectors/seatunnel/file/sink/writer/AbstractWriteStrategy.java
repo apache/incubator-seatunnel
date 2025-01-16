@@ -82,6 +82,7 @@ public abstract class AbstractWriteStrategy implements WriteStrategy {
     protected Long checkpointId = 0L;
     protected int partId = 0;
     protected int batchSize;
+    protected boolean singleFileMode;
     protected int currentBatchSize = 0;
 
     public AbstractWriteStrategy(FileSinkConfig fileSinkConfig) {
@@ -89,6 +90,7 @@ public abstract class AbstractWriteStrategy implements WriteStrategy {
         this.sinkColumnsIndexInRow = fileSinkConfig.getSinkColumnsIndexInRow();
         this.batchSize = fileSinkConfig.getBatchSize();
         this.compressFormat = fileSinkConfig.getCompressFormat();
+        this.singleFileMode = fileSinkConfig.isSingleFileMode();
     }
 
     /**
@@ -107,7 +109,7 @@ public abstract class AbstractWriteStrategy implements WriteStrategy {
 
     @Override
     public void write(SeaTunnelRow seaTunnelRow) throws FileConnectorException {
-        if (currentBatchSize >= batchSize) {
+        if (currentBatchSize >= batchSize && !singleFileMode) {
             newFilePart();
             currentBatchSize = 0;
         }
@@ -218,7 +220,7 @@ public abstract class AbstractWriteStrategy implements WriteStrategy {
      * @return file name
      */
     @Override
-    public String generateFileName(String transactionId) {
+    public final String generateFileName(String transactionId) {
         String fileNameExpression = fileSinkConfig.getFileNameExpression();
         FileFormat fileFormat = fileSinkConfig.getFileFormat();
         String suffix = fileFormat.getSuffix();
@@ -234,8 +236,10 @@ public abstract class AbstractWriteStrategy implements WriteStrategy {
         valuesMap.put(Constants.NOW, formattedDate);
         valuesMap.put(timeFormat, formattedDate);
         valuesMap.put(BaseSinkConfig.TRANSACTION_EXPRESSION, transactionId);
-        String substitute =
-                VariablesSubstitute.substitute(fileNameExpression, valuesMap) + "_" + partId;
+        String substitute = VariablesSubstitute.substitute(fileNameExpression, valuesMap);
+        if (!singleFileMode) {
+            substitute += "_" + partId;
+        }
         return substitute + suffix;
     }
 

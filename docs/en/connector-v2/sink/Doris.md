@@ -25,6 +25,16 @@
 Used to send data to Doris. Both support streaming and batch mode.
 The internal implementation of Doris sink connector is cached and imported by stream load in batches.
 
+## Using Dependency
+
+### For Spark/Flink Engine
+
+> 1. You need to ensure that the [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) has been placed in directory `${SEATUNNEL_HOME}/plugins/`.
+
+### For SeaTunnel Zeta Engine
+
+> 1. You need to ensure that the [jdbc driver jar package](https://mvnrepository.com/artifact/mysql/mysql-connector-java) has been placed in directory `${SEATUNNEL_HOME}/lib/`.
+
 ## Sink Options
 
 |              Name              |  Type   | Required |           Default            |                                                                                                                                      Description                                                                                                                                       |
@@ -83,6 +93,7 @@ ${rowtype_primary_key},
 ${rowtype_fields}
 ) ENGINE=OLAP
  UNIQUE KEY (${rowtype_primary_key})
+COMMENT '${comment}'
 DISTRIBUTED BY HASH (${rowtype_primary_key})
  PROPERTIES (
 "replication_allocation" = "tag.location.default: 1",
@@ -100,6 +111,7 @@ CREATE TABLE IF NOT EXISTS `${database}`.`${table}`
     id,
     ${rowtype_fields}
 ) ENGINE = OLAP UNIQUE KEY (${rowtype_primary_key})
+    COMMENT '${comment}'
     DISTRIBUTED BY HASH (${rowtype_primary_key})
     PROPERTIES
 (
@@ -119,6 +131,7 @@ You can use the following placeholders
 - rowtype_primary_key: Used to get the primary key in the upstream schema (maybe a list)
 - rowtype_unique_key: Used to get the unique key in the upstream schema (maybe a list)
 - rowtype_duplicate_key: Used to get the duplicate key in the upstream schema (only for doris source, maybe a list)
+- comment: Used to get the table comment in the upstream schema
 
 ## Data Type Mapping
 

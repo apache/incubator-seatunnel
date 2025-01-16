@@ -48,7 +48,7 @@ public final class ConfigShadeUtils {
     private static final String SHADE_IDENTIFIER_OPTION = "shade.identifier";
 
     public static final String[] DEFAULT_SENSITIVE_KEYWORDS =
-            new String[] {"password", "username", "auth", "token"};
+            new String[] {"password", "username", "auth", "token", "access_key", "secret_key"};
 
     private static final Map<String, ConfigShade> CONFIG_SHADES = new HashMap<>();
 
