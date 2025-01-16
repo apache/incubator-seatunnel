@@ -44,8 +44,6 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
 
     protected Map<String, SeaTunnelTransform<SeaTunnelRow>> transformMap;
 
-    private Context context;
-
     public AbstractMultiCatalogTransform(
             List<CatalogTable> inputCatalogTables, ReadonlyConfig config) {
         this.inputCatalogTables = inputCatalogTables;
@@ -90,11 +88,6 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
                         .collect(Collectors.toList());
     }
 
-    @Override
-    public void open(Context context) {
-        this.context = context;
-        transformMap.values().forEach(transform -> transform.open(context));
-    }
 
     protected abstract SeaTunnelTransform<SeaTunnelRow> buildTransform(
             CatalogTable inputCatalogTable, ReadonlyConfig config);

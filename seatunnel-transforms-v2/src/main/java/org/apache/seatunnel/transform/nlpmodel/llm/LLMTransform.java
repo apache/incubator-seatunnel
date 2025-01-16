@@ -66,8 +66,7 @@ public class LLMTransform extends SingleFieldOutputTransform {
     }
 
     @Override
-    public void open(Context context) {
-        super.open(context);
+    public void open() {
         initModel();
     }
 

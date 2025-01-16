@@ -68,8 +68,7 @@ public class EmbeddingTransform extends MultipleFieldOutputTransform {
     }
 
     @Override
-    public void open(Context context) {
-        super.open(context);
+    public void open() {
         // Initialize model
         initModel();
     }

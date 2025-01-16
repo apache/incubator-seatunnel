@@ -46,11 +46,8 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
 
     protected String outTableName;
 
-    private Context context;
-
     @Override
-    public void open(Context context) {
-        this.context = context;
+    public void open() {
     }
 
     public AbstractSeaTunnelTransform(
@@ -140,26 +137,4 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
 
     protected abstract TableIdentifier transformTableIdentifier();
 
-    protected void hazelcastMetric(long size) {
-        if (context != null && context.getMetricsContext() != null) {
-            context.getMetricsContext().counter(getTransformMetricName()).inc(size);
-        }
-    }
-
-    protected void updateMetric() {
-        if (context != null && context.getMetricsContext() != null) {
-            hazelcastMetric(1);
-        }
-    }
-
-    protected String getTransformMetricName() {
-        StringBuilder metricName = new StringBuilder();
-        metricName
-                .append(MetricNames.TRANSFORM_OUTPUT_COUNT)
-                .append("#")
-                .append(context.getTransformName())
-                .append("#")
-                .append(outTableName);
-        return metricName.toString();
-    }
 }

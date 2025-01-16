@@ -30,6 +30,7 @@ public class TransformChainAction<T> extends AbstractAction {
 
     private static final long serialVersionUID = -340174711145367535L;
     private final List<SeaTunnelTransform<T>> transforms;
+    private final List<String> pluginOutputs;
 
     public TransformChainAction(
             long id,
@@ -37,9 +38,10 @@ public class TransformChainAction<T> extends AbstractAction {
             @NonNull List<Action> upstreams,
             @NonNull Set<URL> jarUrls,
             @NonNull Set<ConnectorJarIdentifier> connectorJarIdentifiers,
-            @NonNull List<SeaTunnelTransform<T>> transforms) {
+            @NonNull List<SeaTunnelTransform<T>> transforms, List<String> pluginOutputs) {
         super(id, name, upstreams, jarUrls, connectorJarIdentifiers);
         this.transforms = transforms;
+        this.pluginOutputs = pluginOutputs;
     }
 
     public TransformChainAction(
@@ -47,12 +49,17 @@ public class TransformChainAction<T> extends AbstractAction {
             @NonNull String name,
             @NonNull Set<URL> jarUrls,
             @NonNull Set<ConnectorJarIdentifier> connectorJarIdentifiers,
-            @NonNull List<SeaTunnelTransform<T>> transforms) {
+            @NonNull List<SeaTunnelTransform<T>> transforms, List<String> pluginOutputs) {
         super(id, name, jarUrls, connectorJarIdentifiers);
         this.transforms = transforms;
+        this.pluginOutputs = pluginOutputs;
     }
 
     public List<SeaTunnelTransform<T>> getTransforms() {
         return transforms;
+    }
+
+    public List<String> getPluginOutputs() {
+        return pluginOutputs;
     }
 }

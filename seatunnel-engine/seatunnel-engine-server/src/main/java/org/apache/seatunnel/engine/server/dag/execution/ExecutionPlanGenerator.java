@@ -125,7 +125,8 @@ public class ExecutionPlanGenerator {
                             action.getName(),
                             ((TransformAction) action).getTransform(),
                             action.getJarUrls(),
-                            action.getConnectorJarIdentifiers());
+                            action.getConnectorJarIdentifiers(),
+                            ((TransformAction) action).getPluginOutput());
         } else if (action instanceof TransformChainAction) {
             newAction =
                     new TransformChainAction(
@@ -133,7 +134,8 @@ public class ExecutionPlanGenerator {
                             action.getName(),
                             action.getJarUrls(),
                             action.getConnectorJarIdentifiers(),
-                            ((TransformChainAction<?>) action).getTransforms());
+                            ((TransformChainAction<?>) action).getTransforms(),
+                            ((TransformChainAction<?>) action).getPluginOutputs());
         } else {
             throw new UnknownActionException(action);
         }
@@ -368,6 +370,7 @@ public class ExecutionPlanGenerator {
         if (transformChainedVertices.size() > 0) {
             long newVertexId = idGenerator.getNextId();
             List<SeaTunnelTransform> transforms = new ArrayList<>(transformChainedVertices.size());
+            List<String> pluginOutputs = new ArrayList<>(transformChainedVertices.size());
             List<String> names = new ArrayList<>(transformChainedVertices.size());
             Set<URL> jars = new HashSet<>();
             Set<ConnectorJarIdentifier> identifiers = new HashSet<>();
@@ -382,6 +385,7 @@ public class ExecutionPlanGenerator {
                     .forEach(
                             action -> {
                                 transforms.add(action.getTransform());
+                                pluginOutputs.add(action.getPluginOutput());
                                 jars.addAll(action.getJarUrls());
                                 identifiers.addAll(action.getConnectorJarIdentifiers());
                                 names.add(action.getName());
@@ -390,7 +394,7 @@ public class ExecutionPlanGenerator {
                     String.format("TransformChain[%s]", String.join("->", names));
             TransformChainAction transformChainAction =
                     new TransformChainAction(
-                            newVertexId, transformChainActionName, jars, identifiers, transforms);
+                            newVertexId, transformChainActionName, jars, identifiers, transforms,pluginOutputs);
             transformChainAction.setParallelism(currentVertex.getAction().getParallelism());
 
             ExecutionVertex executionVertex =

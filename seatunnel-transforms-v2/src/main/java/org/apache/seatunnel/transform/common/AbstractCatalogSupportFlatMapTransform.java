@@ -41,9 +41,6 @@ public abstract class AbstractCatalogSupportFlatMapTransform
     @Override
     public List<SeaTunnelRow> flatMap(SeaTunnelRow row) {
         List<SeaTunnelRow> results = transform(row);
-        if (CollectionUtils.isNotEmpty(results)) {
-            hazelcastMetric(results.size());
-        }
         return results;
     }
 }

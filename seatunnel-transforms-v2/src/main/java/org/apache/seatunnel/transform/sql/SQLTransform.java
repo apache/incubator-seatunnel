@@ -79,8 +79,7 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
     }
 
     @Override
-    public void open(Context context) {
-        super.open(context);
+    public void open() {
         initSqlEngine();
     }
 

@@ -46,9 +46,6 @@ public abstract class AbstractCatalogSupportMapTransform
     @Override
     public SeaTunnelRow map(SeaTunnelRow row) {
         SeaTunnelRow result = transform(row);
-        if (Objects.nonNull(result)) {
-            updateMetric();
-        }
         return result;
     }
 }
