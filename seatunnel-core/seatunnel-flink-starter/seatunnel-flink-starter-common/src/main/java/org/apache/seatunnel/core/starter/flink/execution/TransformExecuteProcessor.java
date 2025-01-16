@@ -176,7 +176,7 @@ public class TransformExecuteProcessor
     }
 
     public static class FlinkRichMapFunction extends RichMapFunction<SeaTunnelRow, SeaTunnelRow> {
-        private MetricsContext metricsContext; //
+        private MetricsContext metricsContext;
         private SeaTunnelTransform transform;
         private final String metricName;
         private final String pluginOutput;
@@ -206,7 +206,7 @@ public class TransformExecuteProcessor
     }
 
     public static class ArrayFlatMap extends RichFlatMapFunction<SeaTunnelRow, SeaTunnelRow> {
-        private MetricsContext metricsContext; //
+        private MetricsContext metricsContext;
         private SeaTunnelTransform transform;
         private final String metricName;
         private final String pluginOutput;
