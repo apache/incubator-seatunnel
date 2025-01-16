@@ -219,7 +219,6 @@ public class TransformExecuteProcessor
 
         @Override
         public void open(Configuration parameters) throws Exception {
-            // 获取 RuntimeContext
             metricsContext = new FlinkMetricContext((StreamingRuntimeContext) getRuntimeContext());
         }
 
