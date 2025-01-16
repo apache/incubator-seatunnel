@@ -33,6 +33,7 @@ import org.apache.seatunnel.api.sink.SupportSaveMode;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
 import org.apache.seatunnel.api.source.SourceSplit;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.factory.ChangeStreamTableSourceCheckpoint;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.FactoryUtil;
@@ -657,7 +658,7 @@ public class MultipleTableJobConfigParser {
             log.info("Unsupported multi table sink api, rollback to sink template");
             return Optional.empty();
         }
-        Map<String, SeaTunnelSink> sinks = new HashMap<>();
+        Map<TablePath, SeaTunnelSink> sinks = new HashMap<>();
         Set<URL> jars =
                 sinkActions.stream()
                         .flatMap(a -> a.getJarUrls().stream())
@@ -665,8 +666,8 @@ public class MultipleTableJobConfigParser {
         sinkActions.forEach(
                 action -> {
                     SeaTunnelSink sink = action.getSink();
-                    String tableId = action.getConfig().getMultipleRowTableId();
-                    sinks.put(tableId, sink);
+                    TablePath tablePath = action.getConfig().getTablePath();
+                    sinks.put(tablePath, sink);
                 });
         SeaTunnelSink<?, ?, ?, ?> sink =
                 FactoryUtil.createMultiTableSink(sinks, options, classLoader);
@@ -698,12 +699,11 @@ public class MultipleTableJobConfigParser {
                 FactoryUtil.createAndPrepareSink(
                         catalogTable, readonlyConfig, classLoader, factoryId);
         sink.setJobContext(jobConfig.getJobContext());
-        SinkConfig actionConfig =
-                new SinkConfig(catalogTable.getTableId().toTablePath().toString());
+        SinkConfig actionConfig = new SinkConfig(catalogTable.getTableId().toTablePath());
         long id = idGenerator.getNextId();
         String actionName =
                 JobConfigParser.createSinkActionName(
-                        configIndex, factoryId, actionConfig.getMultipleRowTableId());
+                        configIndex, factoryId, actionConfig.getTablePath().toString());
         SinkAction<?, ?, ?, ?> sinkAction =
                 new SinkAction<>(
                         id,
