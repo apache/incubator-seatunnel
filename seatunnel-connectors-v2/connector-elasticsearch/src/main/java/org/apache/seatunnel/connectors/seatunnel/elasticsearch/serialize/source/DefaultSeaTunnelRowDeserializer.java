@@ -44,9 +44,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.apache.seatunnel.api.table.type.BasicType.BOOLEAN_TYPE;
 import static org.apache.seatunnel.api.table.type.BasicType.BYTE_TYPE;
@@ -179,8 +181,13 @@ public class DefaultSeaTunnelRowDeserializer implements SeaTunnelRowDeserializer
                 ArrayType<?, ?> arrayType = (ArrayType<?, ?>) fieldType;
                 SeaTunnelDataType<?> elementType = arrayType.getElementType();
                 List<String> stringList = new ArrayList<>();
-                if (elementType instanceof MapType && !JsonUtils.isJsonArray(fieldValue)) {
-                    stringList.add(fieldValue);
+                if (elementType instanceof MapType) {
+                    stringList =
+                            JsonUtils.isJsonArray(fieldValue)
+                                    ? JsonUtils.toList(fieldValue, Map.class).stream()
+                                            .map(JsonUtils::toJsonString)
+                                            .collect(Collectors.toList())
+                                    : Collections.singletonList(fieldValue);
                 } else {
                     stringList = JsonUtils.toList(fieldValue, String.class);
                 }
