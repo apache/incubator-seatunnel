@@ -34,9 +34,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -194,10 +196,10 @@ public class CsvTextFormatSchemaTest {
     @Test
     public void testCsvFileDeserialization() throws Exception {
         // Test reading and parsing from CSV file
-        java.nio.file.Path testFile =
+        Path testFile =
                 java.nio.file.Paths.get(
                         getClass().getClassLoader().getResource("testdata.csv").toURI());
-        java.util.List<String> lines = java.nio.file.Files.readAllLines(testFile);
+        List<String> lines = java.nio.file.Files.readAllLines(testFile);
 
         // Skip header line
         lines = lines.subList(1, lines.size());
