@@ -45,6 +45,7 @@ import org.apache.seatunnel.common.Constants;
 import org.apache.seatunnel.common.config.Common;
 import org.apache.seatunnel.common.config.TypesafeConfigUtils;
 import org.apache.seatunnel.common.constants.CollectionConstants;
+import org.apache.seatunnel.common.constants.JobMode;
 import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.ExceptionUtils;
@@ -311,7 +312,13 @@ public class MultipleTableJobConfigParser {
     }
 
     private void fillJobConfigAndCommonJars() {
-        jobConfig.getJobContext().setJobMode(envOptions.get(EnvCommonOptions.JOB_MODE));
+        JobMode jobMode = envOptions.get(EnvCommonOptions.JOB_MODE);
+        jobConfig
+                .getJobContext()
+                .setJobMode(jobMode)
+                .setEnableCheckpoint(
+                        (envOptions.get(EnvCommonOptions.CHECKPOINT_INTERVAL) != null)
+                                || jobMode == JobMode.STREAMING);
         if (StringUtils.isEmpty(jobConfig.getName())
                 || jobConfig.getName().equals(Constants.LOGO)
                 || jobConfig.getName().equals(EnvCommonOptions.JOB_NAME.defaultValue())) {

@@ -88,6 +88,13 @@ public class HdfsFileSinkFactory implements TableSinkFactory {
                 .optional(BaseSinkConfig.DATE_FORMAT)
                 .optional(BaseSinkConfig.DATETIME_FORMAT)
                 .optional(BaseSinkConfig.TIME_FORMAT)
+                .optional(BaseSinkConfig.SINGLE_FILE_MODE)
+                .optional(BaseSinkConfig.BATCH_SIZE)
+                .optional(BaseSinkConfig.HDFS_SITE_PATH)
+                .optional(BaseSinkConfig.KERBEROS_PRINCIPAL)
+                .optional(BaseSinkConfig.KERBEROS_KEYTAB_PATH)
+                .optional(BaseSinkConfig.KRB5_PATH)
+                .optional(BaseSinkConfig.REMOTE_USER)
                 .build();
     }
 }
