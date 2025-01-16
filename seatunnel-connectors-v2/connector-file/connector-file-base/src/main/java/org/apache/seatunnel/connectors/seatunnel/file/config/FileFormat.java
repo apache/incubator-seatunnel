@@ -49,7 +49,7 @@ public enum FileFormat implements Serializable {
 
         @Override
         public ReadStrategy getReadStrategy() {
-            return new TextReadStrategy();
+            return new CsvReadStrategy();
         }
     },
     TEXT("txt") {
