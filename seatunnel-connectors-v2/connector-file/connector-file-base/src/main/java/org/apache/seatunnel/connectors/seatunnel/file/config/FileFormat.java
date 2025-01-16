@@ -28,6 +28,7 @@ import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.TextWriteStrat
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.WriteStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.XmlWriteStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.BinaryReadStrategy;
+import org.apache.seatunnel.connectors.seatunnel.file.source.reader.CsvReadStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.ExcelReadStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.JsonReadStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.OrcReadStrategy;
