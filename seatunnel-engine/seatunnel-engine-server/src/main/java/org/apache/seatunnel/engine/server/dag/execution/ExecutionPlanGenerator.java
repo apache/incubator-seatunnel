@@ -135,7 +135,8 @@ public class ExecutionPlanGenerator {
                             action.getJarUrls(),
                             action.getConnectorJarIdentifiers(),
                             ((TransformChainAction<?>) action).getTransforms(),
-                            ((TransformChainAction<?>) action).getPluginOutputs());
+                            ((TransformChainAction<?>) action).getPluginOutputs(),
+                            ((TransformChainAction<?>) action).getTransformNames());
         } else {
             throw new UnknownActionException(action);
         }
@@ -392,6 +393,7 @@ public class ExecutionPlanGenerator {
                             });
             String transformChainActionName =
                     String.format("TransformChain[%s]", String.join("->", names));
+            List<String> transformNames = names;
             TransformChainAction transformChainAction =
                     new TransformChainAction(
                             newVertexId,
@@ -399,7 +401,8 @@ public class ExecutionPlanGenerator {
                             jars,
                             identifiers,
                             transforms,
-                            pluginOutputs);
+                            pluginOutputs,
+                            transformNames);
             transformChainAction.setParallelism(currentVertex.getAction().getParallelism());
 
             ExecutionVertex executionVertex =

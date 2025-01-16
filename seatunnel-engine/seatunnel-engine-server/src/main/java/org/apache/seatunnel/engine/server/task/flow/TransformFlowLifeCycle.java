@@ -53,6 +53,8 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
 
     private final List<String> pluginOutputList;
 
+    private final List<String> transformNames;
+
     private final Collector<Record<?>> collector;
 
     private MetricsContext metricsContext;
@@ -67,6 +69,7 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         this.action = action;
         this.transform = action.getTransforms();
         this.pluginOutputList = action.getPluginOutputs();
+        this.transformNames = action.getTransformNames();
         this.collector = collector;
         this.metricsContext = metricsContext;
     }
@@ -148,7 +151,8 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         int index = 0;
         for (SeaTunnelTransform<T> transformer : transform) {
             String pluginOutput = pluginOutputList.get(index);
-            String metricName = transformer.getPluginName() + "_" + ++index;
+            String metricName = transformNames.get(index);
+            index++;
             List<T> nextInputDataList = new ArrayList<>();
             if (transformer instanceof SeaTunnelFlatMapTransform) {
                 SeaTunnelFlatMapTransform<T> transformDecorator =
