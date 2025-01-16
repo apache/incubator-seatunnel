@@ -92,6 +92,7 @@ ${rowtype_primary_key},
 ${rowtype_fields}
 ) ENGINE=OLAP
  UNIQUE KEY (${rowtype_primary_key})
+COMMENT '${comment}'
 DISTRIBUTED BY HASH (${rowtype_primary_key})
  PROPERTIES (
 "replication_allocation" = "tag.location.default: 1",
@@ -109,6 +110,7 @@ CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}`
     id,
     ${rowtype_fields}
 ) ENGINE = OLAP UNIQUE KEY (${rowtype_primary_key})
+    COMMENT '${comment}'
     DISTRIBUTED BY HASH (${rowtype_primary_key})
     PROPERTIES
 (
@@ -124,8 +126,9 @@ CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}`
 - database：用于获取上游schema中的数据库。
 - table_name：用于获取上游schema中的表名。
 - rowtype_fields：用于获取上游schema中的所有字段，自动映射到Doris的字段描述。
-- rowtype_primary_key：用于获取上游模式中的主键（可能是列表）
+- rowtype_primary_key：用于获取上游模式中的主键（可能是列表）。
 - rowtype_unique_key：用于获取上游模式中的唯一键（可能是列表）。
+- comment：用于获取上游模式中的表注释。
 
 ## 数据类型映射
 
