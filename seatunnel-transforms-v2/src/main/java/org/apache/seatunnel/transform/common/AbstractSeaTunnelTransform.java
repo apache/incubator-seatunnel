@@ -17,7 +17,6 @@
 package org.apache.seatunnel.transform.common;
 
 import org.apache.seatunnel.api.common.CommonOptions;
-import org.apache.seatunnel.api.common.metrics.MetricNames;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
@@ -47,8 +46,7 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
     protected String outTableName;
 
     @Override
-    public void open() {
-    }
+    public void open() {}
 
     public AbstractSeaTunnelTransform(
             @NonNull ReadonlyConfig config, @NonNull CatalogTable inputCatalogTable) {
@@ -136,5 +134,4 @@ public abstract class AbstractSeaTunnelTransform<T, R> implements SeaTunnelTrans
     protected abstract TableSchema transformTableSchema();
 
     protected abstract TableIdentifier transformTableIdentifier();
-
 }

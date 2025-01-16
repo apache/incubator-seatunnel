@@ -21,8 +21,6 @@ import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.transform.SeaTunnelFlatMapTransform;
 
-import org.apache.commons.collections4.CollectionUtils;
-
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 

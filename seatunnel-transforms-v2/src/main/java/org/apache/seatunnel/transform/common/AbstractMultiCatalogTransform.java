@@ -88,7 +88,6 @@ public abstract class AbstractMultiCatalogTransform implements SeaTunnelTransfor
                         .collect(Collectors.toList());
     }
 
-
     protected abstract SeaTunnelTransform<SeaTunnelRow> buildTransform(
             CatalogTable inputCatalogTable, ReadonlyConfig config);
 

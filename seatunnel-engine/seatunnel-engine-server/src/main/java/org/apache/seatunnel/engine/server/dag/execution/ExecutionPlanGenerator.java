@@ -394,7 +394,12 @@ public class ExecutionPlanGenerator {
                     String.format("TransformChain[%s]", String.join("->", names));
             TransformChainAction transformChainAction =
                     new TransformChainAction(
-                            newVertexId, transformChainActionName, jars, identifiers, transforms,pluginOutputs);
+                            newVertexId,
+                            transformChainActionName,
+                            jars,
+                            identifiers,
+                            transforms,
+                            pluginOutputs);
             transformChainAction.setParallelism(currentVertex.getAction().getParallelism());
 
             ExecutionVertex executionVertex =

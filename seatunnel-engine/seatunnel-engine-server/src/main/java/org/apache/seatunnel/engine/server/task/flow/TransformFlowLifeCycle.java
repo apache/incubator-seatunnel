@@ -163,9 +163,12 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
                     if (CollectionUtils.isNotEmpty(outputDataArray)) {
                         nextInputDataList.addAll(outputDataArray);
                         for (T outputData : outputDataArray) {
-                            if(outputData instanceof SeaTunnelRow) {
-                                String tableId = pluginOutput==null?((SeaTunnelRow) outputData).getTableId():pluginOutput;
-                                updateMetric(metricName,tableId);
+                            if (outputData instanceof SeaTunnelRow) {
+                                String tableId =
+                                        pluginOutput == null
+                                                ? ((SeaTunnelRow) outputData).getTableId()
+                                                : pluginOutput;
+                                updateMetric(metricName, tableId);
                             }
                         }
                     }
@@ -185,8 +188,8 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
                         continue;
                     }
                     nextInputDataList.add(outputData);
-                    if(outputData instanceof SeaTunnelRow) {
-                        updateMetric(metricName,((SeaTunnelRow) outputData).getTableId());
+                    if (outputData instanceof SeaTunnelRow) {
+                        updateMetric(metricName, ((SeaTunnelRow) outputData).getTableId());
                     }
                 }
             }
@@ -215,7 +218,7 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
         super.close();
     }
 
-    private void updateMetric(String metricName,String tableId) {
+    private void updateMetric(String metricName, String tableId) {
         StringBuilder metricNameBuilder = new StringBuilder();
         metricNameBuilder
                 .append(MetricNames.TRANSFORM_OUTPUT_COUNT)
