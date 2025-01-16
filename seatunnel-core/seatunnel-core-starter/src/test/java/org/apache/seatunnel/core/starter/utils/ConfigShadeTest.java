@@ -51,6 +51,9 @@ public class ConfigShadeTest {
 
     private static final String PASSWORD = "seatunnel_password";
 
+    private static final String ACCESS_KEY = "access_key";
+    private static final String SECRET_KEY = "secret_key";
+
     @Test
     public void testParseConfig() throws URISyntaxException {
         URL resource = ConfigShadeTest.class.getResource("/config.shade.conf");
@@ -71,6 +74,10 @@ public class ConfigShadeTest {
                 config.getConfigList("source").get(0).getString("username"), USERNAME);
         Assertions.assertEquals(
                 config.getConfigList("source").get(0).getString("password"), PASSWORD);
+        Assertions.assertEquals(
+                config.getConfigList("source").get(0).getString("access_key"), ACCESS_KEY);
+        Assertions.assertEquals(
+                config.getConfigList("source").get(0).getString("secret_key"), SECRET_KEY);
     }
 
     @Test
@@ -89,6 +96,10 @@ public class ConfigShadeTest {
                 config.getConfigList("source").get(0).getString("username"), "******");
         Assertions.assertEquals(
                 config.getConfigList("source").get(0).getString("password"), "******");
+        Assertions.assertEquals(
+                config.getConfigList("source").get(0).getString("access_key"), "******");
+        Assertions.assertEquals(
+                config.getConfigList("source").get(0).getString("secret_key"), "******");
         String conf = ConfigBuilder.mapToString(config.root().unwrapped());
         Assertions.assertTrue(conf.contains("\"password\" : \"******\""));
     }

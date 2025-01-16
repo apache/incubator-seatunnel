@@ -93,6 +93,7 @@ ${rowtype_primary_key},
 ${rowtype_fields}
 ) ENGINE=OLAP
  UNIQUE KEY (${rowtype_primary_key})
+COMMENT '${comment}'
 DISTRIBUTED BY HASH (${rowtype_primary_key})
  PROPERTIES (
 "replication_allocation" = "tag.location.default: 1",
@@ -110,6 +111,7 @@ CREATE TABLE IF NOT EXISTS `${database}`.`${table}`
     id,
     ${rowtype_fields}
 ) ENGINE = OLAP UNIQUE KEY (${rowtype_primary_key})
+    COMMENT '${comment}'
     DISTRIBUTED BY HASH (${rowtype_primary_key})
     PROPERTIES
 (
@@ -129,6 +131,7 @@ You can use the following placeholders
 - rowtype_primary_key: Used to get the primary key in the upstream schema (maybe a list)
 - rowtype_unique_key: Used to get the unique key in the upstream schema (maybe a list)
 - rowtype_duplicate_key: Used to get the duplicate key in the upstream schema (only for doris source, maybe a list)
+- comment: Used to get the table comment in the upstream schema
 
 ## Data Type Mapping
 
