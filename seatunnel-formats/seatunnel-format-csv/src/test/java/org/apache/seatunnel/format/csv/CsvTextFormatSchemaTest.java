@@ -141,6 +141,13 @@ public class CsvTextFormatSchemaTest {
                         .delimiter(delimiter)
                         .csvLineProcessor(new DefaultCsvLineProcessor())
                         .build();
+        CsvSerializationSchema csvSerializationSchema =
+                CsvSerializationSchema.builder()
+                        .seaTunnelRowType(seaTunnelRowType)
+                        .dateTimeFormatter(Formatter.YYYY_MM_DD_HH_MM_SS_SSSSSS)
+                        .delimiter(",")
+                        .build();
+
         SeaTunnelRow seaTunnelRow = deserializationSchema.deserialize(content.getBytes());
         Assertions.assertEquals("mess,age", seaTunnelRow.getField(0));
         Assertions.assertEquals(Boolean.TRUE, seaTunnelRow.getField(1));
@@ -155,6 +162,10 @@ public class CsvTextFormatSchemaTest {
         Assertions.assertEquals(LocalDate.of(2022, 9, 24), seaTunnelRow.getField(10));
         Assertions.assertEquals(((Map<?, ?>) (seaTunnelRow.getField(15))).get("tyrantlucifer"), 18);
         Assertions.assertEquals(((Map<?, ?>) (seaTunnelRow.getField(15))).get("Kris"), 21);
+        byte[] serialize = csvSerializationSchema.serialize(seaTunnelRow);
+        Assertions.assertEquals(
+                "\"mess,age\",true,1,2,3,4,6.66,7.77,8.8888888,,2022-09-24,22:45:00,2022-09-24 22:45:00.000000,1\u00032\u00033\u00034\u00035\u00036\u0002tyrantlucifer\u000418\u0003Kris\u000421,1\u00022\u00023\u00024\u00025\u00026,tyrantlucifer\u000318\u0002Kris\u000321\u0002nullValueKey\u0003\u0002\u00031231",
+                new String(serialize));
     }
 
     @Test

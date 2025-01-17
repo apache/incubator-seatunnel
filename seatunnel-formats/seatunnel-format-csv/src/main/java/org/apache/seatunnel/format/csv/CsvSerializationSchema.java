@@ -32,6 +32,7 @@ import org.apache.seatunnel.format.csv.exception.SeaTunnelCsvFormatException;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.QuoteMode;
 
 import lombok.NonNull;
 
@@ -227,7 +228,7 @@ public class CsvSerializationSchema implements SerializationSchema {
         CSVFormat format =
                 CSVFormat.DEFAULT
                         .builder()
-                        .setQuoteMode(org.apache.commons.csv.QuoteMode.ALL)
+                        .setQuoteMode(QuoteMode.MINIMAL)
                         .setRecordSeparator("")
                         .build();
         StringWriter stringWriter = new StringWriter();
