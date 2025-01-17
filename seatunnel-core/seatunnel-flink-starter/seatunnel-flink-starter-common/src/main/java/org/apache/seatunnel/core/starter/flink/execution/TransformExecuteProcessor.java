@@ -199,8 +199,10 @@ public class TransformExecuteProcessor
                 return null;
             }
             SeaTunnelRow rowResult = ((SeaTunnelMapTransform<SeaTunnelRow>) transform).map(row);
-            String tableId = pluginOutput == null ? rowResult.getTableId() : pluginOutput;
-            updateMetric(metricName, tableId, metricsContext);
+            if (rowResult != null) {
+                String tableId = pluginOutput == null ? rowResult.getTableId() : pluginOutput;
+                updateMetric(metricName, tableId, metricsContext);
+            }
             return rowResult;
         }
     }
