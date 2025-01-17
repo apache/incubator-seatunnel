@@ -4,62 +4,62 @@
 
 ## 描述
 
-Read external data source data through StarRocks.
-The internal implementation of StarRocks source connector is obtains the query plan from the frontend (FE),
-delivers the query plan as a parameter to BE nodes, and then obtains data results from BE nodes.
+通过`StarRocks`读取外部数据源数据。
+`StarRocks`源连接器的内部实现是从`FE`获取查询计划，
+将查询计划作为参数传递给`BE`节点，然后从`BE`节点获取数据结果。
 
-## Key features
+## 主要功能
 
-- [x] [batch](../../concept/connector-v2-features.md)
-- [ ] [stream](../../concept/connector-v2-features.md)
-- [ ] [exactly-once](../../concept/connector-v2-features.md)
-- [x] [schema projection](../../concept/connector-v2-features.md)
-- [x] [parallelism](../../concept/connector-v2-features.md)
-- [x] [support user-defined split](../../concept/connector-v2-features.md)
+- [x] [批处理](../../concept/connector-v2-features.md)
+- [ ] [流处理](../../concept/connector-v2-features.md)
+- [ ] [精确一次](../../concept/connector-v2-features.md)
+- [x] [列投影](../../concept/connector-v2-features.md)
+- [x] [并行度](../../concept/connector-v2-features.md)
+- [x] [支持用户定义拆分](../../concept/connector-v2-features.md)
 
-## Options
+## 配置选项
 
-| name                     |  type  | required |   default value   |
-|--------------------------|--------|----------|-------------------|
-| nodeUrls                 | list   | yes      | -                 |
-| username                 | string | yes      | -                 |
-| password                 | string | yes      | -                 |
-| database                 | string | yes      | -                 |
-| table                    | string | yes      | -                 |
-| scan_filter              | string | no       | -                 |
-| schema                   | config | yes      | -                 |
-| request_tablet_size      | int    | no       | Integer.MAX_VALUE |
-| scan_connect_timeout_ms  | int    | no       | 30000             |
-| scan_query_timeout_sec   | int    | no       | 3600              |
-| scan_keep_alive_min      | int    | no       | 10                |
-| scan_batch_rows          | int    | no       | 1024              |
-| scan_mem_limit           | long   | no       | 2147483648        |
-| max_retries              | int    | no       | 3                 |
-| scan.params.*            | string | no       | -                 |
+| 名称                      | 类型     | 是否必须 | 默认值               |
+|-------------------------|--------|------|-------------------|
+| nodeUrls                | list   | 是    | -                 |
+| username                | string | 是    | -                 |
+| password                | string | 是    | -                 |
+| database                | string | 是    | -                 |
+| table                   | string | 是    | -                 |
+| scan_filter             | string | 否    | -                 |
+| schema                  | config | 是    | -                 |
+| request_tablet_size     | int    | 否   | Integer.MAX_VALUE |
+| scan_connect_timeout_ms | int    | 否   | 30000             |
+| scan_query_timeout_sec  | int    | 否   | 3600              |
+| scan_keep_alive_min     | int    | 否   | 10                |
+| scan_batch_rows         | int    | 否   | 1024              |
+| scan_mem_limit          | long   | 否   | 2147483648        |
+| max_retries             | int    | 否   | 3                 |
+| scan.params.*           | string | 否   | -                 |
 
 ### nodeUrls [list]
 
-`StarRocks` cluster address, the format is `["fe_ip:fe_http_port", ...]`
+`StarRocks` 集群地址配置格式 `["fe_ip:fe_http_port", ...]`。
 
 ### username [string]
 
-`StarRocks` 用户名称
+`StarRocks` 用户名称。
 
 ### password [string]
 
-`StarRocks` 用户密码
+`StarRocks` 用户密码。
 
 ### database [string]
 
-StarRocks 数据库名称
+`StarRocks` 数据库名。
 
 ### table [string]
 
-StarRocks 表名称
+`StarRocks` 表名。
 
 ### scan_filter [string]
 
-Filter expression of the query, which is transparently transmitted to StarRocks. StarRocks uses this expression to complete source-side data filtering.
+过滤查询的表达式，该表达式透明地传输到`StarRocks` 。`StarRocks` 使用此表达式完成源端数据过滤。
 
 例如
 
@@ -71,9 +71,9 @@ Filter expression of the query, which is transparently transmitted to StarRocks.
 
 #### fields [Config]
 
-The schema of the starRocks that you want to generate
+要生成的`starRocks`的`schema`
 
-e.g.
+示例
 
 ```
 schema {
@@ -86,62 +86,60 @@ schema {
 
 ### request_tablet_size [int]
 
-The number of StarRocks Tablets corresponding to an Partition. The smaller this value is set, the more partitions will be generated. This will increase the parallelism on the engine side, but at the same time will cause greater pressure on StarRocks.
+与分区对应的`StarRocks tablet`的数量。此值设置得越小，生成的分区就越多。这将增加引擎的平行度，但同时也会给`StarRocks`造成更大的压力。
 
-The following is an example to explain how to use request_tablet_size to controls the generation of partitions
+以下示例，用于解释如何使用`request_tablet_size`来控制分区的生成。
 
 ```
-the tablet distribution of StarRocks table in cluster as follower
+StarRocks 集群中表的 tablet 分布作为 follower
 
 be_node_1 tablet[1, 2, 3, 4, 5]
 be_node_2 tablet[6, 7, 8, 9, 10]
 be_node_3 tablet[11, 12, 13, 14, 15]
 
-1.If not set request_tablet_size, there will no limit on the number of tablets in a single partition. The partitions will be generated as follows  
+1.如果没有设置 request_tablet_size，则单个分区中的 tablet 数量将没有限制。分区将按以下方式生成：
 
-partition[0] read data of tablet[1, 2, 3, 4, 5] from be_node_1 
-partition[1] read data of tablet[6, 7, 8, 9, 10] from be_node_2 
-partition[2] read data of tablet[11, 12, 13, 14, 15] from be_node_3 
+partition[0] 从 be_node_1 读取 tablet 数据：tablet[1, 2, 3, 4, 5]
+partition[1] 从 be_node_2 读取 tablet 数据：tablet[6, 7, 8, 9, 10]
+partition[2] 从 be_node_3 读取 tablet 数据：tablet[11, 12, 13, 14, 15]
 
-2.if set request_tablet_size=3, the limit on the number of tablets in a single partition is 3. The partitions will be generated as follows
+2.如果设置了 request_tablet_size=3，则每个分区中最多包含 3 个 tablet。分区将按以下方式生成
 
-partition[0] read data of tablet[1, 2, 3] from be_node_1 
-partition[1] read data of tablet[4, 5] from be_node_1 
-partition[2] read data of tablet[6, 7, 8] from be_node_2 
-partition[3] read data of tablet[9, 10] from be_node_2 
-partition[4] read data of tablet[11, 12, 13] from be_node_3 
-partition[5] read data of tablet[14, 15] from be_node_3 
+partition[0] 从 be_node_1 读取 tablet 数据：tablet[1, 2, 3]
+partition[1] 从 be_node_1 读取 tablet 数据：tablet[4, 5]
+partition[2] 从 be_node_2 读取 tablet 数据：tablet[6, 7, 8]
+partition[3] 从 be_node_2 读取 tablet 数据：tablet[9, 10]
+partition[4] 从 be_node_3 读取 tablet 数据：tablet[11, 12, 13]
+partition[5] 从 be_node_3 读取 tablet 数据：tablet[14,15]
 ```
 
 ### scan_connect_timeout_ms [int]
 
-requests connection timeout sent to StarRocks
+发送到 `StarRocks` 的请求连接超时。
 
 ### scan_query_timeout_sec [int]
 
-Query the timeout time of StarRocks, the default value is 1 hour, -1 means no timeout limit
+在 `StarRocks` 中，查询超时时间的默认值为 1 小时，-1 表示没有超时限制。
 
 ### scan_keep_alive_min [int]
 
-The keep-alive duration of the query task, in minutes. The default value is 10. we recommend that you set this parameter to a value greater than or equal to 5.
-
+查询任务的保持连接时长，单位是分钟，默认值为 10 分钟。我们建议将此参数设置为大于或等于 5 的值。
 ### scan_batch_rows [int]
 
-The maximum number of data rows to read from BE at a time. Increasing this value reduces the number of connections established between engine and StarRocks and therefore mitigates overhead caused by network latency.
-
+一次从 `BE` 节点读取的最大数据行数。增加此值可以减少引擎与 `StarRocks` 之间建立的连接数量，从而减轻由网络延迟引起的开销。
 ### scan_mem_limit [long]
 
-The maximum memory space allowed for a single query in the BE node, in bytes. The default value is 2147483648 (2 GB).
+单个查询在 BE 节点上允许的最大内存空间，单位为字节，默认值为 2147483648 字节（即 2 GB）。
 
 ### max_retries [int]
 
-number of retry requests sent to StarRocks
+发送到 `StarRocks` 的重试请求次数。
 
 ### scan.params. [string]
 
-The parameter of the scan data from be
+从 `BE` 节点扫描数据相关的参数。
 
-## Example
+## 示例
 
 ```
 source {
