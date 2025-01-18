@@ -155,7 +155,7 @@ public class SFTPFileSystem extends FileSystem {
         }
     }
 
-    private String quote(String path) {
+    public String quote(String path) {
         byte[] _path = path.getBytes(StandardCharsets.UTF_8);
         int count = 0;
         for (int i = 0; i < _path.length; i++) {
