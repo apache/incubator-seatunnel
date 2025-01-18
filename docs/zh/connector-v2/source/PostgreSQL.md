@@ -12,7 +12,7 @@
 
 ### 对于 Spark/Flink 引擎
 
-> 1. 您需要确保 [jdbc 驱动 jar 包](https://mvnrepository.com/artifact/org.postgresql/postgresql) 已放置在目录 `${SEATUNNEL_HOME}/plugins/` 中。
+> 1. 您需要确保 [jdbc 驱动的jar 包](https://mvnrepository.com/artifact/org.postgresql/postgresql) 已放置在目录 `${SEATUNNEL_HOME}/plugins/` 中。
 
 ### 对于 SeaTunnel Zeta 引擎
 
