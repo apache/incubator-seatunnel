@@ -221,7 +221,6 @@ tables_configs = [
 source {
   FakeSource {
     parallelism = 2
-    plugin_output = "fake"
     row.num = 16
     schema {
         table = "FakeDatabase.FakeTable"
@@ -275,7 +274,6 @@ source {
 source {
   FakeSource {
     parallelism = 2
-    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

@@ -154,7 +154,6 @@ env {
 source {
   FakeSource {
     parallelism = 1
-    plugin_output = "fake"
     row.num = 16
     schema = {
       fields {

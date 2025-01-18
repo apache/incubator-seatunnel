@@ -93,8 +93,6 @@
 ```json
 transform {
   JsonPath {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     columns = [
      {
         "src_field" = "data"
@@ -175,8 +173,6 @@ JsonPath 转换将 seatunnel 的值转换为一个数组。
 ```hocon
 transform {
   JsonPath {
-    plugin_input = "fake"
-    plugin_output = "fake1"
 
     row_error_handle_way = FAIL
     columns = [

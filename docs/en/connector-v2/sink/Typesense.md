@@ -77,7 +77,6 @@ Simple example:
 ```bash
 sink {
     Typesense {
-        plugin_input = "typesense_test_table"
         hosts = ["localhost:8108"]
         collection = "typesense_to_typesense_sink_with_query"
         max_retry_count = 3

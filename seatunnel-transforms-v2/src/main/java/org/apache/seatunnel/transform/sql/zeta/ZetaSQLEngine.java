@@ -132,7 +132,7 @@ public class ZetaSQLEngine implements SQLEngine {
                         && !tableName.equalsIgnoreCase(catalogTableName)
                         && !"DUAL".equalsIgnoreCase(tableName)) {
                     log.warn(
-                            "SQL table name {} is not equal to input table name {} or catalog table name {}",
+                            "SQL table name {} is not equal to dual or input table name {} or catalog table name {}",
                             tableName,
                             inputTableName,
                             catalogTableName);

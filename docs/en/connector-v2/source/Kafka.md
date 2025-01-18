@@ -364,7 +364,6 @@ source {
               """
     bootstrap.servers = "kafkaCluster:9092"
     start_mode = "earliest"
-    plugin_output = "kafka_table"
   }
 }
 ```

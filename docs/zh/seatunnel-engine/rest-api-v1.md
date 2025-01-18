@@ -429,7 +429,6 @@ network:
     "source": [
         {
             "plugin_name": "FakeSource",
-            "plugin_output": "fake",
             "row.num": 100,
             "schema": {
                 "fields": {
@@ -444,8 +443,7 @@ network:
     ],
     "sink": [
         {
-            "plugin_name": "Console",
-            "plugin_input": ["fake"]
+            "plugin_name": "Console"
         }
     ]
 }
@@ -495,7 +493,6 @@ network:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -510,8 +507,7 @@ network:
     ],
     "sink": [
       {
-        "plugin_name": "Console",
-        "plugin_input": ["fake"]
+        "plugin_name": "Console"
       }
     ]
   },
@@ -526,7 +522,6 @@ network:
     "source": [
       {
         "plugin_name": "FakeSource",
-        "plugin_output": "fake",
         "row.num": 1000,
         "schema": {
           "fields": {
@@ -541,8 +536,7 @@ network:
     ],
     "sink": [
       {
-        "plugin_name": "Console",
-        "plugin_input": ["fake"]
+        "plugin_name": "Console"
       }
     ]
   }
@@ -654,7 +648,6 @@ network:
                     "age": "int"
                 }
             },
-            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "seatunnel",
@@ -694,7 +687,6 @@ network:
                     "age": "int"
                 }
             },
-            "plugin_output": "fake",
             "parallelism": 1,
             "hostname": "127.0.0.1",
             "username": "c2VhdHVubmVs",

@@ -98,13 +98,11 @@ transform {
   RowKindExtractor {
         custom_field_name = "custom_name"
         transform_type = FULL
-        plugin_output = "trans_result"
     }
 }
 
 sink {
   Console {
-    plugin_input = "custom_name"
   }
 }
 

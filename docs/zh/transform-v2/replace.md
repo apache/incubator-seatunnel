@@ -56,8 +56,6 @@
 ```
 transform {
   Replace {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     replace_field = "name"
     pattern = " "
     replacement = "_"
@@ -84,7 +82,6 @@ env {
 
 source {
   FakeSource {
-    plugin_output = "fake"
     row.num = 100
     schema = {
       fields {
@@ -97,8 +94,6 @@ source {
 
 transform {
   Replace {
-    plugin_input = "fake"
-    plugin_output = "fake1"
     replace_field = "name"
     pattern = ".+"
     replacement = "b"
@@ -108,7 +103,6 @@ transform {
 
 sink {
   Console {
-    plugin_input = "fake1"
   }
 }
 ```

@@ -5,7 +5,6 @@
   },
   "source": [
     {
-      "plugin_output": "fake_to_inmemory_wtih_zeta",
       "row.num": 10,
       "schema": {
         "fields": {
@@ -20,7 +19,6 @@
   ],
   "sink": [
     {
-      "plugin_input": "fake_to_inmemory_wtih_zeta"
     }
   ]
 }
