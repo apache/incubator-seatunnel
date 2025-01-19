@@ -95,6 +95,7 @@ public class ClickhouseSinkCDCChangelogIT extends TestSuiteBase implements TestR
 
         Container.ExecResult execResult =
                 container.executeJob("/clickhouse_sink_cdc_changelog_case1.conf");
+
         Assertions.assertEquals(0, execResult.getExitCode());
 
         checkSinkTableRows();
@@ -108,6 +109,7 @@ public class ClickhouseSinkCDCChangelogIT extends TestSuiteBase implements TestR
 
         Container.ExecResult execResult =
                 container.executeJob("/clickhouse_sink_cdc_changelog_case2.conf");
+
         Assertions.assertEquals(0, execResult.getExitCode());
 
         Awaitility.given()
@@ -125,6 +127,7 @@ public class ClickhouseSinkCDCChangelogIT extends TestSuiteBase implements TestR
 
         Container.ExecResult execResult =
                 container.executeJob("/clickhouse_sink_cdc_changelog_case1.conf");
+
         Assertions.assertEquals(0, execResult.getExitCode());
 
         checkSinkTableRows();
@@ -138,6 +141,7 @@ public class ClickhouseSinkCDCChangelogIT extends TestSuiteBase implements TestR
 
         Container.ExecResult execResult =
                 container.executeJob("/clickhouse_sink_cdc_changelog_case2.conf");
+
         Assertions.assertEquals(0, execResult.getExitCode());
 
         checkSinkTableRows();
