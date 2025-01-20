@@ -168,6 +168,10 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
                         nextInputDataList.addAll(outputDataArray);
                         for (T outputData : outputDataArray) {
                             if (outputData instanceof SeaTunnelRow) {
+                                log.info("==============pluginOutput:{}", pluginOutput);
+                                log.info(
+                                        "==============tableId:{}",
+                                        ((SeaTunnelRow) outputData).getTableId());
                                 String tableId =
                                         pluginOutput == null
                                                 ? ((SeaTunnelRow) outputData).getTableId()
@@ -193,7 +197,11 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
                     }
                     nextInputDataList.add(outputData);
                     if (outputData instanceof SeaTunnelRow) {
-                        updateMetric(metricName, ((SeaTunnelRow) outputData).getTableId());
+                        String tableId =
+                                pluginOutput == null
+                                        ? ((SeaTunnelRow) outputData).getTableId()
+                                        : pluginOutput;
+                        updateMetric(metricName, tableId);
                     }
                 }
             }
