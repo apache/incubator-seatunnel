@@ -99,7 +99,9 @@ public class CustomModel extends AbstractModel {
             return OBJECT_MAPPER.convertValue(
                     parseResponse(responseStr), new TypeReference<List<String>>() {});
         } catch (Exception e) {
-            String result = OBJECT_MAPPER.convertValue(parseResponse(responseStr), new TypeReference<String>() {});
+            String result =
+                    OBJECT_MAPPER.convertValue(
+                            parseResponse(responseStr), new TypeReference<String>() {});
             return Collections.singletonList(result);
         }
     }
