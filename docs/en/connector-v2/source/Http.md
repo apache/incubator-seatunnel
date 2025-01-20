@@ -42,7 +42,7 @@ They can be downloaded via install-plugin.sh or from the Maven central repositor
 
 ## Source Options
 
-|            Name             |  Type   | Required | Default |                                                             Description                                                              |
+|            Name             |  Type   | Required | Default | Description                                                                                                                          |
 |-----------------------------|---------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------|
 | url                         | String  | Yes      | -       | Http request url.                                                                                                                    |
 | schema                      | Config  | No       | -       | Http and seatunnel data structure mapping                                                                                            |
@@ -57,7 +57,7 @@ They can be downloaded via install-plugin.sh or from the Maven central repositor
 | format                      | String  | No       | text    | The format of upstream data, now only support `json` `text`, default `text`.                                                         |
 | method                      | String  | No       | get     | Http request method, only supports GET, POST method.                                                                                 |
 | headers                     | Map     | No       | -       | Http headers.                                                                                                                        |
-| params                      | Map     | No       | -       | Http params,the program will automatically add http header application/x-www-form-urlencoded.                                        |
+| params                      | Map     | No       | -       | Http params.                                                                                                                         |
 | body                        | String  | No       | -       | Http body,the program will automatically add http header application/json,body is jsonbody.                                          |
 | poll_interval_millis        | Int     | No       | -       | Request http api interval(millis) in stream mode.                                                                                    |
 | retry                       | Int     | No       | -       | The max retry times if request http return to `IOException`.                                                                         |
@@ -67,6 +67,7 @@ They can be downloaded via install-plugin.sh or from the Maven central repositor
 | connect_timeout_ms          | Int     | No       | 12000   | Connection timeout setting, default 12s.                                                                                             |
 | socket_timeout_ms           | Int     | No       | 60000   | Socket timeout setting, default 60s.                                                                                                 |
 | common-options              |         | No       | -       | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details                    |
+| keep_params_as_form         |         | No       | -       | Whether the params are submitted according to the form                                                                               |
 
 ## How to Create a Http Data Synchronization Jobs
 
@@ -345,6 +346,15 @@ source {
 }
 
 ```
+
+### keep_params_as_form
+When set to true,params and page params will be submitted in the form.
+If the submission is application/json format,please do not set this value.
+
+### params
+By default, the parameters will be added to the url path.
+If form submission is required,please set keep_params_as_form true.
+
 
 ## Changelog
 

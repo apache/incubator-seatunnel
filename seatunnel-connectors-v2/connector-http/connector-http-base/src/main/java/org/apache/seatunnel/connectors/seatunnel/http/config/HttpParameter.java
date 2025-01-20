@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.http.config;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
+import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 
 import lombok.Data;
 
@@ -34,7 +35,7 @@ public class HttpParameter implements Serializable {
     protected Map<String, String> headers;
     protected Map<String, String> params;
     protected Map<String, Object> pageParams;
-    protected boolean keepParamsForm = false;
+    protected boolean keepParamsAsForm = false;
     protected Map<String, Object> body;
     protected int pollIntervalMillis;
     protected int retry;
@@ -47,8 +48,8 @@ public class HttpParameter implements Serializable {
     public void buildWithConfig(Config pluginConfig) {
         // set url
         this.setUrl(pluginConfig.getString(HttpConfig.URL.key()));
-        if (pluginConfig.hasPath(HttpConfig.KEEP_PARAM_FORM.key())) {
-            this.setKeepParamsForm(pluginConfig.getBoolean(HttpConfig.KEEP_PARAM_FORM.key()));
+        if (pluginConfig.hasPath(HttpConfig.KEEP_PARAMS_AS_FORM.key())) {
+            this.setKeepParamsAsForm(pluginConfig.getBoolean(HttpConfig.KEEP_PARAMS_AS_FORM.key()));
         }
 
         // set method
@@ -82,8 +83,10 @@ public class HttpParameter implements Serializable {
         }
         // set body
         if (pluginConfig.hasPath(HttpConfig.BODY.key())) {
+
             this.setBody(
-                    pluginConfig.getConfig(HttpConfig.BODY.key()).entrySet().stream()
+                    ConfigFactory.parseString(pluginConfig.getString(HttpConfig.BODY.key()))
+                            .entrySet().stream()
                             .collect(
                                     Collectors.toMap(
                                             Map.Entry::getKey,

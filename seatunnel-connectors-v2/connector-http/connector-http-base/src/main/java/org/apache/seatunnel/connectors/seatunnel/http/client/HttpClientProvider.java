@@ -56,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -121,24 +122,30 @@ public class HttpClientProvider implements AutoCloseable {
             Map<String, String> params,
             Map<String, Object> body,
             Map<String, Object> pageParams,
-            boolean keepParamsForm)
+            boolean keepParamsAsForm)
             throws Exception {
         // convert method option to uppercase
         method = method.toUpperCase(Locale.ROOT);
         // Keep the original post  logic
-        if (HttpPost.METHOD_NAME.equals(method) && keepParamsForm) {
-            if (MapUtils.isEmpty(params)) {
-                params = new HashMap<>();
+        if (HttpPost.METHOD_NAME.equals(method) && keepParamsAsForm) {
+            URI uri = URI.create(url);
+            Map<String, Object> paramsMap = new HashMap<>();
+            if (MapUtils.isNotEmpty(params)) {
+                paramsMap.putAll(params);
             }
             if (MapUtils.isNotEmpty(pageParams)) {
-                for (Map.Entry<String, Object> entry : pageParams.entrySet()) {
-                    params.put(entry.getKey(), entry.getValue().toString());
-                }
+                paramsMap.putAll(params);
             }
-            return doPost(url, headers, params, body);
+            return doPost(uri, headers, paramsMap, body, true);
         }
         if (HttpPost.METHOD_NAME.equals(method)) {
-            return doPost(url, headers, params, body, pageParams);
+            // Create access address
+            URIBuilder uriBuilder = new URIBuilder(url);
+            // add parameter to uri
+            addParameters(uriBuilder, params);
+            URI uri = uriBuilder.build();
+
+            return doPost(uri, headers, pageParams, body, false);
         }
         if (HttpGet.METHOD_NAME.equals(method)) {
             if (MapUtils.isEmpty(params)) {
@@ -318,7 +325,6 @@ public class HttpClientProvider implements AutoCloseable {
     /**
      * Send a post request with request headers , request parameters and request body
      *
-     * @param url request address
      * @param headers request header map
      * @param params request parameter map
      * @param body request body
@@ -326,24 +332,19 @@ public class HttpClientProvider implements AutoCloseable {
      * @throws Exception information
      */
     public HttpResponse doPost(
-            String url,
+            URI uri,
             Map<String, String> headers,
-            Map<String, String> params,
+            Map<String, Object> params,
             Map<String, Object> body,
-            Map<String, Object> pageParams)
+            boolean keepParamsAsForm)
             throws Exception {
-        // Create access address
-        URIBuilder uriBuilder = new URIBuilder(url);
-        // add parameter to uri
-        addParameters(uriBuilder, params);
-        // create a new http get
-        HttpPost httpPost = new HttpPost(uriBuilder.build());
+        HttpPost httpPost = new HttpPost(uri);
         // set default request config
         httpPost.setConfig(requestConfig);
         // set request header
         addHeaders(httpPost, headers);
         // add body in request
-        addBody(httpPost, body, pageParams);
+        addBody(httpPost, body, params, keepParamsAsForm);
         // return http response
         return getResponse(httpPost);
     }
@@ -484,20 +485,22 @@ public class HttpClientProvider implements AutoCloseable {
     private void addBody(
             HttpEntityEnclosingRequestBase request,
             Map<String, Object> body,
-            Map<String, Object> pageParams)
+            Map<String, Object> params,
+            boolean keepParamsAsForm)
             throws UnsupportedEncodingException {
         Map<String, Object> bodyMap = new HashedMap<>();
         if (MapUtils.isNotEmpty(body)) {
             bodyMap = body;
         }
-
-        if (request.getHeaders(HTTP.CONTENT_TYPE) != null
-                && request.getHeaders(HTTP.CONTENT_TYPE).length > 0
-                && APPLICATION_FORM.equalsIgnoreCase(
-                        request.getHeaders(HTTP.CONTENT_TYPE)[0].getValue())) {
+        boolean isFormSubmit =
+                request.getHeaders(HTTP.CONTENT_TYPE) != null
+                        && request.getHeaders(HTTP.CONTENT_TYPE).length > 0
+                        && APPLICATION_FORM.equalsIgnoreCase(
+                                request.getHeaders(HTTP.CONTENT_TYPE)[0].getValue());
+        if (isFormSubmit || keepParamsAsForm) {
             Map<String, String> formParam = new HashedMap<>();
-            if (MapUtils.isNotEmpty(pageParams)) {
-                for (Map.Entry<String, Object> entry : pageParams.entrySet()) {
+            if (MapUtils.isNotEmpty(params)) {
+                for (Map.Entry<String, Object> entry : params.entrySet()) {
                     formParam.put(entry.getKey(), entry.getValue().toString());
                 }
             }
@@ -521,8 +524,8 @@ public class HttpClientProvider implements AutoCloseable {
         } else {
             request.addHeader(HTTP.CONTENT_TYPE, APPLICATION_JSON);
 
-            if (MapUtils.isNotEmpty(pageParams)) {
-                bodyMap.putAll(pageParams);
+            if (MapUtils.isNotEmpty(params)) {
+                bodyMap.putAll(params);
             }
             StringEntity entity =
                     new StringEntity(JsonUtils.toJsonString(bodyMap), ContentType.APPLICATION_JSON);

@@ -330,6 +330,10 @@ public class HttpIT extends TestSuiteBase implements TestResource {
                 container.executeJob("/http_formrequestbody_to_assert.conf");
         Assertions.assertEquals(0, execResult13.getExitCode());
 
+        Container.ExecResult execResult20 =
+                container.executeJob("/http_formrequestbody_to_assert2.conf");
+        Assertions.assertEquals(0, execResult20.getExitCode());
+
         // http httpJsonRequestBody
         Container.ExecResult execResult14 =
                 container.executeJob("/http_jsonrequestbody_to_assert.conf");
