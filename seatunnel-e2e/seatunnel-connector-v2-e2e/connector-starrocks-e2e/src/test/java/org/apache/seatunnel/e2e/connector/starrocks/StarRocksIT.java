@@ -365,6 +365,13 @@ public class StarRocksIT extends TestSuiteBase implements TestResource {
                         "CREATE TABLE IF NOT EXISTS `${database}`.`${table}` (\n ${rowtype_fields}\n ) ENGINE=OLAP \n  DUPLICATE KEY(`BIGINT_COL`) \n COMMENT '${comment}' \n DISTRIBUTED BY HASH (BIGINT_COL) BUCKETS 1 \n PROPERTIES (\n   \"replication_num\" = \"1\", \n  \"in_memory\" = \"false\" , \n  \"storage_format\" = \"DEFAULT\"  \n )");
         starRocksCatalog.open();
         CatalogTable catalogTable = starRocksCatalog.getTable(tablePathStarRocksSource);
+        catalogTable =
+                CatalogTable.of(
+                        catalogTable.getTableId(),
+                        catalogTable.getTableSchema(),
+                        catalogTable.getOptions(),
+                        catalogTable.getPartitionKeys(),
+                        "test'1'");
         // sink tableExists ?
         starRocksCatalog.dropTable(tablePathStarRocksSink, true);
         boolean tableExistsBefore = starRocksCatalog.tableExists(tablePathStarRocksSink);
