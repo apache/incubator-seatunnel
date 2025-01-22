@@ -106,7 +106,7 @@ DISTRIBUTED BY HASH (${rowtype_primary_key})
 
 ```sql
 CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}`
-(
+(   
     id,
     ${rowtype_fields}
 ) ENGINE = OLAP UNIQUE KEY (${rowtype_primary_key})
