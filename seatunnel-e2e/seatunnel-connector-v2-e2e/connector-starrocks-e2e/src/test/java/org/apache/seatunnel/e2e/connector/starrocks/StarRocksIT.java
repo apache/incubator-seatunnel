@@ -89,8 +89,9 @@ public class StarRocksIT extends TestSuiteBase implements TestResource {
                     + SOURCE_TABLE
                     + " (\n"
                     + "  BIGINT_COL     BIGINT,\n"
-                    + "  LARGEINT_COL   LARGEINT,\n"
-                    + "  SMALLINT_COL   SMALLINT,\n"
+                    // add comment for test
+                    + "  LARGEINT_COL   LARGEINT COMMENT '''N''-N',\n"
+                    + "  SMALLINT_COL   SMALLINT COMMENT '\\N\\-N',\n"
                     + "  TINYINT_COL    TINYINT,\n"
                     + "  BOOLEAN_COL    BOOLEAN,\n"
                     + "  DECIMAL_COL    Decimal(12, 1),\n"

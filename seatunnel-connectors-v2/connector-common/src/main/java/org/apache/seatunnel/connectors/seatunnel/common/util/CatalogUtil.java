@@ -106,7 +106,9 @@ public abstract class CatalogUtil {
                         SaveModePlaceHolder.ROWTYPE_FIELDS.getReplacePlaceHolder(), rowTypeFields)
                 .replaceAll(
                         SaveModePlaceHolder.COMMENT.getReplacePlaceHolder(),
-                        Objects.isNull(comment) ? "" : comment.replace("'", "''"));
+                        Objects.isNull(comment)
+                                ? ""
+                                : comment.replace("'", "''").replace("\\", "\\\\"));
     }
 
     private String mergeColumnInTemplate(
