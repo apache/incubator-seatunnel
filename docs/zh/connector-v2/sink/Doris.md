@@ -88,25 +88,25 @@ Doris Sink连接器的内部实现是通过stream load批量缓存和导入的�
 
 ```sql
 CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}` (
-${rowtype_primary_key},
-${rowtype_fields}
+                                                             ${rowtype_primary_key},
+                                                             ${rowtype_fields}
 ) ENGINE=OLAP
- UNIQUE KEY (${rowtype_primary_key})
-COMMENT '${comment}'
-DISTRIBUTED BY HASH (${rowtype_primary_key})
- PROPERTIES (
-"replication_allocation" = "tag.location.default: 1",
-"in_memory" = "false",
-"storage_format" = "V2",
-"disable_auto_compaction" = "false"
-)
+    UNIQUE KEY (${rowtype_primary_key})
+    COMMENT '${comment}'
+    DISTRIBUTED BY HASH (${rowtype_primary_key})
+    PROPERTIES (
+                   "replication_allocation" = "tag.location.default: 1",
+                   "in_memory" = "false",
+                   "storage_format" = "V2",
+                   "disable_auto_compaction" = "false"
+               )
 ```
 
 如果模板中填写了自定义字段，例如添加 id 字段
 
 ```sql
 CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}`
-(   
+(
     id,
     ${rowtype_fields}
 ) ENGINE = OLAP UNIQUE KEY (${rowtype_primary_key})
