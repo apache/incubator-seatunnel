@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}` (
 
 ```sql
 CREATE TABLE IF NOT EXISTS `${database}`.`${table_name}`
-(
+(   
     id,
     ${rowtype_fields}
 ) ENGINE = OLAP UNIQUE KEY (${rowtype_primary_key})
