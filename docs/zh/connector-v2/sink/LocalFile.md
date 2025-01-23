@@ -50,6 +50,7 @@
 | is_enable_transaction                 | boolean | 否    | true                                       | 是否启用事务                                                          |
 | batch_size                            | int     | 否    | 1000000                                    | 批量大小                                                            |
 | single_file_mode                      | boolean | 否    | false                                      | 每个并行度只会输出一个文件，当此参数开启时，batch_size就不会生效。输出的文件名没有文件块后缀。            |
+| create_empty_file_when_no_data        | boolean | 否    | false                                      | 当上游没有数据同步时，依然生成对应的数据文件。                                         |
 | compress_codec                        | string  | 否    | none                                       | 压缩编码                                                            |
 | common-options                        | object  | 否    | -                                          | 常见选项                                                            |
 | max_rows_in_memory                    | int     | 否    | -                                          | 仅在 file_format_type 为 excel 时使用                                 |
