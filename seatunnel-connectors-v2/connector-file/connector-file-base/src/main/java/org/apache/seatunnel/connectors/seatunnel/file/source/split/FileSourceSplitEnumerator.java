@@ -48,17 +48,21 @@ public class FileSourceSplitEnumerator
     private ReadStrategy readStrategy;
 
     public FileSourceSplitEnumerator(
-            SourceSplitEnumerator.Context<FileSourceSplit> context, List<String> filePaths) {
+            ReadStrategy readStrategy,
+            SourceSplitEnumerator.Context<FileSourceSplit> context,
+            List<String> filePaths) {
         this.context = context;
         this.filePaths = filePaths;
         this.assignedSplit = new HashSet<>();
+        this.readStrategy = readStrategy;
     }
 
     public FileSourceSplitEnumerator(
+            ReadStrategy readStrategy,
             SourceSplitEnumerator.Context<FileSourceSplit> context,
             List<String> filePaths,
             FileSourceState sourceState) {
-        this(context, filePaths);
+        this(readStrategy, context, filePaths);
         this.assignedSplit = sourceState.getAssignedSplit();
     }
 

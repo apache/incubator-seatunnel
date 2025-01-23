@@ -301,7 +301,7 @@ public class OrcReadStrategyTest {
             orcReadStrategy.read(fileSourceSplit, testCollector);
             System.out.println(testCollector.rows);
         }
-        Assertions.assertEquals(1, testCollector.rows);
+        Assertions.assertEquals(1, testCollector.rows.size());
         for (SeaTunnelRow row : testCollector.getRows()) {
             Assertions.assertEquals(row.getField(0).getClass(), Boolean.class);
             Assertions.assertEquals(row.getField(1).getClass(), Byte.class);
