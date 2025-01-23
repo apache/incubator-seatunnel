@@ -14,9 +14,6 @@ Used to write data to Activemq.
 
 |                name                 |  type   | required | default value |
 |-------------------------------------|---------|----------|---------------|
-| host                                | string  | no       | -             |
-| port                                | int     | no       | -             |
-| virtual_host                        | string  | no       | -             |
 | username                            | string  | no       | -             |
 | password                            | string  | no       | -             |
 | queue_name                          | string  | yes      | -             |
@@ -31,14 +28,6 @@ Used to write data to Activemq.
 | nested_map_and_list_enabled         | boolean | no       | -             |
 | warnAboutUnstartedConnectionTimeout | boolean | no       | -             |
 | closeTimeout                        | int     | no       | -             |
-
-### host [string]
-
-the default host to use for connections
-
-### port [int]
-
-the default port to use for connections
 
 ### username [string]
 

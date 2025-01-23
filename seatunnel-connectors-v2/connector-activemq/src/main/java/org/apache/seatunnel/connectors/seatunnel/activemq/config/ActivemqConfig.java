@@ -28,15 +28,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 @Setter
 @Getter
 @AllArgsConstructor
 public class ActivemqConfig implements Serializable {
-    private String host;
-    private Integer port;
+
     private String username;
     private String password;
     private String uri;
@@ -53,20 +50,10 @@ public class ActivemqConfig implements Serializable {
     private Boolean alwaysSessionAsync;
     private Boolean alwaysSyncSend;
     private Integer warnAboutUnstartedConnectionTimeout;
-
-    private final Map<String, Object> sinkOptionProps = new HashMap<>();
-
-    public static final Option<String> HOST =
-            Options.key("host")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription("the default host to use for connections");
-
-    public static final Option<Integer> PORT =
-            Options.key("port")
-                    .intType()
-                    .noDefaultValue()
-                    .withDescription("the default port to use for connections");
+    private boolean usesCorrelationId = false;
+    private Config schema;
+    private String format;
+    private String fieldDelimiter;
 
     public static final Option<String> USERNAME =
             Options.key("username")
@@ -190,9 +177,36 @@ public class ActivemqConfig implements Serializable {
                             "Controls whether message expiration checking is done in each "
                                     + "MessageConsumer prior to dispatching a message.");
 
+    public static final Option<Boolean> USE_CORRELATION_ID =
+            Options.key("use_correlation_id")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription(
+                            "Whether the messages received are supplied with a unique"
+                                    + "id to deduplicate messages (in case of failed acknowledgments).");
+
+    public static final Option<Config> SCHEMA =
+            Options.key("schema")
+                    .objectType(Config.class)
+                    .noDefaultValue()
+                    .withDescription(
+                            "The structure of the data, including field names and field types.");
+
+    public static final Option<String> FORMAT =
+            Options.key("format")
+                    .stringType()
+                    .defaultValue(SchemaFormat.JSON.getName())
+                    .withDescription(
+                            "Data format. The default format is json. Optional text format. The default field separator is \", \". "
+                                    + "If you customize the delimiter, add the \"field.delimiter\" option.");
+
+    public static final Option<String> FIELD_DELIMITER =
+            Options.key("field.delimiter")
+                    .stringType()
+                    .defaultValue(",")
+                    .withDescription("Customize the field delimiter for data format.");
+
     public ActivemqConfig(Config config) {
-        this.host = config.getString(HOST.key());
-        this.port = config.getInt(PORT.key());
         this.queueName = config.getString(QUEUE_NAME.key());
         this.uri = config.getString(URI.key());
         if (config.hasPath(USERNAME.key())) {
@@ -234,6 +248,22 @@ public class ActivemqConfig implements Serializable {
         if (config.hasPath(WARN_ABOUT_UNSTARTED_CONNECTION_TIMEOUT.key())) {
             this.warnAboutUnstartedConnectionTimeout =
                     config.getInt(WARN_ABOUT_UNSTARTED_CONNECTION_TIMEOUT.key());
+        }
+        if (config.hasPath(USE_CORRELATION_ID.key())) {
+            this.usesCorrelationId = config.getBoolean(USE_CORRELATION_ID.key());
+        }
+        if (config.hasPath(CONSUMER_EXPIRY_CHECK_ENABLED.key())) {
+            this.consumerExpiryCheckEnabled =
+                    config.getBoolean(CONSUMER_EXPIRY_CHECK_ENABLED.key());
+        }
+        if (config.hasPath(SCHEMA.key())) {
+            this.schema = config.getConfig(SCHEMA.key());
+        }
+        if (config.hasPath(FORMAT.key())) {
+            this.format = config.getString(FORMAT.key());
+        }
+        if (config.hasPath(FIELD_DELIMITER.key())) {
+            this.fieldDelimiter = config.getString(FIELD_DELIMITER.key());
         }
     }
 
