@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @SuppressWarnings("MagicNumber")
 public class HttpParameter implements Serializable {
     protected String url;
-    protected boolean enabledOldSubmit = false;
     protected HttpRequestMethod method;
     protected Map<String, String> headers;
     protected Map<String, String> params;

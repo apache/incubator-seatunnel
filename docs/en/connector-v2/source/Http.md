@@ -67,7 +67,7 @@ They can be downloaded via install-plugin.sh or from the Maven central repositor
 | connect_timeout_ms          | Int     | No       | 12000   | Connection timeout setting, default 12s.                                                                                             |
 | socket_timeout_ms           | Int     | No       | 60000   | Socket timeout setting, default 60s.                                                                                                 |
 | common-options              |         | No       | -       | Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details                    |
-| keep_params_as_form         |         | No       | -       | Whether the params are submitted according to the form                                                                               |
+| keep_params_as_form         |    Boolean     | No       | false       | Whether the params are submitted according to the form, used for compatibility with legacy behaviors. When true, the value of the params parameter is submitted through the form.|
 
 ## How to Create a Http Data Synchronization Jobs
 
@@ -354,7 +354,6 @@ If the submission is application/json format,please do not set this value.
 ### params
 By default, the parameters will be added to the url path.
 If form submission is required,please set keep_params_as_form true.
-
 
 ## Changelog
 

@@ -20,8 +20,6 @@ package org.apache.seatunnel.connectors.seatunnel.http.config;
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.Options;
 
-import org.apache.commons.collections4.map.HashedMap;
-
 import java.util.Map;
 
 public class HttpConfig {
@@ -76,11 +74,8 @@ public class HttpConfig {
                     .withDescription("Http request headers");
     public static final Option<Map<String, String>> PARAMS =
             Options.key("params").mapType().noDefaultValue().withDescription("Http request params");
-    public static final Option<Map<String, Object>> BODY =
-            Options.key("body")
-                    .mapObjectType()
-                    .defaultValue(new HashedMap<>())
-                    .withDescription("Http request body");
+    public static final Option<String> BODY =
+            Options.key("body").stringType().noDefaultValue().withDescription("Http request body");
     public static final Option<ResponseFormat> FORMAT =
             Options.key("format")
                     .enumType(ResponseFormat.class)
