@@ -235,7 +235,6 @@ public class LLMRequestJsonTest {
         resultMap.put("model", "${model}");
         resultMap.put("messages", messagesList);
 
-
         CustomModel model =
                 new CustomModel(
                         rowType,
