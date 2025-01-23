@@ -62,7 +62,8 @@ public class JsonPathTransformTest {
                         new SeaTunnelRowType(
                                 new String[] {"data"},
                                 new SeaTunnelDataType[] {BasicType.STRING_TYPE}));
-        JsonPathTransform transform = new JsonPathTransform(config, table);
+        JsonPathTransform transform =
+                new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
 
         CatalogTable outputTable = transform.getProducedCatalogTable();
         SeaTunnelRow outputRow = transform.map(new SeaTunnelRow(new Object[] {"{\"f1\": 1}"}));
@@ -87,7 +88,8 @@ public class JsonPathTransformTest {
                         new SeaTunnelRowType(
                                 new String[] {"data"},
                                 new SeaTunnelDataType[] {BasicType.STRING_TYPE}));
-        JsonPathTransform transform = new JsonPathTransform(config, table);
+        JsonPathTransform transform =
+                new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         CatalogTable outputTable = transform.getProducedCatalogTable();
         final JsonPathTransform finalTransform = transform;
         Assertions.assertThrows(
@@ -107,7 +109,7 @@ public class JsonPathTransformTest {
                                 TransformCommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION.key(),
                                 ErrorHandleWay.FAIL.name())));
         config = ReadonlyConfig.fromMap(configMap);
-        transform = new JsonPathTransform(config, table);
+        transform = new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         outputTable = transform.getProducedCatalogTable();
         JsonPathTransform finalTransform1 = transform;
         Assertions.assertThrows(
@@ -127,7 +129,7 @@ public class JsonPathTransformTest {
                                 TransformCommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION.key(),
                                 ErrorHandleWay.SKIP.name())));
         config = ReadonlyConfig.fromMap(configMap);
-        transform = new JsonPathTransform(config, table);
+        transform = new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         outputTable = transform.getProducedCatalogTable();
         SeaTunnelRow outputRow = transform.map(new SeaTunnelRow(new Object[] {"{\"f2\": 1}"}));
         Assertions.assertNotNull(outputRow);
@@ -146,7 +148,7 @@ public class JsonPathTransformTest {
                                 TransformCommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION.key(),
                                 ErrorHandleWay.SKIP_ROW.name())));
         config = ReadonlyConfig.fromMap(configMap);
-        transform = new JsonPathTransform(config, table);
+        transform = new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         outputTable = transform.getProducedCatalogTable();
         outputRow = transform.map(new SeaTunnelRow(new Object[] {"{\"f2\": 1}"}));
         Assertions.assertNull(outputRow);
@@ -162,7 +164,7 @@ public class JsonPathTransformTest {
                                 JsonPathTransformConfig.PATH.key(), "$.f1",
                                 JsonPathTransformConfig.DEST_FIELD.key(), "f1")));
         config = ReadonlyConfig.fromMap(configMap);
-        transform = new JsonPathTransform(config, table);
+        transform = new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         outputTable = transform.getProducedCatalogTable();
         outputRow = transform.map(new SeaTunnelRow(new Object[] {"{\"f2\": 1}"}));
         Assertions.assertNull(outputRow);
@@ -183,7 +185,7 @@ public class JsonPathTransformTest {
                                 TransformCommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION.key(),
                                 ErrorHandleWay.FAIL.name())));
         config = ReadonlyConfig.fromMap(configMap);
-        transform = new JsonPathTransform(config, table);
+        transform = new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         outputTable = transform.getProducedCatalogTable();
         try {
             outputRow = transform.map(new SeaTunnelRow(new Object[] {"{\"f2\": 1}"}));
@@ -208,7 +210,7 @@ public class JsonPathTransformTest {
                                 TransformCommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION.key(),
                                 ErrorHandleWay.SKIP.name())));
         config = ReadonlyConfig.fromMap(configMap);
-        transform = new JsonPathTransform(config, table);
+        transform = new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         outputTable = transform.getProducedCatalogTable();
         outputRow = transform.map(new SeaTunnelRow(new Object[] {"{\"f2\": 1}"}));
         Assertions.assertNotNull(outputRow);
@@ -230,7 +232,7 @@ public class JsonPathTransformTest {
                                 TransformCommonOptions.COLUMN_ERROR_HANDLE_WAY_OPTION.key(),
                                 ErrorHandleWay.SKIP_ROW.name())));
         config = ReadonlyConfig.fromMap(configMap);
-        transform = new JsonPathTransform(config, table);
+        transform = new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         outputTable = transform.getProducedCatalogTable();
         outputRow = transform.map(new SeaTunnelRow(new Object[] {"{\"f2\": 1}"}));
         Assertions.assertNull(outputRow);
@@ -264,7 +266,8 @@ public class JsonPathTransformTest {
                         new HashMap<>(),
                         new ArrayList<>(),
                         null);
-        JsonPathTransform transform = new JsonPathTransform(config, table);
+        JsonPathTransform transform =
+                new JsonPathTransform(JsonPathTransformConfig.of(config, table), table);
         CatalogTable outputCatalogTable = transform.getProducedCatalogTable();
         Column f1 = outputCatalogTable.getTableSchema().getColumn("f1");
         Assertions.assertEquals(BasicType.STRING_TYPE, f1.getDataType());

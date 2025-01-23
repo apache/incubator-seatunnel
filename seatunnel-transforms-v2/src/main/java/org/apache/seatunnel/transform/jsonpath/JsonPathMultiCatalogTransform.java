@@ -34,7 +34,8 @@ public class JsonPathMultiCatalogTransform extends AbstractMultiCatalogMapTransf
     @Override
     protected SeaTunnelTransform<SeaTunnelRow> buildTransform(
             CatalogTable inputCatalogTable, ReadonlyConfig config) {
-        return new JsonPathTransform(config, inputCatalogTable);
+        return new JsonPathTransform(
+                JsonPathTransformConfig.of(config, inputCatalogTable), inputCatalogTable);
     }
 
     @Override

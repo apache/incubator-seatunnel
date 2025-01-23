@@ -54,7 +54,7 @@ public class EmbeddingTransform extends MultipleFieldOutputTransform {
 
     public EmbeddingTransform(
             @NonNull ReadonlyConfig config, @NonNull CatalogTable inputCatalogTable) {
-        super(config, inputCatalogTable);
+        super(inputCatalogTable);
         this.config = config;
         initOutputFields(
                 inputCatalogTable.getTableSchema().toPhysicalRowDataType(),
@@ -63,17 +63,13 @@ public class EmbeddingTransform extends MultipleFieldOutputTransform {
 
     private void tryOpen() {
         if (model == null) {
-            initModel();
+            open();
         }
     }
 
     @Override
     public void open() {
         // Initialize model
-        initModel();
-    }
-
-    private void initModel() {
         ModelProvider provider = config.get(ModelTransformConfig.MODEL_PROVIDER);
         try {
             switch (provider) {

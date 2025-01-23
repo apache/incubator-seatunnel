@@ -18,7 +18,6 @@ package org.apache.seatunnel.transform.jsonpath;
 
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 
-import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
@@ -58,12 +57,9 @@ public class JsonPathTransform extends MultipleFieldOutputTransform {
 
     private int[] srcFieldIndexArr;
 
-    public JsonPathTransform(ReadonlyConfig config, CatalogTable catalogTable) {
-        super(
-                config,
-                catalogTable,
-                JsonPathTransformConfig.of(config, catalogTable).getErrorHandleWay());
-        this.config = JsonPathTransformConfig.of(config, catalogTable);
+    public JsonPathTransform(JsonPathTransformConfig config, CatalogTable catalogTable) {
+        super(catalogTable, config.getErrorHandleWay());
+        this.config = config;
         this.seaTunnelRowType = catalogTable.getSeaTunnelRowType();
         init();
     }

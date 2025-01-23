@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.transform.table;
 
-import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TablePath;
@@ -32,11 +31,11 @@ public class TableMergeTransform extends AbstractCatalogSupportMapTransform {
     private final TablePath outputTablePath;
     private final String outputTableId;
 
-    public TableMergeTransform(ReadonlyConfig config, CatalogTable table) {
-        super(config, table);
+    public TableMergeTransform(TableMergeConfig config, CatalogTable table) {
+        super(table);
         this.inputTable = table;
-        this.outputTablePath = TableMergeConfig.of(config).getTablePath();
-        this.outputTableId = TableMergeConfig.of(config).getTablePath().getFullName();
+        this.outputTablePath = config.getTablePath();
+        this.outputTableId = config.getTablePath().getFullName();
     }
 
     @Override

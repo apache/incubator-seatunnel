@@ -41,7 +41,7 @@ public class RowKindExtractorTransform extends SingleFieldOutputTransform {
 
     public RowKindExtractorTransform(
             @NonNull ReadonlyConfig config, @NonNull CatalogTable inputCatalogTable) {
-        super(config, inputCatalogTable);
+        super(inputCatalogTable);
         this.config = config;
         this.transformType = config.get(RowKindExtractorTransformConfig.TRANSFORM_TYPE);
     }

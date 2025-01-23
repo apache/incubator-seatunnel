@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.transform.copy;
 
-import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
@@ -47,9 +46,9 @@ public class CopyFieldTransform extends MultipleFieldOutputTransform {
     private List<Integer> fieldOriginalIndexes;
     private List<SeaTunnelDataType<?>> fieldTypes;
 
-    public CopyFieldTransform(ReadonlyConfig readonlyConfig, CatalogTable catalogTable) {
-        super(readonlyConfig, catalogTable);
-        this.config = CopyTransformConfig.of(readonlyConfig);
+    public CopyFieldTransform(CopyTransformConfig copyTransformConfig, CatalogTable catalogTable) {
+        super(catalogTable);
+        this.config = copyTransformConfig;
         SeaTunnelRowType seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
         initOutputFields(seaTunnelRowType, config.getFields());
     }

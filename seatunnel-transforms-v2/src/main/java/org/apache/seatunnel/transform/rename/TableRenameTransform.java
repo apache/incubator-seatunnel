@@ -19,7 +19,6 @@ package org.apache.seatunnel.transform.rename;
 
 import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
 
-import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TablePath;
@@ -57,10 +56,10 @@ public class TableRenameTransform extends AbstractCatalogSupportMapTransform {
     private TablePath outputTablePath;
     private String outputTableId;
 
-    public TableRenameTransform(ReadonlyConfig readonlyConfig, CatalogTable table) {
-        super(readonlyConfig, table);
-        config = TableRenameConfig.of(readonlyConfig);
+    public TableRenameTransform(TableRenameConfig config, CatalogTable table) {
+        super(table);
         this.inputTable = table;
+        this.config = config;
     }
 
     @Override

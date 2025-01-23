@@ -51,7 +51,7 @@ public class DynamicCompileTransform extends MultipleFieldOutputTransform {
     private AbstractParse DynamicCompileParse;
 
     public DynamicCompileTransform(ReadonlyConfig readonlyConfig, CatalogTable catalogTable) {
-        super(readonlyConfig, catalogTable);
+        super(catalogTable);
         CompileLanguage compileLanguage =
                 readonlyConfig.get(DynamicCompileTransformConfig.COMPILE_LANGUAGE);
         // todo other compile

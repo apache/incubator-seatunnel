@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.transform.sql;
 
+import org.apache.seatunnel.api.common.CommonOptions;
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.Options;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
@@ -63,13 +64,22 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
 
     private transient SQLEngine sqlEngine;
 
+    private final String inputTableName;
+
     public SQLTransform(@NonNull ReadonlyConfig config, @NonNull CatalogTable catalogTable) {
-        super(config, catalogTable);
+        super(catalogTable);
         this.query = config.get(KEY_QUERY);
         if (config.getOptional(KEY_ENGINE).isPresent()) {
             this.engineType = EngineType.valueOf(config.get(KEY_ENGINE).toUpperCase());
         } else {
             this.engineType = ZETA;
+        }
+
+        List<String> pluginInputIdentifiers = config.get(CommonOptions.PLUGIN_INPUT);
+        if (pluginInputIdentifiers != null && !pluginInputIdentifiers.isEmpty()) {
+            this.inputTableName = pluginInputIdentifiers.get(0);
+        } else {
+            this.inputTableName = catalogTable.getTableId().getTableName();
         }
     }
 
@@ -80,22 +90,18 @@ public class SQLTransform extends AbstractCatalogSupportFlatMapTransform {
 
     @Override
     public void open() {
-        initSqlEngine();
-    }
-
-    private void tryOpen() {
-        if (sqlEngine == null) {
-            initSqlEngine();
-        }
-    }
-
-    private void initSqlEngine() {
         sqlEngine = SQLEngineFactory.getSQLEngine(engineType);
         sqlEngine.init(
                 inputTableName,
                 inputCatalogTable.getTableId().getTableName(),
                 inputCatalogTable.getSeaTunnelRowType(),
                 query);
+    }
+
+    private void tryOpen() {
+        if (sqlEngine == null) {
+            open();
+        }
     }
 
     @Override
