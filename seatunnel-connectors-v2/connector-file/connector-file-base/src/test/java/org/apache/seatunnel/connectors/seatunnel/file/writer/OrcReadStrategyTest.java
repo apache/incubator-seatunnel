@@ -121,7 +121,7 @@ public class OrcReadStrategyTest {
             for (int i = 0; i < count; i++) {
                 // Add data to the vector
                 ((BytesColumnVector) batch.cols[0])
-                        .setVal(batch.size, String.valueOf(random.nextInt()).getBytes());
+                        .setVal(batch.size, String.valueOf(i).getBytes());
                 ((BytesColumnVector) batch.cols[1])
                         .setVal(batch.size, String.valueOf(random.nextInt()).getBytes());
                 batch.size++;
@@ -161,6 +161,42 @@ public class OrcReadStrategyTest {
         }
     }
 
+    public OrcReadStrategy getSplitOrcReadStrategyBySize(String file) throws IOException {
+        OrcReadStrategy orcReadStrategy = new OrcReadStrategy();
+        LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
+        orcReadStrategy.init(localConf);
+        SeaTunnelRowType seaTunnelRowTypeInfo = orcReadStrategy.getSeaTunnelRowTypeInfo(file);
+        Config config = ConfigFactory.empty();
+        config =
+                config.withValue(
+                        BaseSourceConfigOptions.ROW_COUNT_PER_SPLIT.key(),
+                        ConfigValueFactory.fromAnyRef(1500000));
+        config =
+                config.withValue(
+                        BaseSourceConfigOptions.WHETHER_SPLIT_FILE.key(),
+                        ConfigValueFactory.fromAnyRef(true));
+        orcReadStrategy.setPluginConfig(config);
+        return orcReadStrategy;
+    }
+
+    public OrcReadStrategy getSplitOrcReadStrategyByRowCount(String file) throws IOException {
+        OrcReadStrategy orcReadStrategy = new OrcReadStrategy();
+        LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
+        orcReadStrategy.init(localConf);
+        SeaTunnelRowType seaTunnelRowTypeInfo = orcReadStrategy.getSeaTunnelRowTypeInfo(file);
+        Config config = ConfigFactory.empty();
+        config =
+                config.withValue(
+                        BaseSourceConfigOptions.ROW_COUNT_PER_SPLIT.key(),
+                        ConfigValueFactory.fromAnyRef(1500000));
+        config =
+                config.withValue(
+                        BaseSourceConfigOptions.WHETHER_SPLIT_FILE.key(),
+                        ConfigValueFactory.fromAnyRef(true));
+        orcReadStrategy.setPluginConfig(config);
+        return orcReadStrategy;
+    }
+
     @Test
     public void testOrcGetSplits() throws IOException {
         String file = "/tmp/orc_split/local_output.orc";
@@ -168,9 +204,7 @@ public class OrcReadStrategyTest {
         int rowCount = 30000000;
         List<StripeInformation> list = autoGenData(file, rowCount);
         try {
-            OrcReadStrategy orcReadStrategy = new OrcReadStrategy();
-            LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
-            orcReadStrategy.init(localConf);
+            OrcReadStrategy orcReadStrategy = getSplitOrcReadStrategyBySize(file);
             Set<FileSourceSplit> set = orcReadStrategy.getFileSourceSplits(file);
             for (FileSourceSplit fileSourceSplit :
                     set.stream()
@@ -180,14 +214,8 @@ public class OrcReadStrategyTest {
             }
             // file size: 300m / 30m
             Assertions.assertTrue(set.size() >= 10);
-            SeaTunnelRowType seaTunnelRowTypeInfo = orcReadStrategy.getSeaTunnelRowTypeInfo(file);
 
-            Config config = ConfigFactory.empty();
-            config =
-                    config.withValue(
-                            BaseSourceConfigOptions.ROW_COUNT_PER_SPLIT.key(),
-                            ConfigValueFactory.fromAnyRef(1500000));
-            orcReadStrategy.setPluginConfig(config);
+            orcReadStrategy = getSplitOrcReadStrategyByRowCount(file);
             Set<FileSourceSplit> set1 = orcReadStrategy.getFileSourceSplits(file);
             for (FileSourceSplit fileSourceSplit :
                     set1.stream()
@@ -195,6 +223,8 @@ public class OrcReadStrategyTest {
                             .collect(Collectors.toList())) {
                 System.out.println(fileSourceSplit);
             }
+
+            // split size should be fixed as calculate by rowCountPerSplit
             int splitSize = 0;
             for (StripeInformation stripeInformation : list) {
                 splitSize +=
@@ -214,11 +244,8 @@ public class OrcReadStrategyTest {
         int rowCount = 30000000;
         autoGenData(file, rowCount);
         try {
-            OrcReadStrategy orcReadStrategy = new OrcReadStrategy();
-            LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
-            orcReadStrategy.init(localConf);
+            OrcReadStrategy orcReadStrategy = getSplitOrcReadStrategyBySize(file);
             Set<FileSourceSplit> set = orcReadStrategy.getFileSourceSplits(file);
-            SeaTunnelRowType seaTunnelRowTypeInfo = orcReadStrategy.getSeaTunnelRowTypeInfo(file);
             long allCount1 = 0;
             // single thread
             for (FileSourceSplit fileSourceSplit : set) {
@@ -238,6 +265,7 @@ public class OrcReadStrategyTest {
                                     throw new RuntimeException(e);
                                 }
                             });
+            // row count should be same
             Assertions.assertEquals(rowCount, allCount.get());
         } finally {
             deleteFile(file);

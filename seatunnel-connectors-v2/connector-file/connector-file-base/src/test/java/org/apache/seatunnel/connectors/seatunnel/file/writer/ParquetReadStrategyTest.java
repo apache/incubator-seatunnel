@@ -19,12 +19,14 @@ package org.apache.seatunnel.connectors.seatunnel.file.writer;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
+import org.apache.seatunnel.shade.com.typesafe.config.ConfigValueFactory;
 
 import org.apache.seatunnel.api.source.Collector;
 import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
+import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
 import org.apache.seatunnel.connectors.seatunnel.file.source.reader.ParquetReadStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.source.split.FileSourceSplit;
@@ -124,18 +126,30 @@ public class ParquetReadStrategyTest {
         }
     }
 
+    private ParquetReadStrategy getSplitParquetReadStrategy(String file) {
+        ParquetReadStrategy parquetReadStrategy = new ParquetReadStrategy();
+        LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
+        parquetReadStrategy.init(localConf);
+        SeaTunnelRowType seaTunnelRowTypeInfo = parquetReadStrategy.getSeaTunnelRowTypeInfo(file);
+        Config config = ConfigFactory.empty();
+        config =
+                config.withValue(
+                        BaseSourceConfigOptions.WHETHER_SPLIT_FILE.key(),
+                        ConfigValueFactory.fromAnyRef(true));
+        parquetReadStrategy.setPluginConfig(config);
+        return parquetReadStrategy;
+    }
+
     @Test
     public void testParquetGetSplits() throws IOException {
-        String file = "d:/local_output.parquet";
+        String file = "/tmp/parquet_split/local_output.parquet";
         deleteFile(file);
         int rowCount = 10000000;
         if (!new File(file).exists()) {
             autoGenData(file, rowCount);
         }
         try {
-            ParquetReadStrategy parquetReadStrategy = new ParquetReadStrategy();
-            LocalConf localConf = new LocalConf(FS_DEFAULT_NAME_DEFAULT);
-            parquetReadStrategy.init(localConf);
+            ParquetReadStrategy parquetReadStrategy = getSplitParquetReadStrategy(file);
 
             Set<FileSourceSplit> set = parquetReadStrategy.getFileSourceSplits(file);
             List<FileSourceSplit> list =
@@ -149,31 +163,25 @@ public class ParquetReadStrategyTest {
             Assertions.assertTrue(set.size() > 1);
             Assertions.assertEquals(list.get(1).getMinRowIndex(), list.get(0).getMaxRowIndex());
 
-            SeaTunnelRowType seaTunnelRowTypeInfo =
-                    parquetReadStrategy.getSeaTunnelRowTypeInfo(file);
-
             long rowSize = 0;
             SeaTunnelRow firstRow = null;
             SeaTunnelRow lastRow = null;
             for (int i = 0; i < list.size(); i++) {
-                // 读取单个分片128m大概需要6s多
+                // read single split(128mb) need 6 seconds
                 FileSourceSplit split = list.get(i);
-                TestCollector testCollector = new TestCollector();
-                long l1 = System.currentTimeMillis();
-                parquetReadStrategy.read(split, testCollector);
-                long l2 = System.currentTimeMillis();
-                System.out.println("read split use time " + (l2 - l1));
-                rowSize += testCollector.rows.size();
+                List<SeaTunnelRow> list1 = new ArrayList<>();
+                long a = testFileSplitRead(parquetReadStrategy, split, list1);
+                rowSize += a;
                 if (i == 0) {
-                    firstRow = testCollector.getRows().get(0);
+                    firstRow = list1.get(0);
                 }
                 if (i == list.size() - 1) {
-                    lastRow = testCollector.getRows().get(testCollector.rows.size() - 1);
+                    lastRow = list1.get(list1.size() - 1);
                 }
             }
             Assertions.assertEquals(rowCount, rowSize);
 
-            List<SeaTunnelRow> sl = test1(parquetReadStrategy, file, rowCount);
+            List<SeaTunnelRow> sl = testFileRead(parquetReadStrategy, file, rowCount);
 
             Assertions.assertEquals(firstRow.getField(0), sl.get(0).getField(0));
             Assertions.assertEquals(lastRow.getField(1), sl.get(1).getField(1));
@@ -183,7 +191,7 @@ public class ParquetReadStrategyTest {
         }
     }
 
-    public List<SeaTunnelRow> test1(
+    public List<SeaTunnelRow> testFileRead(
             ParquetReadStrategy parquetReadStrategy, String file, long rowCount)
             throws IOException {
         TestCollector testCollector1 = new TestCollector();
@@ -195,6 +203,22 @@ public class ParquetReadStrategyTest {
         return Lists.newArrayList(
                 testCollector1.rows.get(0),
                 testCollector1.getRows().get(testCollector1.rows.size() - 1));
+    }
+
+    public long testFileSplitRead(
+            ParquetReadStrategy parquetReadStrategy,
+            FileSourceSplit split,
+            List<SeaTunnelRow> list1)
+            throws IOException {
+        // split read end, testCollector can be gc to avoid oom.
+        TestCollector testCollector = new TestCollector();
+        long l1 = System.currentTimeMillis();
+        parquetReadStrategy.read(split, testCollector);
+        long l2 = System.currentTimeMillis();
+        System.out.println("read split use time " + (l2 - l1));
+        list1.add(testCollector.rows.get(0));
+        list1.add(testCollector.rows.get(testCollector.rows.size() - 1));
+        return testCollector.rows.size();
     }
 
     @Test

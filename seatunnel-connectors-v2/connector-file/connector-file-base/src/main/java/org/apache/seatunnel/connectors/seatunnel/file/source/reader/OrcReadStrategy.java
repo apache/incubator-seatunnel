@@ -86,7 +86,7 @@ import static org.apache.seatunnel.connectors.seatunnel.file.sink.writer.OrcWrit
 public class OrcReadStrategy extends AbstractReadStrategy {
     private static final long MIN_SIZE = 16 * 1024;
 
-    private static final int BATCH_READ_ROWS = 1024;
+    private int batchReadSize = 1024;
 
     /** user can specified row count per split */
     private long rowCountPerSplitByUser = 0;
@@ -110,6 +110,9 @@ public class OrcReadStrategy extends AbstractReadStrategy {
         if (pluginConfig.hasPath(BaseSourceConfigOptions.FILE_SIZE_PER_SPLIT.key())) {
             fileSizePerSplitByUser =
                     pluginConfig.getLong(BaseSourceConfigOptions.FILE_SIZE_PER_SPLIT.key());
+        }
+        if (pluginConfig.hasPath(BaseSourceConfigOptions.BATCH_READ_ROWS.key())) {
+            batchReadSize = pluginConfig.getInt(BaseSourceConfigOptions.BATCH_READ_ROWS.key());
         }
     }
 
@@ -222,9 +225,29 @@ public class OrcReadStrategy extends AbstractReadStrategy {
             log.debug(
                     "minRowIndex or maxRowIndex is null, use fileBaseRead. fileSourceSplit:{}",
                     split);
-            read(path, tableId, output);
-            return;
         }
+        readInner(path, tableId, split.getMinRowIndex(), split.getMaxRowIndex(), output);
+    }
+
+    @Override
+    public void read(String path, String tableId, Collector<SeaTunnelRow> output)
+            throws FileConnectorException, IOException {
+        readInner(path, tableId, null, null, output);
+    }
+
+    private TypeDescription getTypeDescription() {
+        TypeDescription schema = TypeDescription.createStruct();
+        for (int i = 0; i < seaTunnelRowType.getTotalFields(); i++) {
+            TypeDescription typeDescription =
+                    buildFieldWithRowType(seaTunnelRowType.getFieldType(i));
+            schema.addField(seaTunnelRowType.getFieldName(i), typeDescription);
+        }
+        return schema;
+    }
+
+    private void readInner(
+            String path, String tableId, Long min, Long max, Collector<SeaTunnelRow> output)
+            throws IOException, FileConnectorException {
         if (Boolean.FALSE.equals(checkFileType(path))) {
             String errorMsg =
                     String.format(
@@ -233,8 +256,6 @@ public class OrcReadStrategy extends AbstractReadStrategy {
             throw new FileConnectorException(FileConnectorErrorCode.FILE_TYPE_INVALID, errorMsg);
         }
         Map<String, String> partitionsMap = parsePartitionsByPath(path);
-        long startTime = System.currentTimeMillis();
-        log.info("orc file split read start. path:{}, ts:{}", path, startTime);
         try (Reader reader =
                 hadoopFileSystemProxy.doWithHadoopAuth(
                         (configuration, userGroupInformation) -> {
@@ -242,20 +263,19 @@ public class OrcReadStrategy extends AbstractReadStrategy {
                                     OrcFile.readerOptions(configuration);
                             return OrcFile.createReader(new Path(path), readerOptions);
                         })) {
-            TypeDescription schema = TypeDescription.createStruct();
-            for (int i = 0; i < seaTunnelRowType.getTotalFields(); i++) {
-                TypeDescription typeDescription =
-                        buildFieldWithRowType(seaTunnelRowType.getFieldType(i));
-                schema.addField(seaTunnelRowType.getFieldName(i), typeDescription);
-            }
+            TypeDescription schema = getTypeDescription();
+
             List<TypeDescription> children = schema.getChildren();
             RecordReader rows = reader.rows(reader.options().schema(schema));
-            rows.seekToRow(split.getMinRowIndex());
-            VectorizedRowBatch rowBatch = schema.createRowBatch(batchReadRows);
-            long curRowCount = split.getMinRowIndex();
+            long curRowCount = 0;
+            if (min != null) {
+                rows.seekToRow(min);
+                curRowCount = min;
+            }
+            VectorizedRowBatch rowBatch = schema.createRowBatch(batchReadSize);
             while (rows.nextBatch(rowBatch)) {
                 int num = 0;
-                if (curRowCount > split.getMaxRowIndex()) {
+                if (max != null && curRowCount > max) {
                     break;
                 }
                 for (int i = 0; i < rowBatch.size; i++) {
@@ -288,92 +308,14 @@ public class OrcReadStrategy extends AbstractReadStrategy {
                     output.collect(seaTunnelRow);
                     num++;
                     curRowCount++;
-                    if (curRowCount > split.getMaxRowIndex()) {
+                    if (max != null && curRowCount > max) {
                         break;
                     }
                 }
             }
-            long endTime = System.currentTimeMillis();
             log.info(
-                    "orc file split read end. path:{}, ts:{}, useTime:{}, fileSize:{}, totalRows:{}, readRows:{}",
+                    "orc file read end. path:{}, fileSize:{}, totalRows:{}",
                     path,
-                    endTime,
-                    endTime - startTime,
-                    reader.getContentLength(),
-                    reader.getNumberOfRows(),
-                    split.getRows());
-        }
-    }
-
-    @Override
-    public void read(String path, String tableId, Collector<SeaTunnelRow> output)
-            throws FileConnectorException, IOException {
-        if (Boolean.FALSE.equals(checkFileType(path))) {
-            String errorMsg =
-                    String.format(
-                            "This file [%s] is not a orc file, please check the format of this file",
-                            path);
-            throw new FileConnectorException(FileConnectorErrorCode.FILE_TYPE_INVALID, errorMsg);
-        }
-        Map<String, String> partitionsMap = parsePartitionsByPath(path);
-        long startTime = System.currentTimeMillis();
-        log.info("orc file read start. path:{}, ts:{}", path, startTime);
-        try (Reader reader =
-                hadoopFileSystemProxy.doWithHadoopAuth(
-                        (configuration, userGroupInformation) -> {
-                            OrcFile.ReaderOptions readerOptions =
-                                    OrcFile.readerOptions(configuration);
-                            return OrcFile.createReader(new Path(path), readerOptions);
-                        })) {
-            TypeDescription schema = TypeDescription.createStruct();
-            for (int i = 0; i < seaTunnelRowType.getTotalFields(); i++) {
-                TypeDescription typeDescription =
-                        buildFieldWithRowType(seaTunnelRowType.getFieldType(i));
-                schema.addField(seaTunnelRowType.getFieldName(i), typeDescription);
-            }
-            List<TypeDescription> children = schema.getChildren();
-            RecordReader rows = reader.rows(reader.options().schema(schema));
-            VectorizedRowBatch rowBatch = schema.createRowBatch();
-
-            while (rows.nextBatch(rowBatch)) {
-                int num = 0;
-                for (int i = 0; i < rowBatch.size; i++) {
-                    int numCols = rowBatch.numCols;
-                    Object[] fields;
-                    if (isMergePartition) {
-                        int index = numCols;
-                        fields = new Object[numCols + partitionsMap.size()];
-                        for (String value : partitionsMap.values()) {
-                            fields[index++] = value;
-                        }
-                    } else {
-                        fields = new Object[numCols];
-                    }
-                    ColumnVector[] cols = rowBatch.cols;
-                    for (int j = 0; j < numCols; j++) {
-                        if (cols[j] == null) {
-                            fields[j] = null;
-                        } else {
-                            fields[j] =
-                                    readColumn(
-                                            cols[j],
-                                            children.get(j),
-                                            seaTunnelRowType.getFieldType(j),
-                                            num);
-                        }
-                    }
-                    SeaTunnelRow seaTunnelRow = new SeaTunnelRow(fields);
-                    seaTunnelRow.setTableId(tableId);
-                    output.collect(seaTunnelRow);
-                    num++;
-                }
-            }
-            long endTime = System.currentTimeMillis();
-            log.info(
-                    "orc file read end. path:{}, ts:{}, useTime:{}, fileSize:{}, totalRows:{}",
-                    path,
-                    endTime,
-                    endTime - startTime,
                     reader.getContentLength(),
                     reader.getNumberOfRows());
         }

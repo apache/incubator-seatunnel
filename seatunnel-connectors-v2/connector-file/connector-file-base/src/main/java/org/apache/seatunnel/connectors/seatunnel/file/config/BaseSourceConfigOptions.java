@@ -197,4 +197,11 @@ public class BaseSourceConfigOptions {
                     .booleanType()
                     .defaultValue(false)
                     .withDescription("whether to split a file into many splits. true will split");
+
+    public static final Option<Integer> BATCH_READ_ROWS =
+            Options.key("batch_read_rows")
+                    .intType()
+                    .defaultValue(1024)
+                    .withDescription(
+                            "max size in a batch. now only useful for orc file. default is 1024, if memory is enough, you can increase it to speed up reading.");
 }

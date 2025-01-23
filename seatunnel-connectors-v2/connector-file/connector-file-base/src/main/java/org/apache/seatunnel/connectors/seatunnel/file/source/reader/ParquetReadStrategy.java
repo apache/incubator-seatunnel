@@ -158,60 +158,33 @@ public class ParquetReadStrategy extends AbstractReadStrategy {
         String path = split.getFilePath();
         String tableId = split.getTableId();
         if (split.getMinRowIndex() == null || split.getMaxRowIndex() == null) {
-            log.warn(
+            log.debug(
                     "minRowIndex or maxRowIndex is null, use fileBaseRead. fileSourceSplit:{}",
                     split);
-            read(path, tableId, output);
-            return;
         }
-        if (Boolean.FALSE.equals(checkFileType(path))) {
-            String errorMsg =
-                    String.format(
-                            "This file [%s] is not a parquet file, please check the format of this file",
-                            path);
-            throw new FileConnectorException(FileConnectorErrorCode.FILE_TYPE_INVALID, errorMsg);
-        }
-        Path filePath = new Path(path);
-        Map<String, String> partitionsMap = parsePartitionsByPath(path);
-        HadoopInputFile hadoopInputFile =
-                hadoopFileSystemProxy.doWithHadoopAuth(
-                        (configuration, userGroupInformation) ->
-                                HadoopInputFile.fromPath(filePath, configuration));
-        int fieldsCount = seaTunnelRowType.getTotalFields();
-        GenericData dataModel = new GenericData();
-        dataModel.addLogicalTypeConversion(new Conversions.DecimalConversion());
-        dataModel.addLogicalTypeConversion(new TimeConversions.DateConversion());
-        dataModel.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
-        GenericRecord record;
-        try (ParquetReader<GenericData.Record> reader =
-                AvroParquetReader.<GenericData.Record>builder(hadoopInputFile)
-                        .withDataModel(dataModel)
-                        .withFileRange(split.getMinRowIndex(), split.getMaxRowIndex())
-                        .build()) {
-            while ((record = reader.read()) != null) {
-                Object[] fields;
-                if (isMergePartition) {
-                    int index = fieldsCount;
-                    fields = new Object[fieldsCount + partitionsMap.size()];
-                    for (String value : partitionsMap.values()) {
-                        fields[index++] = value;
-                    }
-                } else {
-                    fields = new Object[fieldsCount];
-                }
-                for (int i = 0; i < fieldsCount; i++) {
-                    Object data = record.get(indexes[i]);
-                    fields[i] = resolveObject(data, seaTunnelRowType.getFieldType(i));
-                }
-                SeaTunnelRow seaTunnelRow = new SeaTunnelRow(fields);
-                seaTunnelRow.setTableId(tableId);
-                output.collect(seaTunnelRow);
-            }
-        }
+        readInner(path, tableId, split.getMinRowIndex(), split.getMaxRowIndex(), output);
     }
 
     @Override
     public void read(String path, String tableId, Collector<SeaTunnelRow> output)
+            throws FileConnectorException, IOException {
+        readInner(path, tableId, null, null, output);
+    }
+
+    public GenericData getDataModel() {
+        GenericData dataModel = new GenericData();
+        dataModel.addLogicalTypeConversion(new Conversions.DecimalConversion());
+        dataModel.addLogicalTypeConversion(new TimeConversions.DateConversion());
+        dataModel.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+        return dataModel;
+    }
+
+    private void readInner(
+            String path,
+            String tableId,
+            Long minRowIndex,
+            Long maxRowIndex,
+            Collector<SeaTunnelRow> output)
             throws FileConnectorException, IOException {
         if (Boolean.FALSE.equals(checkFileType(path))) {
             String errorMsg =
@@ -227,15 +200,17 @@ public class ParquetReadStrategy extends AbstractReadStrategy {
                         (configuration, userGroupInformation) ->
                                 HadoopInputFile.fromPath(filePath, configuration));
         int fieldsCount = seaTunnelRowType.getTotalFields();
-        GenericData dataModel = new GenericData();
-        dataModel.addLogicalTypeConversion(new Conversions.DecimalConversion());
-        dataModel.addLogicalTypeConversion(new TimeConversions.DateConversion());
-        dataModel.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
         GenericRecord record;
+        boolean splitFile = minRowIndex != null && maxRowIndex != null;
         try (ParquetReader<GenericData.Record> reader =
-                AvroParquetReader.<GenericData.Record>builder(hadoopInputFile)
-                        .withDataModel(dataModel)
-                        .build()) {
+                splitFile
+                        ? AvroParquetReader.<GenericData.Record>builder(hadoopInputFile)
+                                .withDataModel(getDataModel())
+                                .withFileRange(minRowIndex, maxRowIndex)
+                                .build()
+                        : AvroParquetReader.<GenericData.Record>builder(hadoopInputFile)
+                                .withDataModel(getDataModel())
+                                .build()) {
             while ((record = reader.read()) != null) {
                 Object[] fields;
                 if (isMergePartition) {
