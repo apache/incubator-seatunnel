@@ -36,17 +36,17 @@
 
 ### host [string]
 
-redis 主机
+redis 主机地址
 
 ### port [int]
 
-redis 端口
+redis 端口号
 
 ### hash_key_parse_mode [string]
 
-指定 hash key 解析模式, 支持 `all` `kv` 模式, 用于告知连接器如何解析 hash key
+指定 hash key 解析模式, 支持 `all` `kv` 模式, 用于设定连接器如何解析 hash key。
 
-当设定为 `all` 时，连接器会将 hash key 的值视为一行并根据 schema config 配置进行解析，当设定为 `kv` 时，连接器会将 hash key 的每个 kv 视为一行，并根据 schema config 进行解析：
+当设定为 `all` 时，连接器会将 hash key 的值视为一行并根据 schema config 配置进行解析，当设定为 `kv` 时，连接器会将 hash key 的每个 kv 视为一行，并根据 schema config 进行解析。
 
 例如，如果 hash key 的值如下设置：
 
@@ -114,43 +114,38 @@ keys 模式
 
 ### batch_size [int]
 
-表示每次迭代尝试返回的键的数量，默认值为 10
+表示每次迭代尝试返回的键的数量，默认值为 10。
 
 **提示：Redis 连接器支持模糊键匹配，用户需要确保匹配的键类型相同**
 
 ### data_type [string]
 
-redis 数据类型, 支持 `key` `hash` `list` `set` `zset`
+redis 数据类型, 支持 `key` `hash` `list` `set` `zset`。
 
 - key
 
-> 将每个 key 的值将作为单行数据发送给下游
-
-> 例如，key 对应的值为 `SeaTunnel test message`，则下游接收到的数据为 `SeaTunnel test message`，并且仅会收到一条信息
+> 将每个 key 的值将作为单行数据发送给下游。  
+> 例如，key 对应的值为 `SeaTunnel test message`，则下游接收到的数据为 `SeaTunnel test message`，并且仅会收到一条信息。
 
 - hash
 
-> hash 键值对将会被格式化为 json，并以单行数据的形式发送给下游
-
-> 例如，hash 值为 `name:tyrantlucifer age:26`，则下游接收到的数据为 `{"name":"tyrantlucifer", "age":"26"}`，并且仅会收到一条信息
+> hash 键值对将会被格式化为 json，并以单行数据的形式发送给下游。  
+> 例如，hash 值为 `name:tyrantlucifer age:26`，则下游接收到的数据为 `{"name":"tyrantlucifer", "age":"26"}`，并且仅会收到一条信息。
 
 - list
 
-> list 中的每个元素都将作为单行数据向下游发送
-
-> 例如，list 值为 `[tyrantlucier, CalvinKirs]`，则下游接收到的数据为 `tyrantlucifer` 和 `CalvinKirs`，并且仅会收到两条信息
+> list 中的每个元素都将作为单行数据向下游发送。  
+> 例如，list 值为 `[tyrantlucier, CalvinKirs]`，则下游接收到的数据为 `tyrantlucifer` 和 `CalvinKirs`，并且仅会收到两条信息。
 
 - set
 
-> set 中的每个元素都将作为单行数据向下游发送
-
-> 例如，set 值为 `[tyrantlucier, CalvinKirs]`，则下游接收到的数据为 `tyrantlucifer` 和 `CalvinKirs`，并且仅会收到两条信息
+> set 中的每个元素都将作为单行数据向下游发送。  
+> 例如，set 值为 `[tyrantlucier, CalvinKirs]`，则下游接收到的数据为 `tyrantlucifer` 和 `CalvinKirs`，并且仅会收到两条信息。
 
 - zset
 
-> zset 中的每个元素都将作为单行数据向下游发送
-
-> 例如，zset 值为 `[tyrantlucier, CalvinKirs]`，则下游接收到的数据为 `tyrantlucifer` 和 `CalvinKirs`，并且仅会收到两条信息
+> zset 中的每个元素都将作为单行数据向下游发送。  
+> 例如，zset 值为 `[tyrantlucier, CalvinKirs]`，则下游接收到的数据为 `tyrantlucifer` 和 `CalvinKirs`，并且仅会收到两条信息。
 
 ### user [string]
 
