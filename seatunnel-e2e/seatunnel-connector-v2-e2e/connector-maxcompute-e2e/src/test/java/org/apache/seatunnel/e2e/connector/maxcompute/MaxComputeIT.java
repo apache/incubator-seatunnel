@@ -102,13 +102,14 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
         Assertions.assertFalse(odps.tables().exists("test_table"));
     }
 
-    private void initTable() throws OdpsException {
+    private void initTable() throws OdpsException, IOException {
         Odps odps = getTestOdps();
         createTableWithData(odps, "test_table");
         createTableWithData(odps, "test_table_2");
     }
 
-    private static void createTableWithData(Odps odps, String tableName) throws OdpsException {
+    private static void createTableWithData(Odps odps, String tableName)
+            throws OdpsException, IOException {
         Instance instance =
                 SQLTask.run(odps, "create table " + tableName + " (id INT, name STRING, age INT);");
         instance.waitForSuccess();
@@ -120,7 +121,9 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
                                 + tableName
                                 + " values (1, 'test', 20), (2, 'test2', 30), (3, 'test3', 40);");
         insert.waitForSuccess();
-        Assertions.assertEquals(3, odps.tables().get(tableName).getRecordNum());
+        try (RecordReader reader = odps.tables().get(tableName).read(Integer.MAX_VALUE)) {
+            Assertions.assertEquals(3, reader.stream().count());
+        }
     }
 
     private String getEndpoint() {
