@@ -96,7 +96,8 @@ CREATE TABLE IF NOT EXISTS  `${database}`.`${table}` (
 ORDER BY (${rowtype_primary_key})
 PRIMARY KEY (${rowtype_primary_key})
 SETTINGS
-    index_granularity = 8192;
+    index_granularity = 8192
+COMMENT '${comment}';
 ```
 
 如果模板中填写了自定义字段，例如添加 id 字段
@@ -109,7 +110,8 @@ CREATE TABLE IF NOT EXISTS  `${database}`.`${table}` (
     ORDER BY (${rowtype_primary_key})
     PRIMARY KEY (${rowtype_primary_key})
     SETTINGS
-    index_granularity = 8192;
+    index_granularity = 8192
+    COMMENT '${comment}';
 ```
 
 连接器会自动从上游获取对应类型完成填充，
@@ -122,6 +124,7 @@ CREATE TABLE IF NOT EXISTS  `${database}`.`${table}` (
 - rowtype_fields：用于获取上游schema中的所有字段，自动映射到 Clickhouse 的字段描述。
 - rowtype_primary_key：用于获取上游模式中的主键（可能是列表）。
 - rowtype_unique_key：用于获取上游模式中的唯一键（可能是列表）。
+- comment：用于获取上游模式中的表注释。
 
 ## 如何创建一个clickhouse 同步任务
 

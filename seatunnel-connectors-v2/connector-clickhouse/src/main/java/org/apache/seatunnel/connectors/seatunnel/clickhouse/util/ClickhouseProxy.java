@@ -351,13 +351,18 @@ public class ClickhouseProxy {
     }
 
     public void createTable(
-            String database, String table, String template, TableSchema tableSchema) {
+            String database,
+            String table,
+            String template,
+            String comment,
+            TableSchema tableSchema) {
         String createTableSql =
                 ClickhouseCatalogUtil.INSTANCE.getCreateTableSql(
                         template,
                         database,
                         table,
                         tableSchema,
+                        comment,
                         ClickhouseConfig.SAVE_MODE_CREATE_TEMPLATE.key());
         log.debug("Create Clickhouse table sql: {}", createTableSql);
         executeSql(createTableSql);
