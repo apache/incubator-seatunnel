@@ -110,7 +110,7 @@ public class MaxcomputeSourceReader implements SourceReader<SeaTunnelRow, Maxcom
             // signal to the source that we have reached the end of the data.
             log.info("Closed the bounded Maxcompute source");
             context.signalNoMoreElement();
-        } else if (!this.noMoreSplit) {
+        } else if (this.sourceSplits.isEmpty() && !this.noMoreSplit) {
             context.sendSplitRequest();
         }
     }

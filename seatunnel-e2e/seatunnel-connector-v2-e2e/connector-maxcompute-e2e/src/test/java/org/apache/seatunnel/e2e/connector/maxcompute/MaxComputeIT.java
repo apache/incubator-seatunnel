@@ -93,6 +93,7 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
         Account account = new AliyunAccount("ak", "sk");
         Odps odps = new Odps(account);
         odps.setEndpoint(getEndpoint());
+        odps.setDefaultProject("test_project");
         odps.setTunnelEndpoint(getEndpoint());
         return odps;
     }
