@@ -60,12 +60,6 @@ Used to read data from Maxcompute.
 
 Source plugin common parameters, please refer to [Source Common Options](../source-common-options.md) for details.
 
-### schema [config]
-
-#### fields [Config]
-
-The schema information of upstream data.
-
 ## Examples
 
 ```hocon
@@ -78,21 +72,7 @@ source {
     table_name="<your table name>"
     #partition_spec="<your partition spec>"
     #split_row = 10000
-    schema {
-        fields {
-            name = string
-            age = int
-            gender = string 
-        }
-    }
   }
 }
 ```
-
-## Changelog
-
-### next version
-
-- [Feature] Add Maxcompute Source Connector([3640](https://github.com/apache/seatunnel/pull/3640))
-- [Feature] Support Schema in MaxCompute Source([3640](https://github.com/apache/seatunnel/pull/5283))
 

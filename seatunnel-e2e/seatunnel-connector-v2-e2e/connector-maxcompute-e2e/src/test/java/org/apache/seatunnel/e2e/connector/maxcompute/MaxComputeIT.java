@@ -33,7 +33,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerLoggerFactory;
 
-import com.aliyun.odps.CreateProjectParam;
 import com.aliyun.odps.Instance;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.OdpsException;
@@ -93,7 +92,7 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
         Account account = new AliyunAccount("ak", "sk");
         Odps odps = new Odps(account);
         odps.setEndpoint(getEndpoint());
-        odps.setDefaultProject("test_project");
+        odps.setDefaultProject("project");
         odps.setTunnelEndpoint(getEndpoint());
         return odps;
     }
@@ -105,7 +104,6 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
 
     private void initTable() throws OdpsException {
         Odps odps = getTestOdps();
-        odps.projects().create(new CreateProjectParam().name("test_project"));
         createTableWithData(odps, "test_table");
         createTableWithData(odps, "test_table_2");
     }
@@ -143,7 +141,7 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
     public void testMaxCompute(TestContainer container)
             throws IOException, InterruptedException, OdpsException {
         Odps odps = getTestOdps();
-        odps.tables().delete("test_project", "test_table_sink", true);
+        odps.tables().delete("project", "test_table_sink", true);
         Container.ExecResult execResult = container.executeJob("/maxcompute_to_maxcompute.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
         Assertions.assertEquals(3, odps.tables().get("test_table_sink").getRecordNum());
@@ -166,8 +164,8 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
     public void testMaxComputeMultiTable(TestContainer container)
             throws OdpsException, IOException, InterruptedException {
         Odps odps = getTestOdps();
-        odps.tables().delete("test_project", "test_table_sink", true);
-        odps.tables().delete("test_project", "test_table_2_sink", true);
+        odps.tables().delete("project", "test_table_sink", true);
+        odps.tables().delete("project", "test_table_2_sink", true);
         Container.ExecResult execResult =
                 container.executeJob("/maxcompute_to_maxcompute_multi_table.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
