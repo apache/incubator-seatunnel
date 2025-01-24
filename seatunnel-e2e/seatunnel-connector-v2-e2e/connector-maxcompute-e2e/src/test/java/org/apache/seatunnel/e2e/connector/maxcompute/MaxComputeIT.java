@@ -62,6 +62,7 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
         this.maxcompute =
                 new GenericContainer<>(IMAGE)
                         .withExposedPorts(8080)
+                        .withNetwork(NETWORK)
                         .withNetworkAliases("maxcompute")
                         .waitingFor(
                                 Wait.forLogMessage(
