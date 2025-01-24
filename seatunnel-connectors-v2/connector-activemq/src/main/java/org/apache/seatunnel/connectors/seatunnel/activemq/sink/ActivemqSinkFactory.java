@@ -18,10 +18,8 @@
 package org.apache.seatunnel.connectors.seatunnel.activemq.sink;
 
 import org.apache.seatunnel.api.configuration.util.OptionRule;
-import org.apache.seatunnel.api.table.connector.TableSink;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactory;
-import org.apache.seatunnel.api.table.factory.TableSinkFactoryContext;
 
 import com.google.auto.service.AutoService;
 
@@ -33,10 +31,8 @@ import static org.apache.seatunnel.connectors.seatunnel.activemq.config.Activemq
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.COPY_MESSAGE_ON_SEND;
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.DISABLE_TIMESTAMP_BY_DEFAULT;
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.DISPATCH_ASYNC;
-import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.HOST;
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.NESTED_MAP_AND_LIST_ENABLED;
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.PASSWORD;
-import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.PORT;
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.QUEUE_NAME;
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.URI;
 import static org.apache.seatunnel.connectors.seatunnel.activemq.config.ActivemqConfig.USERNAME;
@@ -57,8 +53,6 @@ public class ActivemqSinkFactory implements TableSinkFactory {
                 .required(QUEUE_NAME, URI)
                 .bundled(USERNAME, PASSWORD)
                 .optional(
-                        HOST,
-                        PORT,
                         CLIENT_ID,
                         CHECK_FOR_DUPLICATE,
                         COPY_MESSAGE_ON_SEND,
@@ -71,10 +65,5 @@ public class ActivemqSinkFactory implements TableSinkFactory {
                         NESTED_MAP_AND_LIST_ENABLED,
                         WARN_ABOUT_UNSTARTED_CONNECTION_TIMEOUT)
                 .build();
-    }
-
-    @Override
-    public TableSink createSink(TableSinkFactoryContext context) {
-        return () -> new ActivemqSink(context.getOptions(), context.getCatalogTable());
     }
 }

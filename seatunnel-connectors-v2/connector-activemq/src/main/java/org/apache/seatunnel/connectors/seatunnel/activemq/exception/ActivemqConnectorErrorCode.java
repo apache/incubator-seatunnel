@@ -29,8 +29,10 @@ public enum ActivemqConnectorErrorCode implements SeaTunnelErrorCode {
     MESSAGE_ACK_REJECTED("ACTIVEMQ-06", "messages could not be acknowledged with basicReject"),
     PARSE_URI_FAILED("ACTIVEMQ-07", "parse uri failed"),
     INIT_SSL_CONTEXT_FAILED("ACTIVEMQ-08", "initialize ssl context failed"),
-    SETUP_SSL_FACTORY_FAILED("ACTIVEMQ-09", "setup ssl factory failed");
-
+    SETUP_SSL_FACTORY_FAILED("ACTIVEMQ-09", "setup ssl factory failed"),
+    CLOSE_SESSION_FAILED("ACTIVEMQ-10", "close session failed"),
+    INITIALIZE_CONSUME_FAILED("ACTIVEMQ-11", "initialize consumer failed"),
+    CREATE_SESSION_FAILED("ACTIVEMQ-12", "create activemq session failed");
     private final String code;
     private final String description;
 
