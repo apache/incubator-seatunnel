@@ -141,6 +141,7 @@ public class ParquetReadStrategyTest {
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     public void testParquetGetSplits() throws IOException {
         String file = "/tmp/parquet_split/local_output.parquet";
         deleteFile(file);
