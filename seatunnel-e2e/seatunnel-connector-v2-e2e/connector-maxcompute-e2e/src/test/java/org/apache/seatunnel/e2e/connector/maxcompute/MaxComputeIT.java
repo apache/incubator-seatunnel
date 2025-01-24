@@ -17,6 +17,11 @@
 
 package org.apache.seatunnel.e2e.connector.maxcompute;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
+import org.apache.seatunnel.connectors.seatunnel.maxcompute.source.MaxcomputeSource;
+import org.apache.seatunnel.connectors.seatunnel.maxcompute.source.MaxcomputeSourceFactory;
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
@@ -25,6 +30,7 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
@@ -45,7 +51,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -175,5 +184,26 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
         Assertions.assertEquals(0, execResult.getExitCode());
         Assertions.assertEquals(3, queryTable(odps, "test_table_sink").size());
         Assertions.assertEquals(3, queryTable(odps, "test_table_2_sink").size());
+    }
+
+    @Test
+    public void testReadColumn() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("accessId", "ak");
+        config.put("accesskey", "sk");
+        config.put("endpoint", "http://maxcompute:8080/api");
+        config.put("project", "project");
+        config.put("table_name", "test_table");
+        config.put("read_columns", Arrays.asList("id", "name"));
+        MaxcomputeSource source =
+                (MaxcomputeSource)
+                        new MaxcomputeSourceFactory()
+                                .createSource(
+                                        new TableSourceFactoryContext(
+                                                ReadonlyConfig.fromMap(config),
+                                                Thread.currentThread().getContextClassLoader()));
+        CatalogTable table = source.getProducedCatalogTables().get(0);
+        Assertions.assertArrayEquals(
+                new String[] {"id", "name"}, table.getTableSchema().getFieldNames());
     }
 }
