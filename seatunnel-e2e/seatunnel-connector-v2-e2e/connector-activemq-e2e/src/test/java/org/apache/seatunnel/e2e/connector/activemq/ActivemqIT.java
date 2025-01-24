@@ -185,6 +185,9 @@ public class ActivemqIT extends TestSuiteBase implements TestResource {
                                 new String(
                                         JSON_SERIALIZATION_SCHEMA.serialize(
                                                 TEST_DATASET.getValue().get(1)))));
+        if (messageConsumer != null) {
+            messageConsumer.close();
+        }
     }
 
     private static Pair<SeaTunnelRowType, List<SeaTunnelRow>> generateTestDataSet() {
