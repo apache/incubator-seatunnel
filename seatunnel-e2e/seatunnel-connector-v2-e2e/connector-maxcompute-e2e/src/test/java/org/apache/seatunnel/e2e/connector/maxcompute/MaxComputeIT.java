@@ -39,7 +39,6 @@ import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.account.Account;
 import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.data.Record;
-import com.aliyun.odps.data.RecordReader;
 import com.aliyun.odps.task.SQLTask;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +47,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -121,9 +119,13 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
                                 + tableName
                                 + " values (1, 'test', 20), (2, 'test2', 30), (3, 'test3', 40);");
         insert.waitForSuccess();
-        try (RecordReader reader = odps.tables().get(tableName).read(Integer.MAX_VALUE)) {
-            Assertions.assertEquals(3, reader.stream().count());
-        }
+        Assertions.assertEquals(3, queryTable(odps, tableName).size());
+    }
+
+    private static List<Record> queryTable(Odps odps, String tableName) throws OdpsException {
+        Instance instance = SQLTask.run(odps, "select * from " + tableName + ";");
+        instance.waitForSuccess();
+        return SQLTask.getResult(instance);
     }
 
     private String getEndpoint() {
@@ -148,19 +150,17 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
         Container.ExecResult execResult = container.executeJob("/maxcompute_to_maxcompute.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
         Assertions.assertEquals(3, odps.tables().get("test_table_sink").getRecordNum());
-        try (RecordReader reader = odps.tables().get("test_table_sink").read(3)) {
-            List<Record> records = reader.stream().collect(Collectors.toList());
-            Assertions.assertEquals(3, records.size());
-            Assertions.assertEquals(1, records.get(0).get("id"));
-            Assertions.assertEquals("test", records.get(0).get("name"));
-            Assertions.assertEquals(20, records.get(0).get("age"));
-            Assertions.assertEquals(2, records.get(1).get("id"));
-            Assertions.assertEquals("test2", records.get(1).get("name"));
-            Assertions.assertEquals(30, records.get(1).get("age"));
-            Assertions.assertEquals(3, records.get(2).get("id"));
-            Assertions.assertEquals("test3", records.get(2).get("name"));
-            Assertions.assertEquals(40, records.get(2).get("age"));
-        }
+        List<Record> records = queryTable(odps, "test_table_sink");
+        Assertions.assertEquals(3, records.size());
+        Assertions.assertEquals(1, records.get(0).get("id"));
+        Assertions.assertEquals("test", records.get(0).get("name"));
+        Assertions.assertEquals(20, records.get(0).get("age"));
+        Assertions.assertEquals(2, records.get(1).get("id"));
+        Assertions.assertEquals("test2", records.get(1).get("name"));
+        Assertions.assertEquals(30, records.get(1).get("age"));
+        Assertions.assertEquals(3, records.get(2).get("id"));
+        Assertions.assertEquals("test3", records.get(2).get("name"));
+        Assertions.assertEquals(40, records.get(2).get("age"));
     }
 
     @TestTemplate
@@ -172,7 +172,7 @@ public class MaxComputeIT extends TestSuiteBase implements TestResource {
         Container.ExecResult execResult =
                 container.executeJob("/maxcompute_to_maxcompute_multi_table.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
-        Assertions.assertEquals(3, odps.tables().get("test_table_sink").getRecordNum());
-        Assertions.assertEquals(3, odps.tables().get("test_table_2_sink").getRecordNum());
+        Assertions.assertEquals(3, queryTable(odps, "test_table_sink").size());
+        Assertions.assertEquals(3, queryTable(odps, "test_table_2_sink").size());
     }
 }
