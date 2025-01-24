@@ -165,8 +165,13 @@ public class PostgresSnapshotSplitReadTask
             throws Exception {
         EventDispatcher.SnapshotReceiver snapshotReceiver =
                 dispatcher.getSnapshotChangeEventReceiver();
-        log.debug("Snapshotting table {}", tableId);
-        TableId newTableId = new TableId(null, tableId.schema(), tableId.table());
+        TableId newTableId = new TableId(tableId.catalog(), tableId.schema(), tableId.table());
+        log.info("Snapshotting table {}", newTableId);
+        databaseSchema.tableIds().stream()
+                .forEach(
+                        tid -> {
+                            log.info("table id: {} in databaseSchema", tid);
+                        });
         createDataEventsForTable(
                 snapshotContext, snapshotReceiver, databaseSchema.tableFor(newTableId));
         snapshotReceiver.completeSnapshot();
