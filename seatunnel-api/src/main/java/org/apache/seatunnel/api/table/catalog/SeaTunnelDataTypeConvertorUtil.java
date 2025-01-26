@@ -163,17 +163,17 @@ public class SeaTunnelDataTypeConvertorUtil {
             ConfigValue typeVal = conf.get(fieldName);
             switch (typeVal.valueType()) {
                 case STRING:
-                    {
-                        fieldTypes[idx] =
-                                deserializeSeaTunnelDataType(
-                                        fieldNames[idx], (String) typeVal.unwrapped());
-                    }
-                    break;
+                {
+                    fieldTypes[idx] =
+                            deserializeSeaTunnelDataType(
+                                    fieldNames[idx], (String) typeVal.unwrapped());
+                }
+                break;
                 case OBJECT:
-                    {
-                        fieldTypes[idx] = parseRowType((ConfigObject) typeVal);
-                    }
-                    break;
+                {
+                    fieldTypes[idx] = parseRowType((ConfigObject) typeVal);
+                }
+                break;
                 case LIST:
                 case NUMBER:
                 case BOOLEAN:
