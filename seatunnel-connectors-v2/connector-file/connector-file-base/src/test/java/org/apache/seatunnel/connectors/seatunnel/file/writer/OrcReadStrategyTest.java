@@ -46,6 +46,8 @@ import org.apache.orc.storage.ql.exec.vector.VectorizedRowBatch;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -198,6 +200,7 @@ public class OrcReadStrategyTest {
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     public void testOrcGetSplits() throws IOException {
         String file = "/tmp/orc_split/local_output.orc";
         deleteFile(file);
@@ -238,6 +241,7 @@ public class OrcReadStrategyTest {
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     public void testOrcReadSplitBigFile() throws IOException {
         String file = "/tmp/orc_split/local_output.orc";
         deleteFile(file);
@@ -280,6 +284,7 @@ public class OrcReadStrategyTest {
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     public void testOrcReadSplit() throws URISyntaxException, IOException {
         URL orcFile = OrcReadStrategyTest.class.getResource("/test.orc");
         Assertions.assertNotNull(orcFile);
