@@ -82,8 +82,12 @@ public class FileSourceSplitEnumerator
     private Set<FileSourceSplit> discoverySplits() {
         Set<FileSourceSplit> fileSourceSplits = new HashSet<>();
         for (String filePath : filePaths) {
-            Set<FileSourceSplit> set = readStrategy.getFileSourceSplits(filePath);
-            fileSourceSplits.addAll(set);
+            if (readStrategy != null) {
+                Set<FileSourceSplit> set = readStrategy.getFileSourceSplits(filePath);
+                fileSourceSplits.addAll(set);
+            } else {
+                fileSourceSplits.add(new FileSourceSplit(filePath));
+            }
         }
         return fileSourceSplits;
     }
