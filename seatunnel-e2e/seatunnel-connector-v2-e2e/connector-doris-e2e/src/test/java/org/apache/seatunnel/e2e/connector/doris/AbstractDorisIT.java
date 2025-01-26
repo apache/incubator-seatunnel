@@ -99,7 +99,7 @@ public abstract class AbstractDorisIT extends TestSuiteBase implements TestResou
 
     protected void initializeJdbcConnection()
             throws SQLException, ClassNotFoundException, MalformedURLException,
-            InstantiationException, IllegalAccessException {
+                    InstantiationException, IllegalAccessException {
         log.info("doris initializing ...");
         URLClassLoader urlClassLoader =
                 new URLClassLoader(new URL[] {new URL(DRIVER_JAR)}, DorisIT.class.getClassLoader());
