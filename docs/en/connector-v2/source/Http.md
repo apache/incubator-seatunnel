@@ -42,7 +42,7 @@ They can be downloaded via install-plugin.sh or from the Maven central repositor
 
 ## Source Options
 
-|            Name             |  Type   | Required | Default | Description                                                                                                                          |
+|            Name             |  Type   | Required | Default |                                                             Description                                                              |
 |-----------------------------|---------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------|
 | url                         | String  | Yes      | -       | Http request url.                                                                                                                    |
 | schema                      | Config  | No       | -       | Http and seatunnel data structure mapping                                                                                            |
@@ -364,4 +364,3 @@ If form submission is required,please set keep_params_as_form true.
 ### new version
 
 - [Feature][Connector-V2][HTTP] Use json-path parsing ([3510](https://github.com/apache/seatunnel/pull/3510))
-
