@@ -28,6 +28,7 @@
     <properties>
         <mysql.version>8.0.31</mysql.version>
     </properties>
+
     <dependencies>
 
         <dependency>
