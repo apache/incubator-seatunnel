@@ -101,7 +101,6 @@ public class JobMetricsRunner implements Runnable {
             lastRunTime = now;
             lastReadCount = jobMetricsSummary.getSourceReadCount();
             lastWriteCount = jobMetricsSummary.getSinkWriteCount();
-            // transformCountMap = jobMetricsSummary.getTransformCountMap();
         } catch (Exception e) {
             log.warn("Failed to get job metrics summary, it maybe first-run");
         }

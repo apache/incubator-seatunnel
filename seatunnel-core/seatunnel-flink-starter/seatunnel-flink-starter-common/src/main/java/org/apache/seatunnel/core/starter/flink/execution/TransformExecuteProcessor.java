@@ -122,7 +122,6 @@ public class TransformExecuteProcessor
                         new TableTransformFactoryContext(
                                 stream.getCatalogTables(), options, classLoader);
                 ConfigValidator.of(context.getOptions()).validate(factory.optionRule());
-
                 SeaTunnelTransform transform = factory.createTransform(context).createTransform();
 
                 transform.setJobContext(jobContext);

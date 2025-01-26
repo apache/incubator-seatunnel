@@ -76,6 +76,7 @@ public class TransformFlowLifeCycle<T> extends ActionFlowLifeCycle
 
     @Override
     public void open() throws Exception {
+        super.open();
         for (SeaTunnelTransform<T> t : transform) {
             try {
                 t.open();
