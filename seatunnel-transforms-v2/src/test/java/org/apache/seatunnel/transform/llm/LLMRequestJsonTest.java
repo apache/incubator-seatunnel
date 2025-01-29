@@ -172,7 +172,6 @@ public class LLMRequestJsonTest {
 
         Map<String, String> header = new HashMap<>();
         header.put("Content-Type", "application/json");
-        header.put("Authorization", "Bearer " + "apikey");
 
         List<Map<String, String>> messagesList = new ArrayList<>();
 
@@ -198,6 +197,52 @@ public class LLMRequestJsonTest {
                         "Determine whether someone is Chinese or American by their name",
                         "custom-model",
                         "https://api.custom.com/v1/chat/completions",
+                        header,
+                        resultMap,
+                        "{\"model\":\"${model}\",\"messages\":[{\"role\":\"system\",\"content\":\"${prompt}\"},{\"role\":\"user\",\"content\":\"${data}\"}]}");
+        ObjectNode node =
+                model.createJsonNodeFromData(
+                        "Determine whether someone is Chinese or American by their name",
+                        "{\"id\":1, \"name\":\"John\"}");
+        Assertions.assertEquals(
+                "{\"messages\":[{\"role\":\"system\",\"content\":\"Determine whether someone is Chinese or American by their name\"},{\"role\":\"user\",\"content\":\"{\\\"id\\\":1, \\\"name\\\":\\\"John\\\"}\"}],\"model\":\"custom-model\"}",
+                OBJECT_MAPPER.writeValueAsString(node));
+    }
+
+    @Test
+    void testCustomOllamaRequestJson() throws IOException {
+        SeaTunnelRowType rowType =
+                new SeaTunnelRowType(
+                        new String[] {"id", "name"},
+                        new SeaTunnelDataType[] {BasicType.INT_TYPE, BasicType.STRING_TYPE});
+
+        Map<String, String> header = new HashMap<>();
+        header.put("Content-Type", "application/json");
+
+        List<Map<String, String>> messagesList = new ArrayList<>();
+
+        Map<String, String> systemMessage = new HashMap<>();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", "${prompt}");
+        messagesList.add(systemMessage);
+
+        Map<String, String> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", "${input}");
+        messagesList.add(userMessage);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("model", "${model}");
+        resultMap.put("messages", messagesList);
+
+        CustomModel model =
+                new CustomModel(
+                        rowType,
+                        SqlType.STRING,
+                        null,
+                        "Determine whether someone is Chinese or American by their name",
+                        "custom-model",
+                        "http://localhost:11434/api/chat",
                         header,
                         resultMap,
                         "{\"model\":\"${model}\",\"messages\":[{\"role\":\"system\",\"content\":\"${prompt}\"},{\"role\":\"user\",\"content\":\"${data}\"}]}");
