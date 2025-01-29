@@ -41,6 +41,7 @@ import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.transform.SeaTunnelTransform;
 import org.apache.seatunnel.common.Constants;
 import org.apache.seatunnel.common.config.Common;
+import org.apache.seatunnel.common.config.EnvConfigParserUtil;
 import org.apache.seatunnel.common.config.TypesafeConfigUtils;
 import org.apache.seatunnel.common.constants.CollectionConstants;
 import org.apache.seatunnel.common.constants.JobMode;
@@ -109,7 +110,7 @@ public class MultipleTableJobConfigParser {
     private final List<URL> commonPluginJars;
     private final Config seaTunnelJobConfig;
 
-    private final ReadonlyConfig envOptions;
+    private ReadonlyConfig envOptions;
 
     private final boolean isStartWithSavePoint;
     private final List<JobPipelineCheckpointData> pipelineCheckpoints;
@@ -314,6 +315,14 @@ public class MultipleTableJobConfigParser {
                 || jobConfig.getName().equals(EnvCommonOptions.JOB_NAME.defaultValue())) {
             jobConfig.setName(envOptions.get(EnvCommonOptions.JOB_NAME));
         }
+
+        Map<String, String> envConfigMap = EnvConfigParserUtil.parseEnvConfig();
+        if (envConfigMap != null) {
+            Map<String, Object> mergedConfig = new HashMap<>(envOptions.toMap());
+            mergedConfig.putAll(envConfigMap);
+            envOptions = ReadonlyConfig.fromMap(mergedConfig);
+        }
+
         jobConfig.getEnvOptions().putAll(envOptions.getSourceMap());
         this.commonPluginJars.addAll(
                 new ArrayList<>(

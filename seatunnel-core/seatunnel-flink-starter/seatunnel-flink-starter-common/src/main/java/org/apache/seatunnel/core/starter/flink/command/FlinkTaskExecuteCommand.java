@@ -21,7 +21,9 @@ import org.apache.seatunnel.shade.com.typesafe.config.Config;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigUtil;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigValueFactory;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.common.Constants;
+import org.apache.seatunnel.common.config.EnvConfigParserUtil;
 import org.apache.seatunnel.core.starter.command.Command;
 import org.apache.seatunnel.core.starter.exception.CommandExecuteException;
 import org.apache.seatunnel.core.starter.flink.args.FlinkCommandArgs;
@@ -32,6 +34,8 @@ import org.apache.seatunnel.core.starter.utils.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.apache.seatunnel.core.starter.utils.FileUtils.checkConfigExist;
 
@@ -55,6 +59,13 @@ public class FlinkTaskExecuteCommand implements Command<FlinkCommandArgs> {
                     config.withValue(
                             ConfigUtil.joinPath("env", "job.name"),
                             ConfigValueFactory.fromAnyRef(flinkCommandArgs.getJobName()));
+        }
+        ReadonlyConfig envOptions = ReadonlyConfig.fromConfig(config.getConfig("env"));
+        Map<String, String> envConfigMap = EnvConfigParserUtil.parseEnvConfig();
+        if (envConfigMap != null) {
+            Map<String, Object> mergedConfig = new HashMap<>(envOptions.toMap());
+            mergedConfig.putAll(envConfigMap);
+            config = config.withValue("env", ConfigValueFactory.fromMap(mergedConfig));
         }
         FlinkExecution seaTunnelTaskExecution = new FlinkExecution(config);
         try {

@@ -143,6 +143,11 @@ public class Common {
         return Paths.get(getSeaTunnelHome(), "lib");
     }
 
+    /** config Dir */
+    public static Path configDir() {
+        return Paths.get(getSeaTunnelHome(), "config");
+    }
+
     /** return lib jars, which located in 'lib/*' or 'lib/{dir}/*'. */
     public static List<Path> getLibJars() {
         Path libRootDir = Common.libDir();
