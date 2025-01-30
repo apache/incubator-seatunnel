@@ -33,6 +33,11 @@ public class HttpConfig {
     public static final int DEFAULT_SOCKET_TIMEOUT_MS = 6000 * 10;
     public static final Option<String> URL =
             Options.key("url").stringType().noDefaultValue().withDescription("Http request url");
+    public static final Option<Boolean> KEEP_PARAMS_AS_FORM =
+            Options.key("keep_params_as_form")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("Keep param form");
     public static final Option<Long> TOTAL_PAGE_SIZE =
             Options.key("total_page_size")
                     .longType()
