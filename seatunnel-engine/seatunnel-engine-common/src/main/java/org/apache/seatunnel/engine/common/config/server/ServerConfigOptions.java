@@ -300,6 +300,62 @@ public class ServerConfigOptions {
                     .defaultValue(new HttpConfig())
                     .withDescription("The http configuration.");
 
+    // New HTTPS configurations
+    public static final Option<Integer> HTTPS_PORT =
+            Options.key("https-port")
+                    .intType()
+                    .defaultValue(8443)
+                    .withDescription("The port used for HTTPS communication.");
+
+    public static final Option<Boolean> ENABLE_HTTPS =
+            Options.key("enable-https")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("Whether to enable HTTPS.");
+
+    public static final Option<String> KEYSTORE =
+            Options.key("keystore")
+                    .stringType()
+                    .defaultValue("")
+                    .withDescription("The file path of the keystore for HTTPS.");
+
+    public static final Option<String> KEYSTORE_PASSWORD =
+            Options.key("keystore-password")
+                    .stringType()
+                    .defaultValue("")
+                    .withDescription("The password for the keystore.");
+
+    public static final Option<String> KEY_PASSWORD =
+            Options.key("key-password")
+                    .stringType()
+                    .defaultValue("")
+                    .withDescription("The password for the key in the keystore.");
+
+    public static final Option<Boolean> REQUIRE_CLIENT_AUTH =
+            Options.key("require-client-auth")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription(
+                            "Whether to require client authentication for HTTPS connections.");
+
+    public static final Option<String> KEY_MANAGER_PASSWORD =
+            Options.key("key-manager-password")
+                    .stringType()
+                    .defaultValue("")
+                    .withDescription("The password for the key manager.");
+
+    public static final Option<String> TRUSTSTORE =
+            Options.key("truststore")
+                    .stringType()
+                    .defaultValue("")
+                    .withDescription("The file path of the truststore for HTTPS.");
+
+    public static final Option<String> TRUSTSTORE_PASSWORD =
+            Options.key("truststore-password")
+                    .stringType()
+                    .defaultValue("")
+                    .withDescription("The password for the truststore.");
+
     public static final String EVENT_REPORT_HTTP = "event-report-http";
     public static final String EVENT_REPORT_HTTP_URL = "url";
     public static final String EVENT_REPORT_HTTP_HEADERS = "headers";

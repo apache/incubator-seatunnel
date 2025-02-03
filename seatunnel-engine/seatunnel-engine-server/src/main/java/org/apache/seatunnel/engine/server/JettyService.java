@@ -18,10 +18,12 @@
 package org.apache.seatunnel.engine.server;
 
 import org.apache.seatunnel.shade.org.eclipse.jetty.server.Server;
+import org.apache.seatunnel.shade.org.eclipse.jetty.server.ServerConnector;
 import org.apache.seatunnel.shade.org.eclipse.jetty.servlet.DefaultServlet;
 import org.apache.seatunnel.shade.org.eclipse.jetty.servlet.FilterHolder;
 import org.apache.seatunnel.shade.org.eclipse.jetty.servlet.ServletContextHandler;
 import org.apache.seatunnel.shade.org.eclipse.jetty.servlet.ServletHolder;
+import org.apache.seatunnel.shade.org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import org.apache.seatunnel.engine.common.config.SeaTunnelConfig;
 import org.apache.seatunnel.engine.server.rest.filter.ExceptionHandlingFilter;
@@ -50,6 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.servlet.DispatcherType;
 import javax.servlet.MultipartConfigElement;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
@@ -88,18 +91,58 @@ public class JettyService {
     public JettyService(NodeEngineImpl nodeEngine, SeaTunnelConfig seaTunnelConfig) {
         this.nodeEngine = nodeEngine;
         this.seaTunnelConfig = seaTunnelConfig;
+
+        // Determine if HTTPS is enabled based on your new YAML properties.
+        boolean enableHttps = seaTunnelConfig.getEngineConfig().getHttpConfig().isEnableHttps();
         int port = seaTunnelConfig.getEngineConfig().getHttpConfig().getPort();
         if (seaTunnelConfig.getEngineConfig().getHttpConfig().isEnableDynamicPort()) {
             port =
                     chooseAppropriatePort(
                             port, seaTunnelConfig.getEngineConfig().getHttpConfig().getPortRange());
         }
-        log.info("SeaTunnel REST service will start on port {}", port);
+        log.info("SeaTunnel REST service will start on HTTP port {}", port);
         this.server = new Server(port);
+
+        // Add HTTPS connector if enabled.
+        if (enableHttps) {
+            // Use the new property names from your YAML.
+            String keystore = seaTunnelConfig.getEngineConfig().getHttpConfig().getKeystore();
+            String keystorePassword =
+                    seaTunnelConfig.getEngineConfig().getHttpConfig().getKeystorePassword();
+            String keyPassword = seaTunnelConfig.getEngineConfig().getHttpConfig().getKeyPassword();
+            String truststore = seaTunnelConfig.getEngineConfig().getHttpConfig().getTruststore();
+            String truststorePassword =
+                    seaTunnelConfig.getEngineConfig().getHttpConfig().getTruststorePassword();
+
+            File keystoreFile = new File(keystore);
+            if (keystoreFile.exists() && keystoreFile.isFile()) {
+                SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
+                sslContextFactory.setKeyStorePath(keystore);
+                sslContextFactory.setKeyStorePassword(keystorePassword);
+                sslContextFactory.setKeyManagerPassword(keyPassword);
+
+                // Optionally enable two-way SSL if truststore values are provided.
+                if (truststore != null
+                        && !truststore.isEmpty()
+                        && truststorePassword != null
+                        && !truststorePassword.isEmpty()) {
+                    sslContextFactory.setNeedClientAuth(true);
+                    sslContextFactory.setTrustStorePath(truststore);
+                    sslContextFactory.setTrustStorePassword(truststorePassword);
+                }
+
+                int httpsPort = seaTunnelConfig.getEngineConfig().getHttpConfig().getHttpsPort();
+                ServerConnector httpsConnector = new ServerConnector(server, sslContextFactory);
+                httpsConnector.setPort(httpsPort);
+                server.addConnector(httpsConnector);
+                log.info("HTTPS enabled on port {}", httpsPort);
+            } else {
+                log.warn("Keystore file not found at '{}'. HTTPS will not be enabled.", keystore);
+            }
+        }
     }
 
     public void createJettyServer() {
-
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath(seaTunnelConfig.getEngineConfig().getHttpConfig().getContextPath());
 

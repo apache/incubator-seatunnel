@@ -27,14 +27,21 @@ import static com.hazelcast.internal.util.Preconditions.checkPositive;
 public class HttpConfig implements Serializable {
 
     private boolean enabled = ServerConfigOptions.ENABLE_HTTP.defaultValue();
-
     private int port = ServerConfigOptions.PORT.defaultValue();
-
     private String contextPath = ServerConfigOptions.CONTEXT_PATH.defaultValue();
-
     private boolean enableDynamicPort = ServerConfigOptions.ENABLE_DYNAMIC_PORT.defaultValue();
-
     private int portRange = ServerConfigOptions.PORT_RANGE.defaultValue();
+
+    // HTTPS configuration
+    private int httpsPort = ServerConfigOptions.HTTPS_PORT.defaultValue();
+    private boolean enableHttps = ServerConfigOptions.ENABLE_HTTPS.defaultValue();
+
+    private String keystore = ServerConfigOptions.KEYSTORE.defaultValue();
+    private String keystorePassword = ServerConfigOptions.KEYSTORE_PASSWORD.defaultValue();
+    private String keyPassword = ServerConfigOptions.KEY_PASSWORD.defaultValue();
+    private String truststore = ServerConfigOptions.TRUSTSTORE.defaultValue();
+    private String truststorePassword = ServerConfigOptions.TRUSTSTORE_PASSWORD.defaultValue();
+    private boolean requireClientAuth = ServerConfigOptions.REQUIRE_CLIENT_AUTH.defaultValue();
 
     public void setPort(int port) {
         checkPositive(port, ServerConfigOptions.HTTP + " must be > 0");
